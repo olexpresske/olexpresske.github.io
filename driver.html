@@ -1,24 +1,128 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OlexPress Driver - Jobs</title><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script><style>body{background:#0f172a;color:#fff;font-family:sans-serif;padding:12px} .card{background:#fff;color:#000;padding:14px;border-radius:16px;margin:10px 0;border-left:5px solid #22c55e} button{padding:11px;border:none;border-radius:10px;font-weight:800;margin:3px;cursor:pointer} .b{padding:4px 8px;border-radius:12px;color:#fff;font-size:10px;font-weight:800}</style></head><body>
-<h3>🚗 OlexPress Driver • Live Jobs</h3><p style="font-size:11px;color:#94a3b8">olexpresske Firebase • Gilgil Ol Kalou Nyahururu</p>
-<div style="display:flex;gap:8px;margin:10px 0"><div style="background:#1e293b;padding:10px;border-radius:12px;flex:1;text-align:center"><div style="font-size:10px;color:#94a3b8">TOTAL</div><b id="total">0</b></div><div style="background:#1e293b;padding:10px;border-radius:12px;flex:1;text-align:center"><div style="font-size:10px;color:#94a3b8">YOU EARN 80%</div><b id="earn" style="color:#22c55e">KES 0</b></div><div style="background:#1e293b;padding:10px;border-radius:12px;flex:1;text-align:center"><div style="font-size:10px;color:#94a3b8">OWE 20%</div><b id="owe" style="color:#f59e0b">KES 0</b></div></div>
-<div id="list">Waiting for customer to book on olexpresske.github.io ...</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OlexPress Driver - Live Jobs</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
+body{background:#0f172a;color:#fff;min-height:100vh;padding:14px}
+.header{background:#1e293b;border-radius:18px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border:1px solid #334155}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:12px 0}
+.stat{background:#1e293b;border-radius:16px;padding:14px;text-align:center;border:1px solid #334155}
+.stat b{font-size:20px;display:block}
+.card{background:#fff;color:#111;border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 8px 24px rgba(0,0,0,0.25);border-left:6px solid #22c55e;animation:slide 0.3s}
+@keyframes slide{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+.badge{padding:4px 10px;border-radius:20px;color:#fff;font-size:10px;font-weight:900;letter-spacing:0.5px}
+button{padding:12px 14px;border:none;border-radius:12px;font-weight:900;font-size:12px;margin:4px 4px 0 0;cursor:pointer;transition:0.15s}
+button:active{transform:scale(0.97)}
+.btn-dark{background:#0f172a;color:#fff}.btn-green{background:#22c55e;color:#fff}.btn-amber{background:#f59e0b;color:#fff}.btn-black{background:#000;color:#4ade80}.btn-ghost{background:#f1f5f9;color:#111}
+.info{background:#f8fafc;border-radius:12px;padding:10px;margin-top:10px;font-size:12px;line-height:1.5}
+</style>
+</head>
+<body>
+
+<div class="header">
+<div><div style="font-weight:900;font-size:18px">🚗 OlexPress Driver</div><div style="font-size:11px;color:#94a3b8">Live Jobs • Gilgil - Ol Kalou - Nyahururu • Firebase</div></div>
+<div style="text-align:right"><div style="background:#22c55e;color:#fff;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:800">● Online</div><div style="font-size:10px;color:#64748b;margin-top:4px">KDA 123X • 13.3km/L</div></div>
+</div>
+
+<div class="stats">
+<div class="stat"><div style="font-size:10px;color:#94a3b8;letter-spacing:1px">TOTAL JOBS</div><b id="total">0</b></div>
+<div class="stat"><div style="font-size:10px;color:#22c55e;letter-spacing:1px">YOU EARN 80%</div><b id="earn" style="color:#22c55e">KES 0</b></div>
+<div class="stat"><div style="font-size:10px;color:#f59e0b;letter-spacing:1px">OWE 20% COMM</div><b id="owe" style="color:#f59e0b">KES 0</b></div>
+</div>
+
+<div id="list" style="margin-top:10px">
+<div style="background:#1e293b;border-radius:16px;padding:20px;text-align:center;color:#94a3b8">Waiting for customer booking on olexpresske.github.io...<br><br>When client books Gilgil → Ol Kalou, job will appear here instantly with ACCEPT button</div>
+</div>
+
 <script>
 const cfg={apiKey:"AIzaSyDc6N5dULG6i72EWrLTtunwhbKQxaVi2KY",authDomain:"olexpresske.firebaseapp.com",databaseURL:"https://olexpresske-default-rtdb.firebaseio.com",projectId:"olexpresske",storageBucket:"olexpresske.firebasestorage.app",messagingSenderId:"953335654623",appId:"1:953335654623:web:1b91cbd29c1f63a23ba16a"};
-firebase.initializeApp(cfg);const db=firebase.database();
-function upd(id,s){db.ref('rides/'+id).update({status:s});}
+firebase.initializeApp(cfg);
+const db=firebase.database();
+
+function upd(id,status){
+  db.ref('rides/'+id).update({status:status, updated:Date.now()});
+}
+
 db.ref('rides').on('value',snap=>{
-let d=snap.val();let el=document.getElementById('list');el.innerHTML='';
-if(!d){el.innerHTML='No jobs yet - customer must book on main site';document.getElementById('total').innerText=0;return;}
-let list=Object.values(d).sort((a,b)=>b.created-a.created);
-let earn=list.filter(x=>x.status=='completed').reduce((a,x)=>a+((x.price-x.commission)||0),0);
-let owe=list.filter(x=>x.status=='completed').reduce((a,x)=>a+(x.commission||0),0);
+let data=snap.val();
+let el=document.getElementById('list');
+if(!data){
+el.innerHTML='<div style="background:#1e293b;border-radius:16px;padding:20px;text-align:center;color:#94a3b8">No jobs yet. Customer must book on main site.</div>';
+document.getElementById('total').innerText=0;
+document.getElementById('earn').innerText='KES 0';
+document.getElementById('owe').innerText='KES 0';
+return;
+}
+let list=Object.values(data).sort((a,b)=>b.created-a.created);
+let completed=list.filter(x=>x.status=='completed');
+let earn=completed.reduce((a,x)=>a+((x.price-x.commission)||0),0);
+let owe=completed.reduce((a,x)=>a+(x.commission||0),0);
 document.getElementById('total').innerText=list.length;
 document.getElementById('earn').innerText='KES '+earn.toLocaleString();
 document.getElementById('owe').innerText='KES '+owe.toLocaleString();
+
+el.innerHTML='';
 list.forEach(r=>{
 let gets=(r.price-r.commission)||0;
-let col={searching:'#3b82f6',enroute:'#f59e0b',arrived:'#22c55e',boarded:'#0f172a',completed:'#64748b',cancelled:'#ef4444'}[r.status]||'#22c55e';
-el.innerHTML+=`<div class=card style="border-left-color:${col}"><b>${r.ticket}</b> <span class=b style="background:${col}">${r.status.toUpperCase()}</span><br>📍 ${r.pickup} → ${r.dropoff}<br>📱 ${r.phone} | 💰 KES ${r.price} | Comm KES ${r.commission} | YOU KES ${gets} | ${new Date(r.created).toLocaleTimeString()}<br><div style="margin-top:8px">${r.status=='searching'?`<button style="background:#0f172a;color:#fff" onclick="upd('${r.ticket}','enroute')">✓ ACCEPT - Driver on way</button>`:''}${r.status=='enroute'?`<button style="background:#22c55e;color:#fff" onclick="upd('${r.ticket}','arrived')">📍 ARRIVED</button> <a href="tel:${r.phone}"><button style="background:#1e293b;color:#fff">📞 CALL ${r.phone}</button></a>`:''}${r.status=='arrived'?`<button style="background:#f59e0b;color:#fff" onclick="upd('${r.ticket}','boarded')">🔓 BOARDED QR ${r.ticket}</button>`:''}${r.status=='boarded'?`<button style="background:#000;color:#4ade80" onclick="upd('${r.ticket}','completed')">🏁 DONE COLLECT KES ${r.price}</button>`:''}${r.status=='completed'?`<div style="background:#f0fdf4;color:#16a34a;padding:8px;border-radius:8px;font-weight:800">✓ COMPLETED - Got KES ${gets}</div>`:''}</div></div>`;
+let colors={searching:'#3b82f6',enroute:'#f59e0b',arrived:'#22c55e',boarding_pending:'#f59e0b',boarded:'#0f172a',payment_pending:'#f59e0b',completed:'#64748b',cancelled:'#ef4444'};
+let col=colors[r.status]||'#22c55e';
+let time=new Date(r.created).toLocaleTimeString();
+
+let html=`<div class="card" style="border-left-color:${col}">
+<div style="display:flex;justify-content:space-between;align-items:start">
+<div><b style="font-size:16px">${r.ticket}</b> <span class="badge" style="background:${col}">${r.status.replace('_',' ').toUpperCase()}</span><br>
+<div style="margin-top:6px;font-weight:800">📍 ${r.pickup} → ${r.dropoff}</div>
+<div style="font-size:12px;color:#475569;margin-top:2px">📱 ${r.phone} • ${r.distance||''} • ${time}</div>
+</div>
+<div style="text-align:right"><div style="font-size:11px;color:#64748b">FARE</div><b style="font-size:18px">KES ${r.price}</b><div style="font-size:11px;color:#16a34a;font-weight:800">YOU KES ${gets}</div><div style="font-size:10px;color:#f59e0b">Comm KES ${r.commission}</div></div>
+</div>
+
+<div class="info">
+<div>Ticket: <b>${r.ticket}</b> • Show QR to client</div>
+<div>Pickup: <b>${r.pickup}</b> → Dropoff: <b>${r.dropoff}</b></div>
+</div>
+
+<div style="margin-top:12px">
+`;
+
+if(r.status=='searching'){
+html+=`<button class="btn-dark" onclick="upd('${r.ticket}','enroute')">✓ ACCEPT - I'm Enroute (3 min)</button><a href="tel:${r.phone}"><button class="btn-ghost">📞 CALL ${r.phone}</button></a>`;
+}
+if(r.status=='enroute'){
+html+=`<div style="background:#fef3c7;color:#92400e;padding:8px;border-radius:10px;font-size:12px;font-weight:700">✅ You accepted - Driving to ${r.pickup} - Client sees ENROUTE and cannot cancel</div>
+<button class="btn-green" onclick="upd('${r.ticket}','arrived')">📍 ARRIVED at ${r.pickup}</button><a href="tel:${r.phone}"><button class="btn-ghost">📞 Call Client</button></a>`;
+}
+if(r.status=='arrived'){
+html+=`<div style="background:#dcfce7;color:#166534;padding:8px;border-radius:10px;font-size:12px;font-weight:700">📍 Arrived - Client sees ARRIVED - Ask to show ticket ${r.ticket}</div>
+<button class="btn-amber" onclick="upd('${r.ticket}','boarding_pending')">🔓 Request On-Boarding - Confirm Ticket ${r.ticket}</button>`;
+}
+if(r.status=='boarding_pending'){
+html+=`<div style="background:#fef3c7;color:#92400e;padding:10px;border-radius:10px;font-weight:800">🔓 Request sent - Waiting for client to ACCEPT ON-BOARDING<br>Both will display ON-BOARDING when accepted</div>`;
+}
+if(r.status=='boarded'){
+html+=`<div style="background:#0f172a;color:#4ade80;padding:10px;border-radius:10px;font-weight:900;text-align:center">✅ ON-BOARDING CONFIRMED - Both driver & client display BOARDING • Enroute to ${r.dropoff}</div>
+<button class="btn-black" onclick="upd('${r.ticket}','payment_pending')">💰 Request Payment KES ${r.price} - Arrived ${r.dropoff}</button>`;
+}
+if(r.status=='payment_pending'){
+html+=`<div style="background:#fef3c7;color:#92400e;padding:10px;border-radius:10px;font-weight:700">💰 Payment request KES ${r.price} sent - Waiting client confirm payment</div>
+<button class="btn-black" onclick="upd('${r.ticket}','completed')">🏁 Close Ride - Send Thank You to Client</button>`;
+}
+if(r.status=='completed'){
+html+=`<div style="background:#f0fdf4;color:#16a34a;padding:10px;border-radius:10px;font-weight:900;text-align:center">🎉 COMPLETED • Collected KES ${r.price} • Your earning KES ${gets} • Thank you message sent to client • Ready for next job</div>`;
+}
+if(r.status=='cancelled'){
+html+=`<div style="background:#fee2e2;color:#dc2626;padding:10px;border-radius:10px;font-weight:800">❌ Cancelled by client before enroute</div>`;
+}
+
+html+=`</div></div>`;
+el.innerHTML+=html;
 });
 });
-</script></body></html>
+</script>
+</body>
+</html>
