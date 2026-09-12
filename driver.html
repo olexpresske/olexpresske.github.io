@@ -1,25 +1,24 @@
-<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>OlexPress Driver</title>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<style>body{background:#0f172a;color:#fff;font-family:sans-serif;padding:12px}
-.card{background:#fff;color:#000;padding:14px;border-radius:16px;margin:10px 0}
-button{padding:12px;border:none;border-radius:10px;font-weight:800;margin:4px;cursor:pointer}
-.b{padding:4px 8px;border-radius:12px;color:#fff;font-size:10px}</style>
-</head><body>
-<h3>🚗 OlexPress Driver - LIVE</h3>
-<p style="font-size:11px;color:#94a3b8">Gilgil - Ol Kalou - Nyahururu • Firebase olexpresske</p>
-<div id="list">Loading rides...</div>
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OlexPress Driver - Jobs</title><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script><style>body{background:#0f172a;color:#fff;font-family:sans-serif;padding:12px} .card{background:#fff;color:#000;padding:14px;border-radius:16px;margin:10px 0;border-left:5px solid #22c55e} button{padding:11px;border:none;border-radius:10px;font-weight:800;margin:3px;cursor:pointer} .b{padding:4px 8px;border-radius:12px;color:#fff;font-size:10px;font-weight:800}</style></head><body>
+<h3>🚗 OlexPress Driver • Live Jobs</h3><p style="font-size:11px;color:#94a3b8">olexpresske Firebase • Gilgil Ol Kalou Nyahururu</p>
+<div style="display:flex;gap:8px;margin:10px 0"><div style="background:#1e293b;padding:10px;border-radius:12px;flex:1;text-align:center"><div style="font-size:10px;color:#94a3b8">TOTAL</div><b id="total">0</b></div><div style="background:#1e293b;padding:10px;border-radius:12px;flex:1;text-align:center"><div style="font-size:10px;color:#94a3b8">YOU EARN 80%</div><b id="earn" style="color:#22c55e">KES 0</b></div><div style="background:#1e293b;padding:10px;border-radius:12px;flex:1;text-align:center"><div style="font-size:10px;color:#94a3b8">OWE 20%</div><b id="owe" style="color:#f59e0b">KES 0</b></div></div>
+<div id="list">Waiting for customer to book on olexpresske.github.io ...</div>
 <script>
 const cfg={apiKey:"AIzaSyDc6N5dULG6i72EWrLTtunwhbKQxaVi2KY",authDomain:"olexpresske.firebaseapp.com",databaseURL:"https://olexpresske-default-rtdb.firebaseio.com",projectId:"olexpresske",storageBucket:"olexpresske.firebasestorage.app",messagingSenderId:"953335654623",appId:"1:953335654623:web:1b91cbd29c1f63a23ba16a"};
 firebase.initializeApp(cfg);const db=firebase.database();
-db.ref('rides').on('value',s=>{
-let d=s.val();let el=document.getElementById('list');el.innerHTML='';
-if(!d){el.innerHTML='No rides yet - book on main site olexpresske.github.io';return;}
-Object.values(d).reverse().forEach(r=>{
+function upd(id,s){db.ref('rides/'+id).update({status:s});}
+db.ref('rides').on('value',snap=>{
+let d=snap.val();let el=document.getElementById('list');el.innerHTML='';
+if(!d){el.innerHTML='No jobs yet - customer must book on main site';document.getElementById('total').innerText=0;return;}
+let list=Object.values(d).sort((a,b)=>b.created-a.created);
+let earn=list.filter(x=>x.status=='completed').reduce((a,x)=>a+((x.price-x.commission)||0),0);
+let owe=list.filter(x=>x.status=='completed').reduce((a,x)=>a+(x.commission||0),0);
+document.getElementById('total').innerText=list.length;
+document.getElementById('earn').innerText='KES '+earn.toLocaleString();
+document.getElementById('owe').innerText='KES '+owe.toLocaleString();
+list.forEach(r=>{
 let gets=(r.price-r.commission)||0;
-el.innerHTML+=`<div class=card><b>${r.ticket}</b> <span class=b style="background:#f59e0b">${r.status}</span><br>📍 ${r.pickup} → ${r.dropoff}<br>📱 ${r.phone} • KES ${r.price} • Comm KES ${r.commission} • YOU GET KES ${gets}<br><button style="background:#0f172a;color:#fff" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'enroute'})">ACCEPT</button><button style="background:#22c55e;color:#fff" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'arrived'})">ARRIVED</button><button style="background:#f59e0b;color:#fff" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'boarded'})">BOARDED</button><button style="background:#000;color:#4ade80" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'completed'})">DONE COLLECT ${r.price}</button></div>`;
+let col={searching:'#3b82f6',enroute:'#f59e0b',arrived:'#22c55e',boarded:'#0f172a',completed:'#64748b',cancelled:'#ef4444'}[r.status]||'#22c55e';
+el.innerHTML+=`<div class=card style="border-left-color:${col}"><b>${r.ticket}</b> <span class=b style="background:${col}">${r.status.toUpperCase()}</span><br>📍 ${r.pickup} → ${r.dropoff}<br>📱 ${r.phone} | 💰 KES ${r.price} | Comm KES ${r.commission} | YOU KES ${gets} | ${new Date(r.created).toLocaleTimeString()}<br><div style="margin-top:8px">${r.status=='searching'?`<button style="background:#0f172a;color:#fff" onclick="upd('${r.ticket}','enroute')">✓ ACCEPT - Driver on way</button>`:''}${r.status=='enroute'?`<button style="background:#22c55e;color:#fff" onclick="upd('${r.ticket}','arrived')">📍 ARRIVED</button> <a href="tel:${r.phone}"><button style="background:#1e293b;color:#fff">📞 CALL ${r.phone}</button></a>`:''}${r.status=='arrived'?`<button style="background:#f59e0b;color:#fff" onclick="upd('${r.ticket}','boarded')">🔓 BOARDED QR ${r.ticket}</button>`:''}${r.status=='boarded'?`<button style="background:#000;color:#4ade80" onclick="upd('${r.ticket}','completed')">🏁 DONE COLLECT KES ${r.price}</button>`:''}${r.status=='completed'?`<div style="background:#f0fdf4;color:#16a34a;padding:8px;border-radius:8px;font-weight:800">✓ COMPLETED - Got KES ${gets}</div>`:''}</div></div>`;
 });
 });
 </script></body></html>
