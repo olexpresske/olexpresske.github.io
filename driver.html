@@ -1,1 +1,35 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OlexPress Driver</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>body{font-family:Inter;padding:10px;background:#111;color:white} .card{background:#fff;color:#111;border-radius:14px;padding:12px;margin:10px 0} .btn{background:#1aae32;color:#fff;padding:10px;border-radius:8px;border:none;width:100%;font-weight:800;margin:4px 0}</style>
+</head><body>
+<div style="display:flex;align-items:center;gap:8px"><img src="logo.png" style="height:32px;background:#fff;padding:4px;border-radius:8px"><b>OlexPress DRIVER</b></div>
 
+<div class="card"><b style="color:gold">DRIVER APP - OLEXRESS KE</b><br><small>Live from Firebase olexpresske</small><div id="reqs" style="margin-top:10px">Loading requests...</div></div>
+
+<div class="card"><div id="map" style="height:300px;border-radius:10px"></div></div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const cfg={apiKey:"AIzaSyDc6N5dULG6i72EWrLTtunwhbKQxaVi2KY",authDomain:"olexpresske.firebaseapp.com",databaseURL:"https://olexpresske-default-rtdb.firebaseio.com",projectId:"olexpresske",storageBucket:"olexpresske.firebasestorage.app",messagingSenderId:"953335654623",appId:"1:953335654623:web:1b91cbd29c1f63a23ba16a"};
+firebase.initializeApp(cfg);const db=firebase.database();
+let map=L.map('map').setView([-0.492,36.32],10);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+db.ref('rides').on('value',s=>{
+ const d=s.val(); const div=document.getElementById('reqs');
+ if(!d){div.innerHTML='No ride yet - Go to olexpresske.github.io and request a ride first!';return;}
+ div.innerHTML='';
+ Object.values(d).slice(-5).reverse().forEach(r=>{
+  const el=document.createElement('div');
+  el.style.cssText='border:2px solid #1aae32;padding:10px;border-radius:10px;margin:8px 0;background:#f0fff0';
+  el.innerHTML=`<b>${r.ticket}</b><br>${r.pickup} → ${r.dropoff}<br><b>KES ${r.price}</b> Comm ${r.commission} | Status: <b>${r.status}</b><br>
+  <button class=btn onclick="st('${r.ticket}','enroute')">✅ ACCEPT RIDE</button>
+  <button class=btn style=background:#f59e0b onclick="st('${r.ticket}','arrived')">📍 I HAVE ARRIVED</button>
+  <button class=btn style=background:#2563eb onclick="st('${r.ticket}','boarded')">🔓 SCAN QR BOARDED</button>
+  <button class=btn style=background:#111 onclick="st('${r.ticket}','completed')">🏁 DROP COMPLETE</button>`;
+  div.appendChild(el);
+ });
+});
+function st(t,s){db.ref('rides/'+t+'/status').set(s); alert('Status → '+s);}
+</script></body></html>
