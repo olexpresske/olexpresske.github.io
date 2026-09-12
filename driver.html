@@ -1,95 +1,25 @@
 <!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>OlexPress Driver</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-body{margin:0;background:#0a0a0a;color:#fff;font-family:Inter,system-ui}
-.phone{max-width:430px;margin:0 auto;background:#111;border:1px solid #222;min-height:100vh}
-.header{display:flex;align-items:center;justify-content:space-between;padding:14px;border:1px solid #d4af37;border-radius:18px;margin:12px;background:#0e0e0e}
-.header b{color:#d4af37;font-size:26px;letter-spacing:.5px}
-#map{height:360px;margin:12px;border-radius:18px;border:2px solid #333;z-index:1;background:#000}
-.card{margin:12px;background:#151515;border:1px solid #d4af37;border-radius:16px;padding:14px}
-.badge{display:inline-block;background:#d4af37;color:#000;padding:4px 10px;border-radius:20px;font-weight:800;font-size:12px}
-.earning{color:#00ff88;font-weight:900}
-.fare{color:#00ff88;font-weight:900;font-size:20px}
-.row{display:flex;justify-content:space-between;margin-top:10px}
-button{flex:1;margin:4px;padding:14px;border-radius:12px;border:0;font-weight:900;font-size:16px}
-.btn-gold{background:#d4af37;color:#000}
-.btn-white{background:#fff;color:#000;border:1px solid #fff}
-.btn-green{background:#1a9d4a;color:#fff}
-small{color:#aaa}
-.logo-pin{width:36px;height:36px;background:#1a9d4a;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:inline-block;position:relative}
-.logo-pin::after{content:'🛣️';position:absolute;transform:rotate(45deg);top:6px;left:8px;font-size:14px}
-</style>
-</head>
-<body>
-<div class="phone">
-<div class="header"><div style="display:flex;align-items:center;gap:10px"><div class="logo-pin"></div><b>OlexPress</b></div><div style="border:1px solid #d4af37;border-radius:50%;padding:6px">👨‍✈️</div></div>
-<center><small style="color:#d4af37">Your Ride Everywhere • BASE 250 + 42/km</small></center>
-<div id="map"></div>
-<div id="list"></div>
-</div>
-
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>body{background:#0f172a;color:#fff;font-family:sans-serif;padding:12px}
+.card{background:#fff;color:#000;padding:14px;border-radius:16px;margin:10px 0}
+button{padding:12px;border:none;border-radius:10px;font-weight:800;margin:4px;cursor:pointer}
+.b{padding:4px 8px;border-radius:12px;color:#fff;font-size:10px}</style>
+</head><body>
+<h3>🚗 OlexPress Driver - LIVE</h3>
+<p style="font-size:11px;color:#94a3b8">Gilgil - Ol Kalou - Nyahururu • Firebase olexpresske</p>
+<div id="list">Loading rides...</div>
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDc6N5dULG6i72EWrlTtunwhbKQxaVi2KY",
-  authDomain: "olexpresske.firebaseapp.com",
-  databaseURL: "https://olexpresske-default-rtdb.firebaseio.com",
-  projectId: "olexpresske",
-  storageBucket: "olexpresske.firebasestorage.app",
-  messagingSenderId: "953335654623",
-  appId: "1:953335654623:web:1b91cbd29c1f63a23ba16a"
-};
-firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
-let map=L.map('map').setView([-0.533,36.45],11);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-let markers=[];
-
-function load(){
- db.ref('jobs').limitToLast(20).on('value',s=>{
-   const data=s.val()||{};
-   const el=document.getElementById('list'); el.innerHTML="";
-   markers.forEach(m=>map.removeLayer(m)); markers=[];
-   Object.entries(data).reverse().forEach(([id,j])=>{
-     if(j.status==='completed') return;
-     const driverGet=Math.round(j.fare*0.864);
-     const olex=Math.round(j.fare*0.136);
-     el.innerHTML+=`
-      <div class="card">
-        <span class="badge">🚖 Incoming • ${Math.floor((Date.now()-j.created)/60000)||1} min ago</span><br><br>
-        <b>${j.customer}</b> • <small>5★ Verified</small><br><br>
-        <div class="row">
-          <div><small>Fare (KES)</small><div class="fare">KES ${j.fare}</div></div>
-          <div><small>Distance</small><div><b>${j.distance} km</b></div></div>
-          <div><small>Your Earnings</small><div class="earning">KES ${driverGet}</div></div>
-        </div>
-        <div style="margin-top:12px;background:#1e1e1e;padding:10px;border-radius:10px">
-          <div>📍 Pickup: <small>${j.pickup.lat.toFixed(4)},${j.pickup.lng.toFixed(4)}</small></div>
-          <div style="margin-top:6px">🎯 Drop: <small>${j.drop.lat.toFixed(4)},${j.drop.lng.toFixed(4)}</small></div>
-          <small>BASE 250 + ${j.distance}×42 = ${j.fare} | Olex fee KES ${olex}</small>
-        </div>
-        <div style="display:flex;margin-top:12px">
-          <button class="btn-gold" onclick="accept('${id}')">Accept</button>
-          <button class="btn-white" onclick="nav(${j.pickup.lat},${j.pickup.lng},${j.drop.lat},${j.drop.lng})">Navigate</button>
-          <button class="btn-green" onclick="done('${id}')">Done</button>
-        </div>
-      </div>`;
-      markers.push(L.marker([j.pickup.lat,j.pickup.lng]).addTo(map));
-      markers.push(L.marker([j.drop.lat,j.drop.lng]).addTo(map));
-   });
- });
-}
-load();
-function accept(id){ db.ref('jobs/'+id).update({status:'accepted'}); }
-function done(id){ if(confirm('Complete?')) db.ref('jobs/'+id).update({status:'completed'}); }
-function nav(a,b,c,d){ window.open(`https://www.google.com/maps/dir/${a},${b}/${c},${d}/`,'_blank'); }
-</script>
-</body>
-</html>
+const cfg={apiKey:"AIzaSyDc6N5dULG6i72EWrLTtunwhbKQxaVi2KY",authDomain:"olexpresske.firebaseapp.com",databaseURL:"https://olexpresske-default-rtdb.firebaseio.com",projectId:"olexpresske",storageBucket:"olexpresske.firebasestorage.app",messagingSenderId:"953335654623",appId:"1:953335654623:web:1b91cbd29c1f63a23ba16a"};
+firebase.initializeApp(cfg);const db=firebase.database();
+db.ref('rides').on('value',s=>{
+let d=s.val();let el=document.getElementById('list');el.innerHTML='';
+if(!d){el.innerHTML='No rides yet - book on main site olexpresske.github.io';return;}
+Object.values(d).reverse().forEach(r=>{
+let gets=(r.price-r.commission)||0;
+el.innerHTML+=`<div class=card><b>${r.ticket}</b> <span class=b style="background:#f59e0b">${r.status}</span><br>📍 ${r.pickup} → ${r.dropoff}<br>📱 ${r.phone} • KES ${r.price} • Comm KES ${r.commission} • YOU GET KES ${gets}<br><button style="background:#0f172a;color:#fff" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'enroute'})">ACCEPT</button><button style="background:#22c55e;color:#fff" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'arrived'})">ARRIVED</button><button style="background:#f59e0b;color:#fff" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'boarded'})">BOARDED</button><button style="background:#000;color:#4ade80" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'completed'})">DONE COLLECT ${r.price}</button></div>`;
+});
+});
+</script></body></html>
