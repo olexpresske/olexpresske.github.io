@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OLEX Admin LIVE</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>body{font-family:system-ui;background:#020617;color:#fff;padding:12px}
+table{width:100%;border-collapse:collapse;background:#1e293b;border-radius:12px;overflow:hidden}
+th,td{padding:10px;border-bottom:1px solid #334155;font-size:13px} th{background:#0f172a}
+.badge{padding:4px 8px;border-radius:20px;font-size:11px} .pending{background:#22c55e22;color:#22c55e} .accepted{background:#3b82f622;color:#60a5fa} .onboard{background:#f59e0b22;color:#f59e0b} .completed{background:#334155;color:#94a3b8}</style>
+</head><body>
+<h1>📊 OLEX Admin - LIVE</h1>
+<p>Total: <span id="count">0</span> | <a href="driver.html" style="color:#22c55e">Driver Panel</a> | <a href="https://console.firebase.google.com/project/olexpresske/database" style="color:#22c55e">Firebase</a></p>
+<table><thead><tr><th>ID</th><th>Customer</th><th>Route</th><th>Status</th><th>Boarded</th><th>Time</th></tr></thead><tbody id="tbody"></tbody></table>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDc6N5dULG6i72EWrLTtunwhbKQxaVi2KY",
+  authDomain: "olexpresske.firebaseapp.com",
+  databaseURL: "https://olexpresske-default-rtdb.firebaseio.com",
+  projectId: "olexpresske",
+  storageBucket: "olexpresske.firebasestorage.app",
+  messagingSenderId: "953335654623",
+  appId: "1:953335654623:web:1b91cbd29c1f63a23ba16a"
+};
+firebase.initializeApp(firebaseConfig);
+firebase.database().ref('rides').on('value',snap=>{
+  const tbody=document.getElementById('tbody'); tbody.innerHTML=''; let c=0;
+  const data=snap.val(); if(!data)return;
+  Object.entries(data).reverse().forEach(([id,r])=>{c++;
+    tbody.innerHTML+=`<tr><td>#${id.slice(-6)}</td><td>${r.name}<br><small>${r.phone}</small></td><td>${r.from}→${r.to}<br>KES ${r.price}</td><td><span class="badge ${r.status}">${r.status}</span></td><td>${r.customerBoarded?'✅ YES':'❌ NO'}</td><td>${new Date(r.timestamp).toLocaleTimeString()}</td></tr>`;
+  }); document.getElementById('count').innerText=c;
+});
+</script></body></html>
