@@ -1,22 +1,104 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OlexPress Admin</title><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script><style>body{background:#0f172a;color:#fff;font-family:sans-serif;padding:12px} .stat{display:inline-block;background:#1e293b;padding:12px 18px;border-radius:14px;margin:4px;text-align:center} .card{background:#fff;color:#111;padding:12px;border-radius:14px;margin:8px 0;font-size:13px}</style></head><body>
-<h2>🔑 OlexPress Admin - All Rides</h2>
-<div id="stats"></div>
-<div id="list">Loading rides from Firebase...</div>
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OlexPress Admin - Owner Dashboard</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
+body{background:#0f172a;color:#fff;min-height:100vh;padding:14px}
+.head{background:linear-gradient(135deg,#1e293b,#0f172a);border-radius:20px;padding:18px;border:1px solid #334155;display:flex;justify-content:space-between;align-items:center}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.stat{background:#1e293b;border:1px solid #334155;border-radius:18px;padding:16px;text-align:center}
+.stat .lbl{font-size:10px;color:#94a3b8;letter-spacing:1px;font-weight:800}.stat b{font-size:22px;display:block;margin-top:4px}
+.stat.earn{border-color:#22c55e33;background:linear-gradient(135deg,#1e293b,#14532d22)}
+.stat.comm{border-color:#f59e0b33;background:linear-gradient(135deg,#1e293b,#78350f22)}
+.filters{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
+.fbtn{padding:8px 14px;border-radius:20px;border:1.5px solid #334155;background:#1e293b;color:#94a3b8;font-weight:800;font-size:11px;cursor:pointer}.fbtn.on{background:#fff;color:#111;border-color:#fff}
+.card{background:#fff;color:#111;border-radius:18px;padding:16px;margin:10px 0;box-shadow:0 8px 24px rgba(0,0,0,0.25);border-left:6px solid #22c55e}
+.badge{padding:4px 10px;border-radius:20px;color:#fff;font-size:10px;font-weight:900}
+button{padding:8px 12px;border:none;border-radius:10px;font-weight:800;font-size:11px;cursor:pointer;margin:4px 4px 0 0}
+</style></head><body>
+
+<div class="head">
+<div><div style="font-weight:900;font-size:20px">🔑 OlexPress Admin</div><div style="font-size:11px;color:#94a3b8">Owner Dashboard • All Rides Live • Nyandarua</div></div>
+<div style="text-align:right"><div style="background:#f59e0b;color:#fff;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:900">OWNER ONLY</div><div style="font-size:10px;color:#64748b;margin-top:4px">olexpresske Firebase</div></div>
+</div>
+
+<div class="stats">
+<div class="stat"><div class="lbl">TOTAL RIDES</div><b id="tTotal">0</b><div style="font-size:10px;color:#64748b" id="tTotalSub">all time</div></div>
+<div class="stat"><div class="lbl" style="color:#f59e0b">ACTIVE NOW</div><b id="tActive" style="color:#f59e0b">0</b><div style="font-size:10px;color:#64748b">searching→payment</div></div>
+<div class="stat"><div class="lbl" style="color:#22c55e">COMPLETED</div><b id="tComp" style="color:#22c55e">0</b><div style="font-size:10px;color:#64748b">done</div></div>
+<div class="stat"><div class="lbl">TOTAL FARES</div><b id="tFares">KES 0</b><div style="font-size:10px;color:#64748b">collected by drivers</div></div>
+<div class="stat earn"><div class="lbl" style="color:#22c55e">DRIVERS EARN 80%</div><b id="tEarn" style="color:#22c55e">KES 0</b><div style="font-size:10px;color:#64748b">paid to drivers</div></div>
+<div class="stat comm"><div class="lbl" style="color:#f59e0b">YOUR COMMISSION 20%</div><b id="tComm" style="color:#f59e0b">KES 0</b><div style="font-size:10px;color:#64748b">owed to you</div></div>
+</div>
+
+<div class="filters">
+<button class="fbtn on" onclick="filterStatus('all',this)">All Rides</button>
+<button class="fbtn" onclick="filterStatus('searching',this)">Searching</button>
+<button class="fbtn" onclick="filterStatus('enroute',this)">Enroute</button>
+<button class="fbtn" onclick="filterStatus('arrived',this)">Arrived</button>
+<button class="fbtn" onclick="filterStatus('boarding_pending',this)">Boarding Req</button>
+<button class="fbtn" onclick="filterStatus('boarded',this)">On-Boarding</button>
+<button class="fbtn" onclick="filterStatus('payment_pending',this)">Payment Req</button>
+<button class="fbtn" onclick="filterStatus('completed',this)">Completed</button>
+</div>
+
+<div id="list"><div style="background:#1e293b;border-radius:16px;padding:20px;text-align:center;color:#94a3b8">Loading all rides from Firebase rides node...</div></div>
+
 <script>
 const cfg={apiKey:"AIzaSyDc6N5dULG6i72EWrLTtunwhbKQxaVi2KY",authDomain:"olexpresske.firebaseapp.com",databaseURL:"https://olexpresske-default-rtdb.firebaseio.com",projectId:"olexpresske",storageBucket:"olexpresske.firebasestorage.app",messagingSenderId:"953335654623",appId:"1:953335654623:web:1b91cbd29c1f63a23ba16a"};
 firebase.initializeApp(cfg);const db=firebase.database();
-db.ref('rides').on('value',s=>{
-let d=s.val();let el=document.getElementById('list');let st=document.getElementById('stats');
-if(!d){el.innerHTML='No rides yet';st.innerHTML='';return;}
-let list=Object.values(d).sort((a,b)=>b.created-a.created);
-let total=list.length;let active=list.filter(x=>['searching','enroute','arrived','boarded'].includes(x.status)).length;
-let completed=list.filter(x=>x.status=='completed').length;
-let revenue=list.filter(x=>x.status=='completed').reduce((a,x)=>a+(x.price||0),0);
-let commission=list.filter(x=>x.status=='completed').reduce((a,x)=>a+(x.commission||0),0);
-st.innerHTML=`<div class=stat><div style="font-size:10px;color:#94a3b8">TOTAL RIDES</div><b style="font-size:20px">${total}</b></div><div class=stat><div style="font-size:10px;color:#f59e0b">ACTIVE</div><b style="font-size:20px;color:#f59e0b">${active}</b></div><div class=stat><div style="font-size:10px;color:#22c55e">COMPLETED</div><b style="font-size:20px;color:#22c55e">${completed}</b></div><div class=stat><div style="font-size:10px;color:#94a3b8">TOTAL FARES</div><b>KES ${revenue.toLocaleString()}</b></div><div class=stat><div style="font-size:10px;color:#f59e0b">YOUR 20% COMM</div><b style="color:#f59e0b">KES ${commission.toLocaleString()}</b></div>`;
+let allRides=[];let currentFilter='all';
+function filterStatus(s,el){
+currentFilter=s;
+document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('on'));
+if(el)el.classList.add('on');
+render();
+}
+function render(){
+let el=document.getElementById('list');
+let list=currentFilter=='all'?allRides:allRides.filter(x=>x.status==currentFilter);
+if(!list.length){el.innerHTML=`<div style="background:#1e293b;border-radius:16px;padding:20px;text-align:center;color:#94a3b8">No rides for ${currentFilter}</div>`;return;}
 el.innerHTML='';
 list.forEach(r=>{
-el.innerHTML+=`<div class=card><b>${r.ticket}</b> ${r.status.toUpperCase()} | ${new Date(r.created).toLocaleString()}<br>📍 ${r.pickup} → ${r.dropoff} | ${r.distance||''}<br>📱 ${r.phone} | 💰 Fare KES ${r.price} | Comm KES ${r.commission} | Driver gets KES ${(r.price-r.commission)}<br><button onclick="firebase.database().ref('rides/${r.ticket}').remove()" style="background:#fee2e2;color:#dc2626;border:none;padding:6px 10px;border-radius:8px;margin-top:6px;font-weight:700">Delete</button></div>`;
+let colors={searching:'#3b82f6',enroute:'#f59e0b',arrived:'#22c55e',boarding_pending:'#f59e0b',boarded:'#0f172a',payment_pending:'#f59e0b',completed:'#64748b',cancelled:'#ef4444'};
+let col=colors[r.status]||'#22c55e';
+let gets=(r.price-r.commission)||0;
+let time=new Date(r.created).toLocaleString();
+el.innerHTML+=`<div class="card" style="border-left-color:${col}">
+<div style="display:flex;justify-content:space-between">
+<div><b>${r.ticket}</b> <span class="badge" style="background:${col}">${r.status.replace('_',' ').toUpperCase()}</span><div style="font-size:11px;color:#64748b;margin-top:4px">${time}</div></div>
+<div style="text-align:right"><div style="font-size:10px;color:#64748b">FARE</div><b>KES ${r.price?.toLocaleString()}</b><div style="font-size:10px"><span style="color:#16a34a">Driver KES ${gets}</span> • <span style="color:#f59e0b">You KES ${r.commission}</span></div></div>
+</div>
+<div style="margin-top:8px;font-size:13px;font-weight:700">📍 ${r.pickup} → ${r.dropoff} • ${r.distance||''}</div>
+<div style="font-size:12px;color:#475569">📱 ${r.phone} • Ticket ${r.ticket} • QR ${r.ticket}</div>
+<div style="margin-top:10px">
+<button style="background:#fee2e2;color:#dc2626" onclick="if(confirm('Delete ${r.ticket}?'))firebase.database().ref('rides/${r.ticket}').remove()">🗑 Delete</button>
+<button style="background:#0f172a;color:#fff" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'completed'})">Force Complete</button>
+<button style="background:#f1f5f9;color:#111" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'searching'})">Reset to Searching</button>
+</div>
+</div>`;
 });
+}
+
+db.ref('rides').on('value',s=>{
+let d=s.val();
+if(!d){allRides=[];render();['tTotal','tActive','tComp','tFares','tEarn','tComm'].forEach(id=>{let e=document.getElementById(id);if(e)e.innerText=id.includes('Total')||id.includes('Active')||id.includes('Comp')?0:'KES 0';});return;}
+allRides=Object.values(d).sort((a,b)=>b.created-a.created);
+let total=allRides.length;
+let active=allRides.filter(x=>['searching','enroute','arrived','boarding_pending','boarded','payment_pending'].includes(x.status)).length;
+let comp=allRides.filter(x=>x.status=='completed').length;
+let fares=allRides.filter(x=>x.status=='completed').reduce((a,x)=>a+(x.price||0),0);
+let earn=allRides.filter(x=>x.status=='completed').reduce((a,x)=>a+((x.price-x.commission)||0),0);
+let comm=allRides.filter(x=>x.status=='completed').reduce((a,x)=>a+(x.commission||0),0);
+document.getElementById('tTotal').innerText=total;
+document.getElementById('tActive').innerText=active;
+document.getElementById('tComp').innerText=comp;
+document.getElementById('tFares').innerText='KES '+fares.toLocaleString();
+document.getElementById('tEarn').innerText='KES '+earn.toLocaleString();
+document.getElementById('tComm').innerText='KES '+comm.toLocaleString();
+render();
 });
 </script></body></html>
