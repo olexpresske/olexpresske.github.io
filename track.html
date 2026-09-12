@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Track Ride - OLEX</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>body{font-family:system-ui;background:#f8fafc;padding:16px} .card{background:#fff;border-radius:20px;padding:20px;max-width:500px;margin:20px auto;box-shadow:0 10px 30px #0001} .status{padding:12px;border-radius:12px;text-align:center;font-weight:bold;margin:12px 0} .pending{background:#dcfce7} .accepted{background:#dbeafe} .onboard{background:#fef3c7} .completed{background:#e2e8f0} .btn{width:100%;padding:14px;border:none;border-radius:12px;font-weight:bold;cursor:pointer} .board{background:#0f172a;color:#fff} .done{background:#22c55e}</style>
+</head><body>
+<div class="card" id="card">Loading...</div>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDc6N5dULG6i72EWrLTtunwhbKQxaVi2KY",
+  authDomain: "olexpresske.firebaseapp.com",
+  databaseURL: "https://olexpresske-default-rtdb.firebaseio.com",
+  projectId: "olexpresske",
+  storageBucket: "olexpresske.firebasestorage.app",
+  messagingSenderId: "953335654623",
+  appId: "1:953335654623:web:1b91cbd29c1f63a23ba16a"
+};
+firebase.initializeApp(firebaseConfig);
+const id=new URLSearchParams(location.search).get('id');
+if(!id){document.getElementById('card').innerHTML='No ID - use ?id=RIDE_ID'}
+else{
+ firebase.database().ref('rides/'+id).on('value',snap=>{
+  const r=snap.val(); if(!r){document.getElementById('card').innerHTML='Ride not found';return}
+  document.getElementById('card').innerHTML=`<h2>🚕 OLEX Express</h2><p>#${id.slice(-6)} | ${new Date(r.timestamp).toLocaleString()}</p><div class="status ${r.status}">Status: ${r.status.toUpperCase()}</div><p><b>${r.from} → ${r.to}</b></p><p>👤 ${r.name} | 💺 ${r.seats} | KES ${r.price}</p><hr><button class="btn board ${r.customerBoarded?'done':''}" onclick="firebase.database().ref('rides/${id}').update({customerBoarded:true});alert('Boarded!')">${r.customerBoarded?'✅ YOU BOARDED':'☑️ Tick when you have BOARDED'}</button>${r.status==='completed'?'<div class="status completed">🏁 Trip Completed!</div>':''}`;
+ });
+}
+</script></body></html>
