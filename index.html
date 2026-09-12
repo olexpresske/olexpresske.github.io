@@ -1,85 +1,160 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>OlexPress KE - Your Ride Everywhere</title>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OlexPress KE</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
-body{background:#ede9e4}
-.header{background:#fff;margin:12px;border-radius:18px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 12px rgba(0,0,0,0.06)}
-.hero{margin:12px;display:grid;grid-template-columns:1.1fr 1fr;gap:12px}
-.left{background:#faf8f6;border-radius:22px;padding:22px}
-.left h1{font-size:46px;font-weight:900;line-height:0.9}
-.in{width:100%;padding:14px;border-radius:12px;border:1.5px solid #e7e5e4;margin-top:8px;font-weight:600}
-.chip{display:inline-block;background:#fff;border:1.5px solid #e5e5e4;border-radius:20px;padding:7px 12px;font-size:11px;font-weight:700;margin:4px;cursor:pointer}
-.btn{width:100%;background:#0f172a;color:#fff;border:none;border-radius:14px;padding:16px;font-weight:800;margin-top:14px;cursor:pointer}
-.mapWrap{background:#fff;border-radius:22px;padding:12px}
-#map{height:420px;border-radius:16px}
-.price{background:#f0fdf4;border:1px dashed #22c55e;border-radius:12px;padding:10px;margin-top:10px;font-weight:700;font-size:13px}
-.ticket{display:none;background:#0f172a;color:#fff;border-radius:20px;padding:16px;margin:12px}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}body{background:#f5f1eb}
+.header{background:#fff;margin:12px;border-radius:18px;padding:12px 18px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 16px rgba(0,0,0,0.06)}
+.hero{margin:12px;display:grid;grid-template-columns:1.15fr 0.85fr;gap:12px}
+.card{background:#fffdf9;border-radius:22px;padding:24px;border:1px solid #f0e9de;box-shadow:0 10px 28px rgba(0,0,0,0.06)}
+.card h1{font-size:52px;font-weight:900;line-height:0.9;letter-spacing:-1px}.card h1 span{color:#f59e0b}
+.in{width:100%;padding:14px;border-radius:12px;border:1.6px solid #e8ddd0;background:#fff;font-weight:700;margin-top:6px}
+.chip{display:inline-block;background:#fff;border:1.6px solid #e8ddd0;border-radius:20px;padding:7px 12px;font-size:11px;font-weight:800;margin:5px 5px 0 0;cursor:pointer}.chip.on{background:#111;color:#facc15;border-color:#111}
+.btn{width:100%;background:#0f172a;color:#fff;border:none;border-radius:14px;padding:16px;font-weight:900;margin-top:14px;cursor:pointer}
+.btn:disabled{background:#cbd5e1;cursor:not-allowed}
+.fare{background:#f0fdf4;border:1px dashed #22c55e;border-radius:14px;padding:12px;margin-top:12px;display:none;justify-content:space-between}
+.mapCard{background:#0f172a;border-radius:22px;padding:10px}#map{height:460px;border-radius:16px}
+.ticket{display:none;margin:12px;background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:22px;padding:18px;color:#fff}
 .ticket.show{display:block}
-</style>
-</head>
-<body>
+.dotW{display:flex;align-items:center;gap:0;margin-top:12px}.dot{width:28px;height:28px;border-radius:50%;background:#334155;color:#94a3b8;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900}.dot.on{background:#22c55e;color:#fff;box-shadow:0 0 0 4px rgba(34,197,94,.25)}.line{flex:1;height:3px;background:#334155}.line.on{background:#22c55e}
+.actionBtn{width:100%;padding:14px;border-radius:14px;border:none;font-weight:900;margin-top:10px;cursor:pointer}
+@media(max-width:900px){.hero{grid-template-columns:1fr}.card h1{font-size:38px}#map{height:320px}}
+</style></head><body>
 <div class="header">
-<div style="display:flex;align-items:center;gap:10px"><img src="logo.png" style="height:42px;border-radius:10px;background:#fff"><b>OlexPress<br><span style="color:#16a34a;font-size:11px">Your Ride Everywhere</span></b></div>
-<div style="font-size:11px;font-weight:700;color:#64748b">BASE 250 + 42/km • Nyandarua</div>
+<div style="display:flex;gap:10px;align-items:center"><img src="logo.png" style="height:42px;background:#f0fdf4;border-radius:10px;padding:4px" onerror="this.style.display='none'"><b>OlexPress<br><span style="color:#16a34a;font-size:11px">Your Ride Everywhere</span></b></div>
+<div style="background:#fef3c7;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:800">BASE 250 + 42/km • 2-4 min</div>
 </div>
 
 <div class="hero">
-<div class="left">
-<h1>Your Ride<br><span style="color:#f59e0b">Everywhere</span><br>in Nyandarua</h1>
-<p style="font-size:12px;color:#64748b;margin-top:6px">No Yego, No hidden fees • 2-4 min away</p>
+<div class="card">
+<h1>Your Ride<br><span>Everywhere</span><br>in Nyandarua</h1>
+<p style="font-size:12px;color:#8b7355;margin-top:6px;font-weight:600">No hidden fees • Ticket stays on phone • Pay driver</p>
 
-<label style="font-size:10px;font-weight:800;margin-top:14px;display:block">PICKUP (EDITABLE - tap to change)</label>
-<div style="display:flex;gap:6px">
-<input id="from" class="in" value="Gilgil" style="margin-top:4px;flex:1">
-<button onclick="useGPS()" style="padding:12px;border-radius:12px;border:1.5px solid #e5e5e4;background:#fff;font-weight:800;font-size:11px">📍</button>
-</div>
-<div><span class="chip" onclick="setFrom('Gilgil')">Gilgil</span><span class="chip" onclick="setFrom('Ol Kalou')">Ol Kalou</span><span class="chip" onclick="setFrom('Nyahururu')">Nyahururu</span></div>
+<label style="font-size:10px;font-weight:800;margin-top:18px;display:block;letter-spacing:1px">PICKUP (EDITABLE)</label>
+<input id="from" class="in" value="Gilgil"><div><span class="chip on" onclick="setFrom('Gilgil',this)">Gilgil</span><span class="chip" onclick="setFrom('Ol Kalou',this)">Ol Kalou</span><span class="chip" onclick="setFrom('Nyahururu',this)">Nyahururu</span></div>
 
-<label style="font-size:10px;font-weight:800;margin-top:12px;display:block">WHERE TO?</label>
-<input id="to" class="in" placeholder="Ol Kalou / Nyahururu" style="margin-top:4px" oninput="calc()">
-<div><span class="chip" onclick="setTo('Ol Kalou')">Ol Kalou • 1200</span><span class="chip" onclick="setTo('Nyahururu')">Nyahururu • 3040</span></div>
+<label style="font-size:10px;font-weight:800;margin-top:14px;display:block;letter-spacing:1px">WHERE TO?</label>
+<input id="to" class="in" placeholder="Ol Kalou / Nyahururu" oninput="calc()"><div><span class="chip" onclick="setTo('Ol Kalou',this)">Ol Kalou • 1200</span><span class="chip" onclick="setTo('Nyahururu',this)">Nyahururu • 3040</span></div>
 
 <input id="phone" class="in" placeholder="Phone 07XX XXX XXX" type="tel">
-<div id="priceBox" class="price" style="display:none"></div>
-<button class="btn" onclick="book()">Ride Now → Book This Ride</button>
-<p style="font-size:10px;color:#94a3b8;margin-top:8px">✓ Ticket stays on phone • Pay driver on arrival</p>
-<div id="q1" style="margin-top:12px"></div>
+<div id="fareBox" class="fare"><div><div style="font-size:10px;font-weight:800;color:#16a34a">FARE</div><b id="fareTxt" style="font-size:18px">KES 1,200</b></div><div style="font-size:11px;font-weight:700">✓ Ticket + QR</div></div>
+<button id="bookBtn" class="btn" onclick="tryBook()">Ride Now — Book This Ride →</button>
+<div id="lockMsg" style="display:none;background:#fef3c7;border-radius:12px;padding:10px;margin-top:10px;font-size:12px;font-weight:700;color:#92400e">⚠️ You have active ride. Cannot book again until completed. Cancel if searching.</div>
 </div>
-
-<div class="mapWrap">
-<div style="font-weight:800;margin-bottom:8px;font-size:13px">OLEX PRESS - NYANDARUA • Click map to set dropoff</div>
-<div id="map"></div>
-<div id="mStatus" style="font-size:11px;color:#64748b;margin-top:6px">Map: Gilgil, Ol Kalou, Nyahururu, Aberdares</div>
-</div>
+<div class="mapCard"><div style="color:#facc15;font-size:11px;font-weight:800;padding:6px 8px;display:flex;justify-content:space-between"><span>OLEX PRESS LIVE MAP</span><span style="background:#22c55e;color:#fff;padding:3px 8px;border-radius:12px">● Live</span></div><div id="map"></div><div id="mStat" style="color:#94a3b8;font-size:11px;padding:8px 4px 2px">Map ready</div></div>
 </div>
 
 <div id="ticket" class="ticket">
-<div style="display:flex;justify-content:space-between"><div><div style="font-size:10px;opacity:0.6">TICKET</div><div id="tID" style="font-size:22px;font-weight:900">OLEX-XXXX</div><div id="tRoute">Gilgil → Nyahururu</div><div id="tSt" style="background:#22c55e;padding:4px 8px;border-radius:12px;display:inline-block;font-size:11px;margin-top:6px">SEARCHING</div></div><div style="background:#fff;padding:6px;border-radius:12px"><div id="q2"></div></div></div>
-<div style="margin-top:10px;display:flex;gap:6px"><div id="d1" style="width:28px;height:28px;border-radius:50%;background:#22c55e;display:flex;align-items:center;justify-content:center;font-size:12px">1</div><div style="flex:1;height:3px;background:#334155;margin-top:13px"></div><div id="d2" style="width:28px;height:28px;border-radius:50%;background:#334155;display:flex;align-items:center;justify-content:center">2</div><div style="flex:1;height:3px;background:#334155;margin-top:13px"></div><div id="d3" style="width:28px;height:28px;border-radius:50%;background:#334155;display:flex;align-items:center;justify-content:center">3</div></div>
-<div id="tInfo" style="font-size:12px;margin-top:8px;color:#cbd5e1">Searching driver near Gilgil...</div>
+<div style="display:flex;justify-content:space-between"><div><div style="font-size:10px;opacity:.6">BOARDING PASS</div><div id="tId" style="font-size:26px;font-weight:900">OLEX-XXXX</div><div id="tRoute">Gilgil → Ol Kalou</div><div id="tSt" style="margin-top:8px;background:#22c55e;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:800;display:inline-block">SEARCHING</div></div><div style="background:#fff;padding:8px;border-radius:14px"><div id="qr"></div></div></div>
+<div class="dotW"><div class="dot on" id="d1">1</div><div class="line" id="l1"></div><div class="dot" id="d2">2</div><div class="line" id="l2"></div><div class="dot" id="d3">3</div><div class="line" id="l3"></div><div class="dot" id="d4">4</div><div class="line" id="l4"></div><div class="dot" id="d5">5</div></div>
+<div style="display:flex;justify-content:space-between;font-size:9px;color:#64748b;margin-top:4px"><span>Search</span><span>Enroute</span><span>Arrived</span><span>Boarded</span><span>Done</span></div>
+<div id="tInfo" style="background:rgba(255,255,255,.07);padding:12px;border-radius:12px;margin-top:12px;font-size:13px">Searching driver...</div>
+<div id="tActions"></div>
 </div>
 
 <script>
 const cfg={apiKey:"AIzaSyDc6N5dULG6i72EWrLTtunwhbKQxaVi2KY",authDomain:"olexpresske.firebaseapp.com",databaseURL:"https://olexpresske-default-rtdb.firebaseio.com",projectId:"olexpresske",storageBucket:"olexpresske.firebasestorage.app",messagingSenderId:"953335654623",appId:"1:953335654623:web:1b91cbd29c1f63a23ba16a"};
 firebase.initializeApp(cfg);const db=firebase.database();
-let map;setTimeout(()=>{map=L.map('map').setView([-0.492,36.32],10);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);L.marker([-0.492,36.32]).addTo(map).bindPopup('Gilgil');L.marker([-0.26,36.37]).addTo(map).bindPopup('Ol Kalou');L.marker([0.03,36.36]).addTo(map).bindPopup('Nyahururu');map.on('click',e=>{document.getElementById('from').value='Gilgil';document.getElementById('to').value='Ol Kalou';calc();});},500);
-function setFrom(v){document.getElementById('from').value=v;calc();}
-function setTo(v){document.getElementById('to').value=v;calc();}
-function useGPS(){if(navigator.geolocation){navigator.geolocation.getCurrentPosition(p=>{document.getElementById('from').value='Current Location Gilgil';});}}
-function calc(){let t=document.getElementById('to').value.toLowerCase();let f=document.getElementById('from').value;let p=1200;if(t.includes('nyahu'))p=3040;else if(t.includes('engineer'))p=880;else if(t.includes('njabini'))p=1300;else if(t.includes('gilgil town'))p=500;document.getElementById('priceBox').style.display='block';document.getElementById('priceBox').innerText=`✓ ${f} → ${t||'...'} • Fare KES ${p} • Pay driver on arrival • BASE 250 + 42/km`;return p;}
+let map;setTimeout(()=>{map=L.map('map').setView([-0.492,36.32],10);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);L.marker([-0.492,36.32]).addTo(map).bindPopup('Gilgil');L.marker([-0.26,36.37]).addTo(map).bindPopup('Ol Kalou');},400);
+function setFrom(v,el){document.getElementById('from').value=v;if(el){el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');}calc();}
+function setTo(v,el){document.getElementById('to').value=v;if(el){el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');}calc();}
+function priceFor(t){t=t.toLowerCase();if(t.includes('nyahu'))return 3040;if(t.includes('engineer'))return 880;if(t.includes('njabini'))return 1300;return 1200;}
+function calc(){let to=document.getElementById('to').value.trim();if(!to){document.getElementById('fareBox').style.display='none';return 1200;}let p=priceFor(to);document.getElementById('fareBox').style.display='flex';document.getElementById('fareTxt').innerText='KES '+p.toLocaleString();return p;}
 function gen(){return 'OLEX-'+Math.random().toString(36).substr(2,4).toUpperCase()+'-'+Math.floor(Math.random()*90+10);}
-function book(){let to=document.getElementById('to').value.trim();let from=document.getElementById('from').value.trim();let ph=document.getElementById('phone').value.trim();if(!to){alert('Where to? Type Ol Kalou or Nyahururu');return;}if(!from){alert('Pickup? Edit current location');return;}if(ph.length<9){alert('Enter phone 07XX');return;}let price=calc();let comm=Math.round(price*0.2);let id=gen();let data={ticket:id,pickup:from,dropoff:to,phone:ph,price:price,commission:comm,status:'searching',created:Date.now()};db.ref('rides/'+id).set(data).then(()=>{localStorage.setItem('olex_ticket',id);show(id);});}
-function show(id){document.getElementById('ticket').classList.add('show');db.ref('rides/'+id).on('value',s=>{let r=s.val();if(!r)return;document.getElementById('tID').innerText=r.ticket;document.getElementById('tRoute').innerText=r.pickup+' → '+r.dropoff;document.getElementById('tSt').innerText=r.status.toUpperCase();document.getElementById('q2').innerHTML='';new QRCode(document.getElementById('q2'),{text:r.ticket,width:70,height:70});let msgs={searching:'Searching driver near '+r.pickup+'...',enroute:'Driver on way to '+r.pickup,arrived:'Driver arrived at '+r.pickup,boarded:'On board to '+r.dropoff,completed:'Trip done - Pay KES '+r.price};document.getElementById('tInfo').innerText=msgs[r.status]||r.status;document.getElementById('mStatus').innerText=msgs[r.status]||r.status;});window.scrollTo({top:500,behavior:'smooth'});}
-let saved=localStorage.getItem('olex_ticket');if(saved)show(saved);
-</script>
-</body>
-</html>
+
+function tryBook(){
+let saved=localStorage.getItem('olex_ticket');
+if(saved){
+db.ref('rides/'+saved).once('value').then(s=>{
+let r=s.val();
+if(r && ['searching','enroute','arrived','boarding_pending','boarded','payment_pending'].includes(r.status)){
+if(['enroute','arrived','boarding_pending','boarded','payment_pending'].includes(r.status)){
+alert('⚠️ Please confirm booking of ride '+r.ticket+'\n\nDriver is '+r.status.toUpperCase()+' - cannot book new ride until this one is done.\n\nStatus: '+r.status);
+showTicket(saved);return;
+}
+if(r.status=='searching'){
+if(confirm('You already have active ride '+r.ticket+' SEARCHING.\n\nCancel it to book new one?')){
+cancelRide();
+}
+return;
+}
+}
+localStorage.removeItem('olex_ticket');doBook();
+});
+}else{doBook();}
+}
+
+function doBook(){
+let to=document.getElementById('to').value.trim();let from=document.getElementById('from').value.trim()||'Gilgil';let ph=document.getElementById('phone').value.trim();
+if(!to){alert('Where to?');return;}if(ph.length<9){alert('Phone 07XX');return;}
+let price=calc();let comm=Math.round(price*0.2);let id=gen();
+db.ref('rides/'+id).set({ticket:id,pickup:from,dropoff:to,phone:ph,price:price,commission:comm,status:'searching',created:Date.now()}).then(()=>{
+localStorage.setItem('olex_ticket',id);showTicket(id);
+});
+}
+
+function cancelRide(){
+let id=localStorage.getItem('olex_ticket');if(!id)return;
+db.ref('rides/'+id).once('value').then(s=>{
+let r=s.val();
+if(r && ['enroute','arrived','boarding_pending','boarded','payment_pending'].includes(r.status)){
+alert('❌ Cannot cancel - driver is '+r.status.toUpperCase()+'\nPlease confirm booking of ride '+r.ticket);
+return;
+}
+if(confirm('Cancel ride '+id+'?')){
+db.ref('rides/'+id).update({status:'cancelled'}).then(()=>{
+setTimeout(()=>{db.ref('rides/'+id).remove();localStorage.removeItem('olex_ticket');location.reload();},700);
+});
+}
+});
+}
+
+function showTicket(id){
+document.getElementById('ticket').classList.add('show');
+document.getElementById('bookBtn').disabled=true;
+document.getElementById('bookBtn').innerText='🔒 Active Ride - Cannot Book Again';
+document.getElementById('lockMsg').style.display='block';
+db.ref('rides/'+id).on('value',s=>{
+let r=s.val();if(!r)return;
+document.getElementById('tId').innerText=r.ticket;document.getElementById('tRoute').innerText=r.pickup+' → '+r.dropoff;
+document.getElementById('tSt').innerText=r.status.replace('_',' ').toUpperCase();
+document.getElementById('qr').innerHTML='';new QRCode(document.getElementById('qr'),{text:r.ticket,width:74,height:74});
+let msgs={
+searching:`Searching driver near ${r.pickup}... 2-4 min away`,
+enroute:`✅ Driver on way to ${r.pickup} • 3 min • Plate KDA 123X • Confirm booking`,
+arrived:`📍 Driver arrived at ${r.pickup} • Show ticket ${r.ticket} to driver`,
+boarding_pending:`🔓 Driver requests ON-BOARDING • Ticket ${r.ticket} • Accept to continue`,
+boarded:`✅ ON-BOARDING confirmed! Both display ON-BOARDING • Going to ${r.dropoff}`,
+payment_pending:`💰 Driver requests payment KES ${r.price} • Pay driver then confirm`,
+completed:`🎉 Thank you! Ride completed • Pay KES ${r.price} done • You can now book again!`,
+cancelled:`Cancelled`
+};
+document.getElementById('tInfo').innerText=msgs[r.status]||r.status;
+document.getElementById('mStat').innerText=msgs[r.status]||r.status;
+
+let act=document.getElementById('tActions');act.innerHTML='';
+if(r.status=='searching'){
+act.innerHTML=`<button class="actionBtn" style="background:#fff;color:#dc2626" onclick="cancelRide()">✕ Cancel Ride to Book Again</button>`;
+}else if(r.status=='boarding_pending'){
+act.innerHTML=`<div style="background:#fef3c7;color:#92400e;padding:10px;border-radius:12px;font-size:13px;font-weight:700;margin-top:10px">Driver confirms ticket ${r.ticket} - Requests on-boarding</div><button class="actionBtn" style="background:#22c55e;color:#fff" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'boarded'})">✓ Accept On-Boarding - Show I'm Boarded</button>`;
+}else if(r.status=='boarded'){
+act.innerHTML=`<div style="background:#dcfce7;color:#166534;padding:10px;border-radius:12px;font-weight:800;text-align:center">✅ ON-BOARDING • You and driver both display boarding • Enroute to ${r.dropoff}</div>`;
+}else if(r.status=='payment_pending'){
+act.innerHTML=`<button class="actionBtn" style="background:#f59e0b;color:#fff" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'completed'})">✓ Confirm Payment KES ${r.price} - Close Ride</button>`;
+}else if(r.status=='completed'){
+act.innerHTML=`<div style="background:#dcfce7;color:#166534;padding:12px;border-radius:12px;font-weight:800;text-align:center;margin-top:10px">🎉 Thank you for riding OlexPress! Ride closed.</div><button class="actionBtn" style="background:#0f172a;color:#fff;margin-top:8px" onclick="localStorage.removeItem('olex_ticket');location.reload()">+ Book New Ride</button>`;
+setTimeout(()=>{document.getElementById('bookBtn').disabled=false;document.getElementById('bookBtn').innerText='Ride Now — Book This Ride →';},1000);
+}
+
+let order={searching:1,enroute:2,arrived:3,boarding_pending:3,boarded:4,payment_pending:4,completed:5};
+let cur=order[r.status]||1;
+for(let i=1;i<=5;i++){let d=document.getElementById('d'+i);let l=document.getElementById('l'+i);if(d)d.classList.toggle('on',i<=cur);if(l)l.classList.toggle('on',i<cur);}
+});
+window.scrollTo({top:600,behavior:'smooth'});
+}
+let saved=localStorage.getItem('olex_ticket');if(saved)showTicket(saved);
+</script></body></html>
