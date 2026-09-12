@@ -1,19 +1,37 @@
 <!DOCTYPE html>
-<html><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>OLEX Driver</title>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OlexPress - Driver</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+body{margin:0;font-family:system-ui;background:#0a0a0a;color:#fff}
+.page{max-width:1200px;margin:0 auto;padding:12px}
+#map{height:380px;border-radius:16px;border:2px solid #d4af37;z-index:1}
+.card{background:#151515;border:1px solid #333;border-radius:14px;padding:12px;margin:10px 0}
+.btn{padding:10px 14px;border-radius:10px;border:0;font-weight:800;cursor:pointer}
+.accept{background:#d4af37;color:#000}
+.nav{background:#fff;color:#000}
+.done{background:#00ff88;color:#000}
+.logo{height:40px;background:#fff;padding:5px;border-radius:8px}
+small{color:#aaa}
+</style>
+</head>
+<body>
+<div class="page">
+<img src="./logo.png" class="logo">
+<h3 style="color:#d4af37">DRIVER APP - OLEXPRESS KE</h3>
+<div id="map"></div>
+<div id="jobs"></div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<style>body{font-family:system-ui;background:#0f172a;color:#fff;margin:0;padding:12px}
-.card{background:#1e293b;border-radius:16px;padding:14px;margin:10px 0;border-left:5px solid #22c55e}
-.btn{padding:10px 16px;border:none;border-radius:10px;font-weight:bold;cursor:pointer;margin:5px}
-.accept{background:#22c55e;color:#000} .onboard{background:#f59e0b;color:#000} .done{background:#ef4444;color:#fff}
-</style></head><body>
-<h1>🚗 OLEX Driver Panel - LIVE</h1>
-<div id="list">Loading...</div>
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyDc6N5dULG6i72EWrLTtunwhbKQxaVi2KY",
+  apiKey: "AIzaSyDc6N5dULG6i72EWrlTtunwhbKQxaVi2KY",
   authDomain: "olexpresske.firebaseapp.com",
   databaseURL: "https://olexpresske-default-rtdb.firebaseio.com",
   projectId: "olexpresske",
@@ -23,20 +41,60 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-db.ref('rides').on('value', snap=>{
-  const list = document.getElementById('list'); list.innerHTML='';
-  const data = snap.val(); if(!data){list.innerHTML='No rides';return}
-  Object.entries(data).reverse().forEach(([id,ride])=>{
-    if(ride.status==='completed') return;
-    const div=document.createElement('div'); div.className='card';
-    div.innerHTML=`<h2>${ride.from} → ${ride.to} #${id.slice(-5)}</h2>
-      <p>👤 ${ride.name} | 📞 ${ride.phone} | 💺 ${ride.seats} | KES ${ride.price}</p>
-      <p>Status: <b>${ride.status}</b> | Boarded: ${ride.customerBoarded?'✅ YES':'❌ NO'}</p>
-      ${ride.status==='pending'?`<button class="btn accept" onclick="firebase.database().ref('rides/${id}').update({status:'accepted'})">✅ ACCEPT</button>`:''}
-      ${ride.status==='accepted'?`<button class="btn onboard" onclick="firebase.database().ref('rides/${id}').update({status:'onboard'})">🟡 ONBOARD</button>`:''}
-      ${ride.status==='onboard'?`<button class="btn done" onclick="firebase.database().ref('rides/${id}').update({status:'completed'})">🏁 DESTINATION REACHED</button>`:''}
-      <p><a href="track.html?id=${id}" style="color:#22c55e">track link</a></p>`;
-    list.appendChild(div);
-  });
-});
-</script></body></html>
+
+let map=L.map('map').setView([-0.5333,36.45],11);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+let markers=[];
+
+function clearMarkers(){ markers.forEach(m=>map.removeLayer(m)); markers=[]; }
+
+function loadJobs(){
+ db.ref('jobs').orderByChild('created').limitToLast(30).on('value', snap=>{
+   const data=snap.val()||{};
+   const list=Object.entries(data).reverse();
+   const div=document.getElementById('jobs');
+   div.innerHTML="";
+   clearMarkers();
+   list.forEach(([id,j])=>{
+     if(j.status==='completed') return;
+     const fuel=16.1, wear=6, driverP=15, comm=0.136;
+     const perKmCost= fuel+wear+driverP; //37.1
+     const olex = (j.distance * 5.04).toFixed(0); // commission
+     const driverGet = (j.fare - parseFloat(olex)).toFixed(0);
+
+     const card=document.createElement('div');
+     card.className='card';
+     card.innerHTML=`
+       <b>${j.customer||'Customer'}</b> - <small>${new Date(j.created).toLocaleString()}</small><br>
+       <small>Dist: ${j.distance}km | Fare: KES ${j.fare} | Status: ${j.status}</small><br>
+       Driver gets: <b style="color:#00ff88">KES ${driverGet}</b> | Olex: KES ${olex}<br>
+       <small>BASE 250 + ${j.distance}×42 = ${j.fare}</small><br><br>
+       <button class="btn accept" onclick="acceptJob('${id}')">Accept</button>
+       <button class="btn nav" onclick="navJob(${j.pickup.lat},${j.pickup.lng},${j.drop.lat},${j.drop.lng})">Map</button>
+       <button class="btn done" onclick="completeJob('${id}')">Done</button>
+     `;
+     div.appendChild(card);
+     
+     // add pins
+     if(j.pickup) markers.push(L.marker([j.pickup.lat,j.pickup.lng]).addTo(map).bindPopup("Pickup: "+j.customer));
+     if(j.drop) markers.push(L.marker([j.drop.lat,j.drop.lng],{icon:L.divIcon({html:"🏁",className:""})}).addTo(map).bindPopup("Drop"));
+   });
+   if(markers.length>0){ let g=L.featureGroup(markers); map.fitBounds(g.getBounds().pad(0.3)); }
+ });
+}
+loadJobs();
+
+function acceptJob(id){ db.ref('jobs/'+id).update({status:'accepted', acceptedAt:Date.now()}); }
+function completeJob(id){ if(!confirm("Complete ride?"))return; db.ref('jobs/'+id).update({status:'completed', completedAt:Date.now()}); }
+function navJob(plat,plng,dlat,dlng){
+ clearMarkers();
+ let p=L.marker([plat,plng]).addTo(map).bindPopup("Pickup").openPopup();
+ let d=L.marker([dlat,dlng]).addTo(map).bindPopup("Drop");
+ markers=[p,d];
+ map.setView([plat,plng],14);
+ // open google maps
+ window.open(`https://www.google.com/maps/dir/${plat},${plng}/${dlat},${dlng}/`, "_blank");
+}
+</script>
+</body>
+</html>
