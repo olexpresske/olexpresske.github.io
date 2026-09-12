@@ -1,70 +1,66 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>OLEX - Yego Model Pricing</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OlexPress - Your Ride Everywhere</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-<style>#map{height:200px;border-radius:16px}</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto}
+body{background:#f5f7fb}.glass{backdrop-filter:blur(20px);background:rgba(255,255,255,0.85);border:1px solid rgba(255,255,255,0.3)}
+.header{position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;justify-content:space-between;align-items:center;padding:16px 20px}
+.logo{font-weight:900;font-size:22px;letter-spacing:-1px}
+.hero{padding:90px 20px 20px;max-width:500px;margin:0 auto}
+.hero h1{font-size:42px;font-weight:900;line-height:0.9;letter-spacing:-2px;margin-bottom:12px}
+.searchBox{border-radius:20px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,0.1);margin-top:20px}
+.input{width:100%;padding:16px;border:none;background:#f2f4f7;border-radius:12px;margin:8px 0;font-size:16px;outline:none}
+.btn{width:100%;padding:18px;background:#111;color:white;border:none;border-radius:12px;font-weight:700;font-size:17px;margin-top:12px;cursor:pointer}
+#map{height:60vh;width:100%;display:none}
+#trackingPanel{position:fixed;bottom:0;left:0;right:0;border-radius:24px 24px 0 0;padding:20px;z-index:1000;display:none;max-width:500px;margin:0 auto}
+.driverCard{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.7);padding:12px;border-radius:16px}
+.statusPill{padding:6px 12px;border-radius:20px;background:#111;color:white;font-size:12px;font-weight:700;display:inline-block;margin-bottom:8px}
+.qrBox{background:white;padding:12px;border-radius:16px;margin-top:12px;display:flex;justify-content:space-between;align-items:center}
+.commissionBox{background:#fff8e1;padding:10px;border-radius:12px;margin-top:10px;font-size:13px;border:1px dashed #f9a825}
+</style>
 </head>
-<body class="bg-slate-50">
-<nav class="bg-black text-white p-3 flex justify-between"><div class="font-black">OLEX <span class="text-green-400">LUXURY</span> <span class="text-[9px] bg-green-400 text-black px-2 py-1 rounded-full">YEGO MODEL</span></div><div class="text-[10px]">NYANDARUA UBER</div></nav>
-<div id="map" class="m-3"></div>
-<div class="bg-white rounded-[24px] p-5 m-3 -mt-6 relative z-10 shadow-xl max-w-lg mx-auto border">
-<h2 class="font-black mb-3">Where to?</h2>
-<select id="from" onchange="calc()" class="w-full border-2 rounded-xl p-3 mb-3 bg-yellow-50 font-bold">
-<option value="0,Gilgil">Gilgil Town (Base)</option>
-<option value="12,Miharati">Miharati - 12KM</option>
-<option value="30,Njabini">Njabini - 30KM</option>
-<option value="35,Ol Kalou">Ol Kalou - 35KM</option>
-<option value="45,Engineer">Engineer - 45KM</option>
-<option value="75,Nyahururu">Nyahururu - 75KM</option>
-</select>
-<select id="to" onchange="calc()" class="w-full border-2 rounded-xl p-3 mb-3 font-bold">
-<option value="35,Ol Kalou">Ol Kalou - 35KM</option>
-<option value="0,Gilgil">Gilgil Town</option>
-<option value="12,Miharati">Miharati</option>
-<option value="75,Nyahururu">Nyahururu</option>
-</select>
-
-<p class="text-xs font-bold mb-2">Choose Class (Yego Model):</p>
-<div class="grid grid-cols-3 gap-2 mb-4">
-<button onclick="setClass('eco')" id="bEco" class="border-2 p-2 rounded-xl text-[11px] font-bold">Economy<br><span class="text-[9px]">300+60/KM</span></button>
-<button onclick="setClass('com')" id="bCom" class="bg-black text-white border-2 border-black p-2 rounded-xl text-[11px] font-bold">Comfort<br><span class="text-[9px]">400+80/KM ✓</span></button>
-<button onclick="setClass('xl')" id="bXl" class="border-2 p-2 rounded-xl text-[11px] font-bold">XL Noah<br><span class="text-[9px]">500+100/KM</span></button>
+<body>
+<div class="header glass"><div class="logo">OlexPress</div><div>🔔 ❤️ 👤</div></div>
+<div id="landingView"><div class="hero">
+<h1>Your Ride<br>Everywhere</h1><p style="color:#666;font-size:14px">Available now • 2-4 min away</p>
+<div class="searchBox glass">
+<input id="pickup" class="input" value="Current Location - Gilgil">
+<input id="dropoff" class="input" placeholder="Where to? e.g. Ol Kalou">
+<input id="phone" class="input" placeholder="Phone 07XX...">
+<div style="display:flex;gap:8px"><button style="flex:1;padding:10px;border-radius:8px;border:1px solid #ddd;background:white" onclick="setDest('Ol Kalou')">Ol Kalou 1200</button><button style="flex:1;padding:10px;border-radius:8px;border:1px solid #ddd;background:white" onclick="setDest('Nyahururu')">Nyahururu 3040</button></div>
+<div id="priceBox" style="margin-top:12px;font-weight:700;display:none">Ride KES <span id="price">0</span> • Comm 20% = <span id="comm">0</span> • Driver <span id="driverEarn">0</span></div>
+<button class="btn" onclick="requestRide()">Ride Now → Generate Ticket</button>
+</div></div></div>
+<div id="map"></div>
+<div id="trackingPanel" class="glass">
+<div class="statusPill" id="statusText">SEARCHING DRIVER...</div>
+<div style="font-size:12px;color:#666">Live • <span id="dist">0.4 km</span> away • <span id="eta">4 min</span></div>
+<div class="driverCard"><div style="width:48px;height:48px;background:#111;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white">B</div><div style="flex:1"><div style="font-weight:700">Brian Kimani • Arrived</div><div style="font-size:12px">Toyota Premio • KCA 123Z • ★ 4.9</div></div><div>📞</div></div>
+<div class="qrBox"><div><div style="font-weight:700;font-size:13px">Ride Ticket / QR</div><div style="font-size:11px">Show to driver</div><div style="font-weight:900" id="ticketCode">OLX-XXXX</div></div><div id="qrcode"></div></div>
+<div class="commissionBox" id="paymentBox" style="display:none"><b>Payment:</b><br><label><input type="radio" name="pay" value="mpesa" checked> M-Pesa - auto split</label><br><label><input type="radio" name="pay" value="cash"> Cash - driver owes KES <span class="commDue">0</span></label><br><button class="btn" style="padding:10px;margin-top:8px" onclick="completeRide()">Complete Ride → Thank You</button></div>
+<button id="arrivedBtn" class="btn" style="display:none;background:#0a8" onclick="showPayment()">Driver Arrived - Show Payment</button>
 </div>
-
-<div class="bg-black rounded-2xl p-4 text-white">
-<div class="flex justify-between text-[11px] text-slate-400"><span>Base (up to 2KM)</span><span id="baseShow">KES 400</span></div>
-<div class="flex justify-between text-[11px] text-slate-400"><span>Distance (<span id="kmShow">35</span>KM - 2KM) × <span id="rateShow">80</span></span><span id="kmCost">KES 2,640</span></div>
-<div class="border-t border-slate-700 my-2"></div>
-<div class="flex justify-between font-black text-lg"><span>Total Private</span><span id="totalShow" class="text-green-400">KES 3,040</span></div>
-<p class="text-[10px] text-slate-400 text-center mt-1">Whole car • Up to 4 pax • Not matatu price</p>
-</div>
-
-<input id="cName" class="w-full border-2 rounded-xl p-3 mt-4" placeholder="Name">
-<input id="cPhone" class="w-full border-2 rounded-xl p-3 mt-2" placeholder="Phone 07..." type="tel">
-<button onclick="book()" id="btn" class="w-full bg-green-400 text-black p-4 rounded-xl font-black mt-4">REQUEST - YEGO MODEL</button>
-<div id="msg" class="hidden mt-3 p-3 rounded-xl text-center text-sm font-bold"></div>
-
-<div class="mt-4 bg-slate-50 p-3 rounded-xl text-[10px]">
-<p class="font-bold">Compare:</p>
-<p>Yego Medium (35KM): KES 1,603 | Uber: KES 1,045 | <span class="font-black">OLEX Comfort: KES 3,040 LUXURY</span></p>
-</div>
-</div>
+<div id="thankYou" style="position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:2000;display:none;align-items:center;justify-content:center"><div style="background:white;border-radius:24px;padding:30px;text-align:center;max-width:340px;width:90%"><div style="font-size:48px">✓</div><h2>Thank you!</h2><p>Ride completed</p><p style="font-size:12px">Ticket <span id="thankTicket"></span></p><p style="font-size:12px">✓ Payment via <span id="payMethod">M-Pesa</span></p><button class="btn" onclick="location.reload()">Done</button></div></div>
 <script>
-const firebaseConfig={apiKey:"AIzaSyDc6N5dULG6i72EWrLTtunwhbKQxaVi2KY",authDomain:"olexpresske.firebaseapp.com",databaseURL:"https://olexpresske-default-rtdb.firebaseio.com",projectId:"olexpresske",storageBucket:"olexpresske.firebasestorage.app",messagingSenderId:"953335654623",appId:"1:953335654623:web:1b91cbd29c1f63a23ba16a"};
-if(!firebase.apps.length)firebase.initializeApp(firebaseConfig); const db=firebase.database();
-let map=L.map('map').setView([-0.35,36.37],9); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-let curClass='com'; let rates={eco:{base:300,perKm:60,min:500,comm:15},com:{base:400,perKm:80,min:600,comm:18},xl:{base:500,perKm:100,min:800,comm:18}};
-function setClass(c){curClass=c; document.getElementById('bEco').className='border-2 p-2 rounded-xl text-[11px] font-bold'; document.getElementById('bCom').className='border-2 p-2 rounded-xl text-[11px] font-bold'; document.getElementById('bXl').className='border-2 p-2 rounded-xl text-[11px] font-bold'; document.getElementById('b'+c.charAt(0).toUpperCase()+c.slice(1)).className='bg-black text-white border-2 border-black p-2 rounded-xl text-[11px] font-bold'; calc();}
-function calc(){ let f=parseInt(document.getElementById('from').value.split(',')[0]), t=parseInt(document.getElementById('to').value.split(',')[0]); let dist=Math.abs(f-t); if(dist<2)dist=2; if(dist==0)dist=35; let r=rates[curClass]; let kmCost=(dist-2)*r.perKm; let total=r.base+kmCost; if(total<r.min)total=r.min; document.getElementById('kmShow').innerText=dist; document.getElementById('rateShow').innerText=r.perKm; document.getElementById('baseShow').innerText='KES '+r.base; document.getElementById('kmCost').innerText='KES '+kmCost.toLocaleString(); document.getElementById('totalShow').innerText='KES '+total.toLocaleString(); return {dist,total,base:r.base,kmCost,comm:r.comm};}
-calc();
-function book(){ let name=document.getElementById('cName').value, phone=document.getElementById('cPhone').value; if(!name||phone.length<10)return alert('Name & phone'); let d=calc(); let from=document.getElementById('from').value.split(',')[1], to=document.getElementById('to').value.split(',')[1]; document.getElementById('btn').innerText='Finding Driver...'; let data={name,phone,from,to,distance:d.dist+' KM',price:'KES '+d.total,priceNum:d.total,base:d.base,kmCost:d.kmCost,class:curClass,commission:d.comm,status:'pending',model:'yego',timestamp:Date.now()}; let ref=db.ref('rides').push(); ref.set(data).then(()=>{ document.getElementById('msg').className='mt-3 p-3 rounded-xl text-center text-sm font-bold bg-green-100 text-green-700 block'; document.getElementById('msg').innerText='✅ Sent! Price: KES '+d.total+' ('+curClass+')'; setTimeout(()=>{window.location.href='track.html?id='+ref.key;},1500); });}
+const firebaseConfig = {apiKey:"AIzaSyDc6N5dULG6i72EWrLTtunwhbKQxaVi2KY",authDomain:"olexpresske.firebaseapp.com",databaseURL:"https://olexpresske-default-rtdb.firebaseio.com",projectId:"olexpresske",storageBucket:"olexpresske.firebasestorage.app",messagingSenderId:"953335654623",appId:"1:953335654623:web:1b91cbd29c1f63a23ba16a"};
+firebase.initializeApp(firebaseConfig);const db=firebase.database();
+let map,driverMarker,currentTicket,currentPrice=0;
+function setDest(d){document.getElementById('dropoff').value=d;calcPrice();}
+document.getElementById('dropoff').addEventListener('input',calcPrice);
+function calcPrice(){const d=document.getElementById('dropoff').value.toLowerCase();let price=500;if(d.includes('ol kalou'))price=1200;if(d.includes('nyahururu'))price=3040;if(d.includes('gilgil'))price=300;currentPrice=price;document.getElementById('price').innerText=price;document.getElementById('comm').innerText=Math.round(price*0.2);document.getElementById('driverEarn').innerText=Math.round(price*0.8);document.getElementById('priceBox').style.display='block';document.getElementById('fareFinal')&&(document.getElementById('fareFinal').innerText=price);document.querySelector('.commDue').innerText=Math.round(price*0.2);}
+function requestRide(){const pickup=document.getElementById('pickup').value;const dropoff=document.getElementById('dropoff').value;const phone=document.getElementById('phone').value;if(!dropoff){alert('Enter where to?');return;}calcPrice();const ticket="OLEX-"+Math.random().toString(36).substr(2,4).toUpperCase()+Math.floor(100+Math.random()*900);currentTicket=ticket;document.getElementById('ticketCode').innerText=ticket;document.getElementById('qrcode').innerHTML='';new QRCode(document.getElementById('qrcode'),{text:ticket,width:70,height:70});db.ref('rides/'+ticket).set({ticket:ticket,pickup:pickup,dropoff:dropoff,phone:phone,price:currentPrice,commission:Math.round(currentPrice*0.2),driverEarn:Math.round(currentPrice*0.8),status:"searching",createdAt:Date.now(),qr:ticket});document.getElementById('landingView').style.display='none';document.getElementById('map').style.display='block';document.getElementById('trackingPanel').style.display='block';initMap();listenForStatus(ticket);setTimeout(()=>{db.ref('rides/'+ticket+'/status').get().then(s=>{if(s.val()=='searching'){db.ref('rides/'+ticket).update({status:'enroute',driver:{name:'Brian Kimani',plate:'KCA 123Z',lat:-0.492,lng:36.32}});}});},3000);}
+function initMap(){if(map)return;map=L.map('map',{zoomControl:false}).setView([-0.5,36.3],13);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);L.marker([-0.492,36.32]).addTo(map);L.marker([-0.2,36.37]).addTo(map);driverMarker=L.marker([-0.51,36.30],{icon:L.divIcon({html:'<div style=background:#111;color:white;padding:4px 8px;border-radius:12px>🚗</div>'})}).addTo(map);let i=0;setInterval(()=>{if(!driverMarker)return;const lat=-0.51+i*0.02;const lng=36.30+i*0.005;driverMarker.setLatLng([lat,lng]);document.getElementById('dist').innerText=(0.5-i*0.05).toFixed(1)+' km';i+=0.02;if(i>1)i=0;},1000);}
+function listenForStatus(ticket){db.ref('rides/'+ticket+'/status').on('value',snap=>{const st=snap.val();const el=document.getElementById('statusText');if(st=='searching')el.innerText='SEARCHING DRIVER...';if(st=='enroute')el.innerText='DRIVER ENROUTE • 3.2 km • 7 min';if(st=='arrived'){el.innerText='DRIVER ARRIVED ✓';el.style.background='#0a8';document.getElementById('arrivedBtn').style.display='block';}if(st=='boarded'){el.innerText='BOARDED • ON TRIP';document.getElementById('arrivedBtn').style.display='none';document.getElementById('paymentBox').style.display='block';}if(st=='completed')showThankYou();});}
+function showPayment(){db.ref('rides/'+currentTicket+'/status').set('boarded');}
+function completeRide(){const pay=document.querySelector('input[name=pay]:checked').value;const comm=Math.round(currentPrice*0.2);db.ref('rides/'+currentTicket).update({payment:pay,status:'completed',completedAt:Date.now()});if(pay=='cash'){db.ref('drivers/BRIAN/walletDebt').transaction(d=>(d||0)+comm);}else{db.ref('drivers/BRIAN/wallet').transaction(w=>(w||0)+Math.round(currentPrice*0.8));}document.getElementById('payMethod').innerText=pay=='mpesa'?'M-Pesa':'Cash (Driver owes KES '+comm+')';showThankYou();}
+function showThankYou(){document.getElementById('thankTicket').innerText=currentTicket;document.getElementById('thankYou').style.display='flex';}
 </script>
 </body>
 </html>
