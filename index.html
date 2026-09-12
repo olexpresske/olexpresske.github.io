@@ -1,94 +1,85 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>OlexPress KE - Your Ride Everywhere</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-body{margin:0;background:#080808;color:#fff;font-family:Inter,system-ui}
-.wrap{max-width:1100px;margin:0 auto;padding:16px}
-.header{border:1px solid #d4af37;border-radius:18px;padding:14px;display:flex;justify-content:space-between;align-items:center;background:#111}
-.header b{color:#d4af37;font-size:28px}
-.nav a{color:#fff;text-decoration:none;margin-left:12px;border:1px solid #333;padding:8px 14px;border-radius:10px;font-size:14px}
-.nav a.gold{background:#d4af37;color:#000;font-weight:800;border:0}
-.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;margin:18px 0}
-@media(max-width:800px){.hero{grid-template-columns:1fr}}
-.card{background:#131313;border:1px solid #333;border-radius:18px;padding:18px}
-.card.gold{border-color:#d4af37;background:linear-gradient(180deg,#1a1a0f,#111)}
-h1{font-size:38px;margin:8px 0;line-height:1.1}
-h1 span{color:#d4af37}
-.btn{display:inline-block;padding:14px 22px;border-radius:12px;font-weight:900;text-decoration:none;margin:6px 6px 0 0}
-.btn-gold{background:#d4af37;color:#000}
-.btn-white{background:#fff;color:#000}
-.btn-outline{border:1px solid #444;color:#fff}
-.price{font-size:32px;color:#00ff88;font-weight:900}
-.logo-pin{width:36px;height:36px;background:#1a9d4a;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:inline-block;position:relative}
-.logo-pin::after{content:'🛣️';position:absolute;transform:rotate(45deg);top:6px;left:8px}
-input{width:100%;padding:14px;border-radius:12px;border:1px solid #444;background:#1e1e1e;color:#fff;margin:8px 0;font-size:16px}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
-@media(max-width:700px){.grid3{grid-template-columns:1fr}}
-.small{color:#999;font-size:13px}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
+body{background:#ede9e4}
+.header{background:#fff;margin:12px;border-radius:18px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 12px rgba(0,0,0,0.06)}
+.hero{margin:12px;display:grid;grid-template-columns:1.1fr 1fr;gap:12px}
+.left{background:#faf8f6;border-radius:22px;padding:22px}
+.left h1{font-size:46px;font-weight:900;line-height:0.9}
+.in{width:100%;padding:14px;border-radius:12px;border:1.5px solid #e7e5e4;margin-top:8px;font-weight:600}
+.chip{display:inline-block;background:#fff;border:1.5px solid #e5e5e4;border-radius:20px;padding:7px 12px;font-size:11px;font-weight:700;margin:4px;cursor:pointer}
+.btn{width:100%;background:#0f172a;color:#fff;border:none;border-radius:14px;padding:16px;font-weight:800;margin-top:14px;cursor:pointer}
+.mapWrap{background:#fff;border-radius:22px;padding:12px}
+#map{height:420px;border-radius:16px}
+.price{background:#f0fdf4;border:1px dashed #22c55e;border-radius:12px;padding:10px;margin-top:10px;font-weight:700;font-size:13px}
+.ticket{display:none;background:#0f172a;color:#fff;border-radius:20px;padding:16px;margin:12px}
+.ticket.show{display:block}
 </style>
 </head>
 <body>
-<div class="wrap">
 <div class="header">
-<div style="display:flex;gap:10px;align-items:center"><div class="logo-pin"></div><b>OlexPress</b><small style="margin-left:8px;color:#aaa">KE</small></div>
-<div class="nav"><a href="./job.html">Book</a><a href="./driver.html">Driver</a><a href="./admin.html" class="gold">Admin</a></div>
+<div style="display:flex;align-items:center;gap:10px"><img src="logo.png" style="height:42px;border-radius:10px;background:#fff"><b>OlexPress<br><span style="color:#16a34a;font-size:11px">Your Ride Everywhere</span></b></div>
+<div style="font-size:11px;font-weight:700;color:#64748b">BASE 250 + 42/km • Nyandarua</div>
 </div>
 
 <div class="hero">
-<div class="card gold">
-<h1>Your Ride <span>Everywhere</span> in Nyandarua</h1>
-<p class="small">Pure OlexPress pricing — No Yego, No hidden fees. Fleet average 13.3km/L — all cars covered.</p>
-<div style="margin:16px 0">
-<div class="price">BASE KES 250 + 42/km</div>
-<small>Fuel 16.1 + Wear 6 + Driver 15 = 37.1 × 1.136 (13.6% Olex) = 42</small>
+<div class="left">
+<h1>Your Ride<br><span style="color:#f59e0b">Everywhere</span><br>in Nyandarua</h1>
+<p style="font-size:12px;color:#64748b;margin-top:6px">No Yego, No hidden fees • 2-4 min away</p>
+
+<label style="font-size:10px;font-weight:800;margin-top:14px;display:block">PICKUP (EDITABLE - tap to change)</label>
+<div style="display:flex;gap:6px">
+<input id="from" class="in" value="Gilgil" style="margin-top:4px;flex:1">
+<button onclick="useGPS()" style="padding:12px;border-radius:12px;border:1.5px solid #e5e5e4;background:#fff;font-weight:800;font-size:11px">📍</button>
 </div>
-<a class="btn btn-gold" href="./job.html">Book Now on Map</a>
-<a class="btn btn-white" href="./driver.html">Driver App</a>
-<div class="grid3">
-<div><b>✔ Mixed Fleet</b><br><small>Vitz to Premio — same 42</small></div>
-<div><b>✔ Live Map</b><br><small>Click pickup & drop</small></div>
-<div><b>✔ Instant Firebase</b><br><small>Jobs saved live</small></div>
+<div><span class="chip" onclick="setFrom('Gilgil')">Gilgil</span><span class="chip" onclick="setFrom('Ol Kalou')">Ol Kalou</span><span class="chip" onclick="setFrom('Nyahururu')">Nyahururu</span></div>
+
+<label style="font-size:10px;font-weight:800;margin-top:12px;display:block">WHERE TO?</label>
+<input id="to" class="in" placeholder="Ol Kalou / Nyahururu" style="margin-top:4px" oninput="calc()">
+<div><span class="chip" onclick="setTo('Ol Kalou')">Ol Kalou • 1200</span><span class="chip" onclick="setTo('Nyahururu')">Nyahururu • 3040</span></div>
+
+<input id="phone" class="in" placeholder="Phone 07XX XXX XXX" type="tel">
+<div id="priceBox" class="price" style="display:none"></div>
+<button class="btn" onclick="book()">Ride Now → Book This Ride</button>
+<p style="font-size:10px;color:#94a3b8;margin-top:8px">✓ Ticket stays on phone • Pay driver on arrival</p>
+<div id="q1" style="margin-top:12px"></div>
+</div>
+
+<div class="mapWrap">
+<div style="font-weight:800;margin-bottom:8px;font-size:13px">OLEX PRESS - NYANDARUA • Click map to set dropoff</div>
+<div id="map"></div>
+<div id="mStatus" style="font-size:11px;color:#64748b;margin-top:6px">Map: Gilgil, Ol Kalou, Nyahururu, Aberdares</div>
 </div>
 </div>
 
-<div class="card">
-<h3 style="color:#d4af37;margin:0 0 8px">Quick Fare Calculator</h3>
-<input id="km" type="number" placeholder="Enter distance km (e.g. 15)" oninput="calc()">
-<div style="margin-top:10px">
-Fare: <b id="fare" style="color:#00ff88;font-size:26px">KES 0</b><br>
-<small id="break">250 + 0×42</small><br><br>
-<small>Driver gets: <span id="driver" style="color:#00ff88">0</span> | Olex: <span id="olex" style="color:#d4af37">0</span></small>
-</div>
-<a class="btn btn-gold" href="./job.html" style="width:100%;text-align:center;margin-top:12px">Book This Ride</a>
-</div>
+<div id="ticket" class="ticket">
+<div style="display:flex;justify-content:space-between"><div><div style="font-size:10px;opacity:0.6">TICKET</div><div id="tID" style="font-size:22px;font-weight:900">OLEX-XXXX</div><div id="tRoute">Gilgil → Nyahururu</div><div id="tSt" style="background:#22c55e;padding:4px 8px;border-radius:12px;display:inline-block;font-size:11px;margin-top:6px">SEARCHING</div></div><div style="background:#fff;padding:6px;border-radius:12px"><div id="q2"></div></div></div>
+<div style="margin-top:10px;display:flex;gap:6px"><div id="d1" style="width:28px;height:28px;border-radius:50%;background:#22c55e;display:flex;align-items:center;justify-content:center;font-size:12px">1</div><div style="flex:1;height:3px;background:#334155;margin-top:13px"></div><div id="d2" style="width:28px;height:28px;border-radius:50%;background:#334155;display:flex;align-items:center;justify-content:center">2</div><div style="flex:1;height:3px;background:#334155;margin-top:13px"></div><div id="d3" style="width:28px;height:28px;border-radius:50%;background:#334155;display:flex;align-items:center;justify-content:center">3</div></div>
+<div id="tInfo" style="font-size:12px;margin-top:8px;color:#cbd5e1">Searching driver near Gilgil...</div>
 </div>
 
-<div class="card" style="margin-top:10px">
-<h3 style="margin:0;color:#d4af37">Popular Routes — BASE 250 + 42/km</h3>
-<div class="grid3">
-<div style="background:#1a1a1a;padding:12px;border-radius:12px"><b>Engineer</b><br><small>15km</small><br><b style="color:#00ff88">KES 880</b></div>
-<div style="background:#1a1a1a;padding:12px;border-radius:12px"><b>Njabini</b><br><small>25km</small><br><b style="color:#00ff88">KES 1300</b></div>
-<div style="background:#1a1a1a;padding:12px;border-radius:12px"><b>Nyahururu</b><br><small>35km</small><br><b style="color:#00ff88">KES 1720</b></div>
-</div>
-</div>
-
-<center style="margin:20px;color:#666"><small>© 2026 OlexPress KE — Built for Nyandarua Hills | BASE 250 + 42/km Live</small></center>
-
-</div>
 <script>
-function calc(){
- let km=parseFloat(document.getElementById('km').value)||0;
- let fare=Math.round(250+km*42);
- let olex=Math.round(fare*0.136);
- let driver=fare-olex;
- document.getElementById('fare').innerText="KES "+fare;
- document.getElementById('break').innerText=`250 + ${km}×42 = ${fare}`;
- document.getElementById('driver').innerText="KES "+driver;
- document.getElementById('olex').innerText="KES "+olex;
-}
+const cfg={apiKey:"AIzaSyDc6N5dULG6i72EWrLTtunwhbKQxaVi2KY",authDomain:"olexpresske.firebaseapp.com",databaseURL:"https://olexpresske-default-rtdb.firebaseio.com",projectId:"olexpresske",storageBucket:"olexpresske.firebasestorage.app",messagingSenderId:"953335654623",appId:"1:953335654623:web:1b91cbd29c1f63a23ba16a"};
+firebase.initializeApp(cfg);const db=firebase.database();
+let map;setTimeout(()=>{map=L.map('map').setView([-0.492,36.32],10);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);L.marker([-0.492,36.32]).addTo(map).bindPopup('Gilgil');L.marker([-0.26,36.37]).addTo(map).bindPopup('Ol Kalou');L.marker([0.03,36.36]).addTo(map).bindPopup('Nyahururu');map.on('click',e=>{document.getElementById('from').value='Gilgil';document.getElementById('to').value='Ol Kalou';calc();});},500);
+function setFrom(v){document.getElementById('from').value=v;calc();}
+function setTo(v){document.getElementById('to').value=v;calc();}
+function useGPS(){if(navigator.geolocation){navigator.geolocation.getCurrentPosition(p=>{document.getElementById('from').value='Current Location Gilgil';});}}
+function calc(){let t=document.getElementById('to').value.toLowerCase();let f=document.getElementById('from').value;let p=1200;if(t.includes('nyahu'))p=3040;else if(t.includes('engineer'))p=880;else if(t.includes('njabini'))p=1300;else if(t.includes('gilgil town'))p=500;document.getElementById('priceBox').style.display='block';document.getElementById('priceBox').innerText=`✓ ${f} → ${t||'...'} • Fare KES ${p} • Pay driver on arrival • BASE 250 + 42/km`;return p;}
+function gen(){return 'OLEX-'+Math.random().toString(36).substr(2,4).toUpperCase()+'-'+Math.floor(Math.random()*90+10);}
+function book(){let to=document.getElementById('to').value.trim();let from=document.getElementById('from').value.trim();let ph=document.getElementById('phone').value.trim();if(!to){alert('Where to? Type Ol Kalou or Nyahururu');return;}if(!from){alert('Pickup? Edit current location');return;}if(ph.length<9){alert('Enter phone 07XX');return;}let price=calc();let comm=Math.round(price*0.2);let id=gen();let data={ticket:id,pickup:from,dropoff:to,phone:ph,price:price,commission:comm,status:'searching',created:Date.now()};db.ref('rides/'+id).set(data).then(()=>{localStorage.setItem('olex_ticket',id);show(id);});}
+function show(id){document.getElementById('ticket').classList.add('show');db.ref('rides/'+id).on('value',s=>{let r=s.val();if(!r)return;document.getElementById('tID').innerText=r.ticket;document.getElementById('tRoute').innerText=r.pickup+' → '+r.dropoff;document.getElementById('tSt').innerText=r.status.toUpperCase();document.getElementById('q2').innerHTML='';new QRCode(document.getElementById('q2'),{text:r.ticket,width:70,height:70});let msgs={searching:'Searching driver near '+r.pickup+'...',enroute:'Driver on way to '+r.pickup,arrived:'Driver arrived at '+r.pickup,boarded:'On board to '+r.dropoff,completed:'Trip done - Pay KES '+r.price};document.getElementById('tInfo').innerText=msgs[r.status]||r.status;document.getElementById('mStatus').innerText=msgs[r.status]||r.status;});window.scrollTo({top:500,behavior:'smooth'});}
+let saved=localStorage.getItem('olex_ticket');if(saved)show(saved);
 </script>
 </body>
 </html>
