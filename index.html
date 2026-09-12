@@ -1,105 +1,70 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>OLEX Express KE - Gilgil ↔ Nairobi Luxury Shuttle</title>
+<title>OLEX - Yego Model Pricing</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>#map{height:200px;border-radius:16px}</style>
 </head>
-<body class="bg-[#f8fafc] font-sans">
-<!-- NAV -->
-<nav class="bg-[#0f172a] text-white p-4 flex justify-between items-center sticky top-0 z-50">
-<div class="flex items-center gap-2"><i class="fas fa-bus text-[#22c55e] text-2xl"></i><span class="font-black text-xl">OLEX<span class="text-[#22c55e]">EXPRESS</span></span></div>
-<div class="flex gap-3 text-xs"><a href="driver.html" class="bg-[#1e293b] px-3 py-2 rounded-lg">Driver</a><a href="admin.html" class="bg-[#22c55e] text-black px-3 py-2 rounded-lg font-bold">Admin</a></div>
-</nav>
+<body class="bg-slate-50">
+<nav class="bg-black text-white p-3 flex justify-between"><div class="font-black">OLEX <span class="text-green-400">LUXURY</span> <span class="text-[9px] bg-green-400 text-black px-2 py-1 rounded-full">YEGO MODEL</span></div><div class="text-[10px]">NYANDARUA UBER</div></nav>
+<div id="map" class="m-3"></div>
+<div class="bg-white rounded-[24px] p-5 m-3 -mt-6 relative z-10 shadow-xl max-w-lg mx-auto border">
+<h2 class="font-black mb-3">Where to?</h2>
+<select id="from" onchange="calc()" class="w-full border-2 rounded-xl p-3 mb-3 bg-yellow-50 font-bold">
+<option value="0,Gilgil">Gilgil Town (Base)</option>
+<option value="12,Miharati">Miharati - 12KM</option>
+<option value="30,Njabini">Njabini - 30KM</option>
+<option value="35,Ol Kalou">Ol Kalou - 35KM</option>
+<option value="45,Engineer">Engineer - 45KM</option>
+<option value="75,Nyahururu">Nyahururu - 75KM</option>
+</select>
+<select id="to" onchange="calc()" class="w-full border-2 rounded-xl p-3 mb-3 font-bold">
+<option value="35,Ol Kalou">Ol Kalou - 35KM</option>
+<option value="0,Gilgil">Gilgil Town</option>
+<option value="12,Miharati">Miharati</option>
+<option value="75,Nyahururu">Nyahururu</option>
+</select>
 
-<!-- HERO -->
-<section class="bg-[#0f172a] text-white px-6 py-10 text-center">
-<h1 class="text-4xl font-black leading-tight">Gilgil ↔ Nairobi<br><span class="text-[#22c55e]">Luxury Shuttle</span></h1>
-<p class="text-slate-400 mt-3">Boarding Confirmation • Real-Time Tracking • M-Pesa Ready</p>
-<div class="flex justify-center gap-3 mt-4 text-xs"><span class="bg-[#1e293b] px-3 py-1 rounded-full">✅ LIVE Firebase</span><span class="bg-[#1e293b] px-3 py-1 rounded-full">📍 Real-Time</span><span class="bg-[#1e293b] px-3 py-1 rounded-full">🎫 Instant Ticket</span></div>
-</section>
-
-<!-- BOOKING CARD -->
-<section class="px-4 -mt-6">
-<div class="bg-white max-w-lg mx-auto rounded-[24px] shadow-[0_20px_60px_rgba(0,0,0,0.15)] p-6 border border-slate-100">
-<h2 class="font-bold text-lg mb-4"><i class="fas fa-ticket text-[#22c55e]"></i> Book Your Seat Now</h2>
-
-<label class="text-xs font-bold text-slate-500">YOUR NAME</label>
-<input id="cName" class="w-full border-2 border-slate-100 rounded-xl p-3 mt-1 mb-3 focus:border-[#22c55e] outline-none" placeholder="Dennis Kariuki">
-
-<label class="text-xs font-bold text-slate-500">PHONE (M-Pesa)</label>
-<input id="cPhone" class="w-full border-2 border-slate-100 rounded-xl p-3 mt-1 mb-3 focus:border-[#22c55e] outline-none" placeholder="0712345678" type="tel">
-
-<div class="grid grid-cols-2 gap-3">
-<div><label class="text-xs font-bold text-slate-500">FROM</label>
-<select id="cFrom" class="w-full border-2 border-slate-100 rounded-xl p-3 mt-1 mb-3"><option>Gilgil</option><option>Nairobi</option><option>Naivasha</option><option>Nakuru</option></select></div>
-<div><label class="text-xs font-bold text-slate-500">TO</label>
-<select id="cTo" class="w-full border-2 border-slate-100 rounded-xl p-3 mt-1 mb-3"><option>Nairobi</option><option>Gilgil</option><option>Naivasha</option><option>Nakuru</option></select></div>
+<p class="text-xs font-bold mb-2">Choose Class (Yego Model):</p>
+<div class="grid grid-cols-3 gap-2 mb-4">
+<button onclick="setClass('eco')" id="bEco" class="border-2 p-2 rounded-xl text-[11px] font-bold">Economy<br><span class="text-[9px]">300+60/KM</span></button>
+<button onclick="setClass('com')" id="bCom" class="bg-black text-white border-2 border-black p-2 rounded-xl text-[11px] font-bold">Comfort<br><span class="text-[9px]">400+80/KM ✓</span></button>
+<button onclick="setClass('xl')" id="bXl" class="border-2 p-2 rounded-xl text-[11px] font-bold">XL Noah<br><span class="text-[9px]">500+100/KM</span></button>
 </div>
 
-<div class="grid grid-cols-2 gap-3">
-<div><label class="text-xs font-bold text-slate-500">SEATS</label>
-<select id="cSeats" class="w-full border-2 border-slate-100 rounded-xl p-3 mt-1 mb-3"><option>1 Seat</option><option>2 Seats</option><option>3 Seats</option><option>4 Seats</option></select></div>
-<div><label class="text-xs font-bold text-slate-500">FARE</label>
-<select id="cPrice" class="w-full border-2 border-slate-100 rounded-xl p-3 mt-1 mb-3 bg-[#f0fdf4] font-bold"><option>KES 800</option><option>KES 1500</option><option>KES 500</option><option>KES 1000</option></select></div>
+<div class="bg-black rounded-2xl p-4 text-white">
+<div class="flex justify-between text-[11px] text-slate-400"><span>Base (up to 2KM)</span><span id="baseShow">KES 400</span></div>
+<div class="flex justify-between text-[11px] text-slate-400"><span>Distance (<span id="kmShow">35</span>KM - 2KM) × <span id="rateShow">80</span></span><span id="kmCost">KES 2,640</span></div>
+<div class="border-t border-slate-700 my-2"></div>
+<div class="flex justify-between font-black text-lg"><span>Total Private</span><span id="totalShow" class="text-green-400">KES 3,040</span></div>
+<p class="text-[10px] text-slate-400 text-center mt-1">Whole car • Up to 4 pax • Not matatu price</p>
 </div>
 
-<button onclick="bookNow()" id="bookBtn" class="w-full bg-[#0f172a] text-white p-4 rounded-xl font-black text-lg mt-2 hover:bg-black transition"><i class="fas fa-bolt text-[#22c55e]"></i> BOOK NOW - GET TICKET</button>
-<p class="text-[11px] text-center text-slate-400 mt-3">You will get tracking link after booking • Boarding tick system enabled</p>
+<input id="cName" class="w-full border-2 rounded-xl p-3 mt-4" placeholder="Name">
+<input id="cPhone" class="w-full border-2 rounded-xl p-3 mt-2" placeholder="Phone 07..." type="tel">
+<button onclick="book()" id="btn" class="w-full bg-green-400 text-black p-4 rounded-xl font-black mt-4">REQUEST - YEGO MODEL</button>
+<div id="msg" class="hidden mt-3 p-3 rounded-xl text-center text-sm font-bold"></div>
 
-<div id="statusMsg" class="hidden mt-4 p-3 rounded-xl text-center text-sm font-bold"></div>
+<div class="mt-4 bg-slate-50 p-3 rounded-xl text-[10px]">
+<p class="font-bold">Compare:</p>
+<p>Yego Medium (35KM): KES 1,603 | Uber: KES 1,045 | <span class="font-black">OLEX Comfort: KES 3,040 LUXURY</span></p>
 </div>
-</section>
-
-<!-- FEATURES -->
-<section class="grid grid-cols-3 gap-3 px-4 mt-6 max-w-lg mx-auto">
-<div class="bg-white p-4 rounded-2xl text-center border"><i class="fas fa-check-circle text-[#22c55e] text-xl"></i><p class="text-xs font-bold mt-2">Boarding Confirm</p></div>
-<div class="bg-white p-4 rounded-2xl text-center border"><i class="fas fa-map-location-dot text-blue-500 text-xl"></i><p class="text-xs font-bold mt-2">Live Tracking</p></div>
-<div class="bg-white p-4 rounded-2xl text-center border"><i class="fas fa-clock text-amber-500 text-xl"></i><p class="text-xs font-bold mt-2">Driver Updates</p></div>
-</section>
-
-<div class="text-center py-8 text-xs text-slate-400">© 2026 OLEX Express KE • Firebase LIVE: olexpresske-default-rtdb • Made in Gilgil 🇰🇪</div>
-
+</div>
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDc6N5dULG6i72EWrLTtunwhbKQxaVi2KY",
-  authDomain: "olexpresske.firebaseapp.com",
-  databaseURL: "https://olexpresske-default-rtdb.firebaseio.com",
-  projectId: "olexpresske",
-  storageBucket: "olexpresske.firebasestorage.app",
-  messagingSenderId: "953335654623",
-  appId: "1:953335654623:web:1b91cbd29c1f63a23ba16a"
-};
-if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-function bookNow(){
-  const name=document.getElementById('cName').value.trim();
-  const phone=document.getElementById('cPhone').value.trim();
-  const from=document.getElementById('cFrom').value;
-  const to=document.getElementById('cTo').value;
-  const seats=document.getElementById('cSeats').value;
-  const price=document.getElementById('cPrice').value;
-  const btn=document.getElementById('bookBtn');
-  const msg=document.getElementById('statusMsg');
-  if(!name||!phone){alert('Please enter Name and Phone');return}
-  if(phone.length<10){alert('Enter valid M-Pesa number');return}
-  btn.innerHTML='⏳ BOOKING...'; btn.disabled=true;
-  const data={name,phone,from,to,seats,price,status:'pending',customerBoarded:false,timestamp:Date.now(),createdAt:new Date().toISOString()};
-  const ref=db.ref('rides').push();
-  ref.set(data).then(()=>{
-    msg.className='mt-4 p-3 rounded-xl text-center text-sm font-bold bg-green-100 text-green-700 block';
-    msg.innerHTML='✅ Booked! Redirecting to your ticket...';
-    setTimeout(()=>{ window.location.href='track.html?id='+ref.key; },800);
-  }).catch(e=>{
-    msg.className='mt-4 p-3 rounded-xl text-center text-sm font-bold bg-red-100 text-red-700 block';
-    msg.innerHTML='❌ Error: '+e.message;
-    btn.innerHTML='BOOK NOW - GET TICKET'; btn.disabled=false;
-  });
-}
+const firebaseConfig={apiKey:"AIzaSyDc6N5dULG6i72EWrLTtunwhbKQxaVi2KY",authDomain:"olexpresske.firebaseapp.com",databaseURL:"https://olexpresske-default-rtdb.firebaseio.com",projectId:"olexpresske",storageBucket:"olexpresske.firebasestorage.app",messagingSenderId:"953335654623",appId:"1:953335654623:web:1b91cbd29c1f63a23ba16a"};
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig); const db=firebase.database();
+let map=L.map('map').setView([-0.35,36.37],9); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+let curClass='com'; let rates={eco:{base:300,perKm:60,min:500,comm:15},com:{base:400,perKm:80,min:600,comm:18},xl:{base:500,perKm:100,min:800,comm:18}};
+function setClass(c){curClass=c; document.getElementById('bEco').className='border-2 p-2 rounded-xl text-[11px] font-bold'; document.getElementById('bCom').className='border-2 p-2 rounded-xl text-[11px] font-bold'; document.getElementById('bXl').className='border-2 p-2 rounded-xl text-[11px] font-bold'; document.getElementById('b'+c.charAt(0).toUpperCase()+c.slice(1)).className='bg-black text-white border-2 border-black p-2 rounded-xl text-[11px] font-bold'; calc();}
+function calc(){ let f=parseInt(document.getElementById('from').value.split(',')[0]), t=parseInt(document.getElementById('to').value.split(',')[0]); let dist=Math.abs(f-t); if(dist<2)dist=2; if(dist==0)dist=35; let r=rates[curClass]; let kmCost=(dist-2)*r.perKm; let total=r.base+kmCost; if(total<r.min)total=r.min; document.getElementById('kmShow').innerText=dist; document.getElementById('rateShow').innerText=r.perKm; document.getElementById('baseShow').innerText='KES '+r.base; document.getElementById('kmCost').innerText='KES '+kmCost.toLocaleString(); document.getElementById('totalShow').innerText='KES '+total.toLocaleString(); return {dist,total,base:r.base,kmCost,comm:r.comm};}
+calc();
+function book(){ let name=document.getElementById('cName').value, phone=document.getElementById('cPhone').value; if(!name||phone.length<10)return alert('Name & phone'); let d=calc(); let from=document.getElementById('from').value.split(',')[1], to=document.getElementById('to').value.split(',')[1]; document.getElementById('btn').innerText='Finding Driver...'; let data={name,phone,from,to,distance:d.dist+' KM',price:'KES '+d.total,priceNum:d.total,base:d.base,kmCost:d.kmCost,class:curClass,commission:d.comm,status:'pending',model:'yego',timestamp:Date.now()}; let ref=db.ref('rides').push(); ref.set(data).then(()=>{ document.getElementById('msg').className='mt-3 p-3 rounded-xl text-center text-sm font-bold bg-green-100 text-green-700 block'; document.getElementById('msg').innerText='✅ Sent! Price: KES '+d.total+' ('+curClass+')'; setTimeout(()=>{window.location.href='track.html?id='+ref.key;},1500); });}
 </script>
 </body>
 </html>
