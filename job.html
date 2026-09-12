@@ -1,0 +1,40 @@
+<!-- MAP PICKER -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<div id="map" style="height:360px;border-radius:16px;margin:12px 0"></div>
+
+<div class="card">
+  <p>Pickup: <span id="pickTxt">Click map for pickup</span></p>
+  <p>Drop: <span id="dropTxt">Click map for destination</span></p>
+  <h2>Fare: KES <span id="fare">0</span></h2>
+  <p><small>Formula: 250 + <span id="km">0</span>km × 42</small></p>
+  <button id="bookBtn">Book OlexPress Now</button>
+</div>
+
+<script>
+const BASE=250, PERKM=42;
+let pick=null, drop=null, map, m1, m2;
+
+map = L.map('map').setView([-0.5, 36.4], 10); // Nyandarua center
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+map.on('click', e=>{
+  if(!pick){
+    pick=e.latlng; m1=L.marker(pick).addTo(map).bindPopup("Pickup").openPopup();
+    document.getElementById('pickTxt').innerText=pick.lat.toFixed(5)+", "+pick.lng.toFixed(5);
+  } else if(!drop){
+    drop=e.latlng; m2=L.marker(drop).addTo(map).bindPopup("Drop").openPopup();
+    let dist = map.distance(pick, drop)/1000; // km
+    let fare = BASE + (dist*PERKM);
+    document.getElementById('km').innerText=dist.toFixed(1);
+    document.getElementById('fare').innerText=Math.round(fare);
+  } else {
+    // reset
+    map.removeLayer(m1); map.removeLayer(m2); pick=e.latlng; drop=null;
+    m1=L.marker(pick).addTo(map); document.getElementById('pickTxt').innerText="New pickup";
+    document.getElementById('dropTxt').innerText="Click for destination";
+    document.getElementById('fare').innerText="0"; document.getElementById('km').innerText="0";
+  }
+});
+</script>
