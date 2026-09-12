@@ -1,126 +1,22 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>OlexPress - Admin</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-body{margin:0;background:#080808;color:#fff;font-family:Inter,system-ui}
-.top{max-width:1200px;margin:0 auto;padding:12px}
-.hdr{border:1px solid #d4af37;border-radius:18px;padding:12px;display:flex;justify-content:space-between;align-items:center;background:#111}
-.hdr b{color:#d4af37;font-size:28px}
-#map{height:360px;border-radius:18px;border:2px solid #333;margin:12px 0;z-index:1}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:12px 0}
-.stat{background:#151515;border:1px solid #333;border-radius:14px;padding:14px}
-.stat b{font-size:22px;color:#d4af37}
-.stat .green{color:#00ff88}
-table{width:100%;border-collapse:collapse;background:#111;border-radius:12px;overflow:hidden}
-th,td{padding:10px;border-bottom:1px solid #222;text-align:left;font-size:14px}
-th{color:#d4af37;background:#161616}
-.btn{padding:8px 12px;border-radius:8px;border:0;font-weight:800;cursor:pointer}
-.del{background:#ff3b3b;color:#fff}
-.done{background:#1a9d4a;color:#fff}
-.nav{background:#fff;color:#000}
-.logo-pin{width:32px;height:32px;background:#1a9d4a;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:inline-block;position:relative}
-.logo-pin::after{content:'🛣️';position:absolute;transform:rotate(45deg);top:5px;left:6px}
-</style>
-</head>
-<body>
-<div class="top">
-<div class="hdr"><div style="display:flex;gap:10px;align-items:center"><div class="logo-pin"></div><b>OlexPress</b><small> ADMIN</small></div><small style="color:#d4af37">BASE 250 + 42/km</small></div>
-
-<div id="map"></div>
-
-<div class="grid">
-<div class="stat"><small>Total Jobs</small><br><b id="tJobs">0</b></div>
-<div class="stat"><small>Total Fare Collected</small><br><b id="tFare" class="green">KES 0</b></div>
-<div class="stat"><small>Olex 13.6% Earnings</small><br><b id="tOlex" style="color:#d4af37">KES 0</b></div>
-<div class="stat"><small>Driver Payout</small><br><b id="tDriver">KES 0</b></div>
-</div>
-
-<table>
-<thead><tr><th>Customer</th><th>Dist</th><th>Fare (250+42)</th><th>Olex</th><th>Driver</th><th>Status</th><th>Action</th></tr></thead>
-<tbody id="tbody"></tbody>
-</table>
-
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OlexPress Admin</title><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script><style>body{background:#0f172a;color:#fff;font-family:sans-serif;padding:12px} .stat{display:inline-block;background:#1e293b;padding:12px 18px;border-radius:14px;margin:4px;text-align:center} .card{background:#fff;color:#111;padding:12px;border-radius:14px;margin:8px 0;font-size:13px}</style></head><body>
+<h2>🔑 OlexPress Admin - All Rides</h2>
+<div id="stats"></div>
+<div id="list">Loading rides from Firebase...</div>
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDc6N5dULG6i72EWrlTtunwhbKQxaVi2KY",
-  authDomain: "olexpresske.firebaseapp.com",
-  databaseURL: "https://olexpresske-default-rtdb.firebaseio.com",
-  projectId: "olexpresske",
-  storageBucket: "olexpresske.firebasestorage.app",
-  messagingSenderId: "953335654623",
-  appId: "1:953335654623:web:1b91cbd29c1f63a23ba16a"
-};
-firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
-
-let map=L.map('map').setView([-0.533,36.45],10);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-let markers=[];
-
-function loadAdmin(){
- db.ref('jobs').on('value', snap=>{
-   const data=snap.val()||{};
-   const tbody=document.getElementById('tbody'); tbody.innerHTML="";
-   markers.forEach(m=>map.removeLayer(m)); markers=[];
-   let totalJobs=0, totalFare=0, totalOlex=0, totalDriver=0;
-   
-   Object.entries(data).reverse().forEach(([id,j])=>{
-     totalJobs++; totalFare+=j.fare||0;
-     const olex=Math.round((j.fare||0)*0.136);
-     const driver=Math.round((j.fare||0)*0.864);
-     totalOlex+=olex; totalDriver+=driver;
-
-     const tr=document.createElement('tr');
-     tr.innerHTML=`
-       <td>${j.customer||'-'}<br><small>${new Date(j.created).toLocaleString()}</small></td>
-       <td>${j.distance}km</td>
-       <td style="color:#00ff88">KES ${j.fare}<br><small>250+${j.distance}×42</small></td>
-       <td style="color:#d4af37">KES ${olex}</td>
-       <td>KES ${driver}</td>
-       <td><span style="background:#222;padding:4px 8px;border-radius:20px">${j.status}</span></td>
-       <td>
-         <button class="btn nav" onclick="viewMap(${j.pickup.lat},${j.pickup.lng},${j.drop.lat},${j.drop.lng})">Map</button>
-         <button class="btn del" onclick="deleteJob('${id}')">Delete</button>
-       </td>
-     `;
-     tbody.appendChild(tr);
-     markers.push(L.marker([j.pickup.lat,j.pickup.lng]).addTo(map));
-   });
-
-   document.getElementById('tJobs').innerText=totalJobs;
-   document.getElementById('tFare').innerText="KES "+totalFare;
-   document.getElementById('tOlex').innerText="KES "+totalOlex;
-   document.getElementById('tDriver').innerText="KES "+totalDriver;
-   
-   if(markers.length>0){ let g=L.featureGroup(markers); map.fitBounds(g.getBounds().pad(0.3)); }
- });
-}
-loadAdmin();
-
-function viewMap(a,b,c,d){
- markers.forEach(m=>map.removeLayer(m));
- let p1=L.marker([a,b]).addTo(map).bindPopup("Pickup").openPopup();
- let p2=L.marker([c,d]).addTo(map).bindPopup("Drop");
- markers=[p1,p2];
- map.setView([a,b],13);
-}
-
-// DELETE - NOW WORKING
-function deleteJob(id){
- if(!confirm("DELETE this job permanently?")) return;
- db.ref('jobs/'+id).remove().then(()=>{
-   alert("Deleted ✅");
- }).catch(e=>alert("Delete failed: "+e.message));
-}
-</script>
-</body>
-</html>
+const cfg={apiKey:"AIzaSyDc6N5dULG6i72EWrLTtunwhbKQxaVi2KY",authDomain:"olexpresske.firebaseapp.com",databaseURL:"https://olexpresske-default-rtdb.firebaseio.com",projectId:"olexpresske",storageBucket:"olexpresske.firebasestorage.app",messagingSenderId:"953335654623",appId:"1:953335654623:web:1b91cbd29c1f63a23ba16a"};
+firebase.initializeApp(cfg);const db=firebase.database();
+db.ref('rides').on('value',s=>{
+let d=s.val();let el=document.getElementById('list');let st=document.getElementById('stats');
+if(!d){el.innerHTML='No rides yet';st.innerHTML='';return;}
+let list=Object.values(d).sort((a,b)=>b.created-a.created);
+let total=list.length;let active=list.filter(x=>['searching','enroute','arrived','boarded'].includes(x.status)).length;
+let completed=list.filter(x=>x.status=='completed').length;
+let revenue=list.filter(x=>x.status=='completed').reduce((a,x)=>a+(x.price||0),0);
+let commission=list.filter(x=>x.status=='completed').reduce((a,x)=>a+(x.commission||0),0);
+st.innerHTML=`<div class=stat><div style="font-size:10px;color:#94a3b8">TOTAL RIDES</div><b style="font-size:20px">${total}</b></div><div class=stat><div style="font-size:10px;color:#f59e0b">ACTIVE</div><b style="font-size:20px;color:#f59e0b">${active}</b></div><div class=stat><div style="font-size:10px;color:#22c55e">COMPLETED</div><b style="font-size:20px;color:#22c55e">${completed}</b></div><div class=stat><div style="font-size:10px;color:#94a3b8">TOTAL FARES</div><b>KES ${revenue.toLocaleString()}</b></div><div class=stat><div style="font-size:10px;color:#f59e0b">YOUR 20% COMM</div><b style="color:#f59e0b">KES ${commission.toLocaleString()}</b></div>`;
+el.innerHTML='';
+list.forEach(r=>{
+el.innerHTML+=`<div class=card><b>${r.ticket}</b> ${r.status.toUpperCase()} | ${new Date(r.created).toLocaleString()}<br>📍 ${r.pickup} → ${r.dropoff} | ${r.distance||''}<br>📱 ${r.phone} | 💰 Fare KES ${r.price} | Comm KES ${r.commission} | Driver gets KES ${(r.price-r.commission)}<br><button onclick="firebase.database().ref('rides/${r.ticket}').remove()" style="background:#fee2e2;color:#dc2626;border:none;padding:6px 10px;border-radius:8px;margin-top:6px;font-weight:700">Delete</button></div>`;
+});
+});
+</script></body></html>
