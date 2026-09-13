@@ -1,107 +1,326 @@
 <!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>OlexPress Driver - Your Ride Everywhere</title>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OlexPress Driver - Liberty Map</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#0f172a">
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}</script>
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#000;color:#fff;font-family:Inter,system-ui}
-.app{max-width:430px;margin:0 auto;background:#0f0f0f;min-height:100vh;border-left:1px solid #222;border-right:1px solid #222}
-.top{margin:10px;border:1px solid #d4af37;border-radius:18px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;background:#141414}
-.top b{color:#d4af37;font-size:26px;letter-spacing:.3px}
-.live{font-size:11px;background:#1a1a1a;border:1px solid #d4af37;color:#d4af37;padding:4px 8px;border-radius:20px}
-#map{height:380px;margin:10px;border-radius:18px;border:2px solid #2a2a2a;z-index:1}
-.card{margin:10px;border:1px solid #d4af37;border-radius:16px;background:#171717;padding:12px}
-.badge{background:#d4af37;color:#000;font-weight:800;font-size:12px;padding:6px 10px;border-radius:20px;display:inline-block}
-.kpi{display:flex;justify-content:space-between;margin-top:12px}
-.kpi div{flex:1}
-.kpi small{color:#aaa;font-size:11px}
-.fare{color:#00ff88;font-weight:900;font-size:22px}
-.earn{color:#00ff88;font-weight:900;font-size:20px}
-.dist{font-weight:900;font-size:18px}
-.btns{display:flex;gap:8px;margin-top:12px}
-.btn{flex:1;padding:13px;border-radius:12px;border:0;font-weight:900;font-size:15px;cursor:pointer}
-.gold{background:#d4af37;color:#000}
-.white{background:#fff;color:#000}
-.green{background:#18a957;color:#fff}
-.pin{width:32px;height:32px;background:#1f9d4d;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center}
-.pin span{transform:rotate(45deg)}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#0f172a;color:white;padding:10px}
+.card{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:14px;margin:10px 0}
+input{width:100%;padding:12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:white;margin:6px 0}
+button{width:100%;padding:12px;border-radius:10px;border:0;font-weight:800;cursor:pointer;margin:4px 0}
+#map{height:300px;border-radius:12px;border:2px solid #22c55e;margin:10px 0}
+.ride{border-left:4px solid #22c55e;background:#1e293b;padding:12px;border-radius:10px;margin:8px 0}
 </style>
 </head>
 <body>
-<div class="app">
-<div class="top"><div style="display:flex;align-items:center;gap:10px"><div class="pin"><span>🛣️</span></div><b>OlexPress</b></div><div class="live">LIVE • Nyandarua</div></div>
-<center style="color:#d4af37;font-size:12px">Your Ride Everywhere • BASE 250 + 42/km</center>
-<div id="map"></div>
-<div id="jobsList"></div>
+
+<div style="background:linear-gradient(135deg,#16a34a,#15803d);border-radius:14px;padding:14px;display:flex;justify-content:space-between;align-items:center">
+<div><div style="font-weight:900">🚕 OlexPress DRIVER - Liberty Map</div><div style="font-size:11px;opacity:.9">Customer liberty pickup/destination - Live coords - Base 250 + KM×42 - 1 Active Only</div></div>
+<div id="driverStatus" style="background:white;color:#16a34a;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:800">OFFLINE</div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<div class="card">
+<h3 style="font-size:13px">👨‍✈️ Driver Login - 1 Active Ride Only</h3>
+<input id="driverName" placeholder="Driver Name - e.g. John XXX Fleet">
+<input id="driverPhone" placeholder="Driver Phone 07...">
+<input id="vehicleNo" placeholder="Vehicle No - e.g. KDA 123X">
+<button onclick="goOnline()" style="background:#22c55e;color:white">🟢 GO ONLINE - See Liberty Rides</button>
+<button onclick="goOffline()" style="background:#334155;color:white">🔴 GO OFFLINE</button>
+<div id="loginInfo" style="font-size:10px;color:#94a3b8;margin-top:6px">Login to see customer liberty rides - Map coords + Base 250 + KM×42 - Multiple blocked</div>
+</div>
+
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<h3 style="font-size:13px">🗺️ Live Map - Customer Liberty Coords</h3>
+<button onclick="centerMap()" style="width:auto;padding:6px 12px;background:#3b82f6;color:white;font-size:10px">📍 Center Map</button>
+</div>
+<div id="map"></div>
+<div id="mapInfo" style="font-size:10px;color:#94a3b8;background:#0f172a;padding:6px;border-radius:6px;margin-top:6px">Map shows customer pickup & destination pins from liberty input - Tap pin for details</div>
+</div>
+
+<div class="card">
+<h3 style="font-size:13px">📋 Pending Rides - Liberty Pickup/Destination (1 at a time)</h3>
+<div id="ridesList"><div style="font-size:11px;color:#94a3b8;text-align:center;padding:20px">Go online to see rides - Customer can type ANY pickup/destination - Coords from live map</div></div>
+</div>
+
+<div id="activeRide" style="display:none" class="card"></div>
+
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDc6N5dULG6i72EWrlTtunwhbKQxaVi2KY",
-  authDomain: "olexpresske.firebaseapp.com",
-  databaseURL: "https://olexpresske-default-rtdb.firebaseio.com",
-  projectId: "olexpresske",
-  storageBucket: "olexpresske.firebasestorage.app",
-  messagingSenderId: "953335654623",
-  appId: "1:953335654623:web:1b91cbd29c1f63a23ba16a"
-};
-firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
+var firebaseConfig={apiKey:"AIzaSyD4...",authDomain:"olexpresske.firebaseapp.com",databaseURL:"https://olexpresske-default-rtdb.firebaseio.com",projectId:"olexpresske"};
+firebase.initializeApp(firebaseConfig);var db=firebase.database();
+const BASE_RATE=250; const PER_KM=42;
+let map, driverMarker, pickupMarker, destMarker, routeLine;
+let driverOnline=false, driverData=null, activeRideId=null;
 
-let map=L.map('map').setView([-0.5333,36.45],11);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-let ms=[];
-
-function loadDriver(){
- db.ref('jobs').limitToLast(30).on('value', snap=>{
-  const data=snap.val()||{};
-  const list=document.getElementById('jobsList');
-  list.innerHTML=""; ms.forEach(m=>map.removeLayer(m)); ms=[];
-  Object.entries(data).reverse().forEach(([id,j])=>{
-    if(j.status==='completed') return;
-    if(!j.pickup||!j.drop) return;
-    const mins=Math.max(1, Math.floor((Date.now()-j.created)/60000));
-    const driverPay=Math.round(j.fare*0.864);
-    const olexPay=Math.round(j.fare*0.136);
-    list.innerHTML+=`
-    <div class="card">
-      <span class="badge">🚖 Incoming Ride Request • ${mins} min ago</span>
-      <div style="margin-top:10px;display:flex;gap:10px;align-items:center">
-        <div style="width:40px;height:40px;background:#d4af37;color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900">${(j.customer||'K')[0]}</div>
-        <div><b>${j.customer||'Customer'}</b><br><small style="color:#d4af37">5★ • Verified Customer</small></div>
-      </div>
-      <div class="kpi">
-        <div><small>💲 Fare (KES)</small><div class="fare">KES ${j.fare}</div></div>
-        <div><small>📍 Distance</small><div class="dist">${j.distance} km</div></div>
-        <div><small>💰 Your Earnings</small><div class="earn">KES ${driverPay}</div></div>
-      </div>
-      <div style="background:#1e1e1e;border-radius:12px;padding:10px;margin-top:10px;font-size:13px">
-        <div>🟢 Pickup: ${j.pickup.lat.toFixed(4)}, ${j.pickup.lng.toFixed(4)}</div>
-        <div style="margin-top:6px">🔴 Drop-off: ${j.drop.lat.toFixed(4)}, ${j.drop.lng.toFixed(4)}</div>
-        <div style="margin-top:6px;color:#999">BASE 250 + ${j.distance}×42 = ${j.fare} | Olex KES ${olexPay}</div>
-      </div>
-      <div class="btns">
-        <button class="btn gold" onclick="acceptJob('${id}')">Accept</button>
-        <button class="btn white" onclick="nav(${j.pickup.lat},${j.pickup.lng},${j.drop.lat},${j.drop.lng})">Navigate</button>
-        <button class="btn green" onclick="doneJob('${id}')">Done</button>
-      </div>
-    </div>`;
-    ms.push(L.marker([j.pickup.lat,j.pickup.lng]).addTo(map));
-    ms.push(L.marker([j.drop.lat,j.drop.lng]).addTo(map));
-  });
-  if(ms.length){ try{map.fitBounds(L.featureGroup(ms).getBounds().pad(0.3))}catch(e){} }
- });
+function initMap(){
+map=L.map('map').setView([-0.3,36.3],9);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OlexPress Driver Map'}).addTo(map);
 }
-loadDriver();
-function acceptJob(id){ db.ref('jobs/'+id).update({status:'accepted'}); }
-function doneJob(id){ if(confirm('Mark as Done?')) db.ref('jobs/'+id).update({status:'completed'}); }
-function nav(a,b,c,d){ window.open(`https://www.google.com/maps/dir/${a},${b}/${c},${d}/`,'_blank'); }
+initMap();
+
+function centerMap(){
+if(driverData && driverData.lat){map.setView([driverData.lat,driverData.lng],12);} else {map.setView([-0.3,36.3],9);}
+}
+
+function goOnline(){
+let name=document.getElementById('driverName').value.trim();
+let phone=document.getElementById('driverPhone').value.trim();
+let vehicle=document.getElementById('vehicleNo').value.trim();
+if(!name||!phone) return alert('Enter Driver Name & Phone');
+if(!vehicle) vehicle='XXX Fleet';
+
+driverData={name:name,phone:phone,vehicle:vehicle,online:true,ts:Date.now()};
+localStorage.setItem('olex_driver', JSON.stringify(driverData));
+
+// Check if driver already has active ride - BLOCK MULTIPLE
+let savedActive=localStorage.getItem('olex_driver_active');
+if(savedActive){
+db.ref('rides/'+savedActive).once('value',snap=>{
+let v=snap.val();
+if(v && v.status!=='completed' && v.driverPhone===phone){
+activeRideId=savedActive;
+showActiveRide(savedActive,v);
+document.getElementById('driverStatus').innerText='BUSY - '+savedActive;
+document.getElementById('driverStatus').style.background='#f59e0b';
+document.getElementById('loginInfo').innerHTML=`⚠️ You have ACTIVE ride ${savedActive} - Complete it before taking new!`;
+} else {
+localStorage.removeItem('olex_driver_active');
+startListening();
+}
+});
+} else {
+startListening();
+}
+
+document.getElementById('driverStatus').innerText='ONLINE - '+name;
+document.getElementById('driverStatus').style.background='#22c55e';
+document.getElementById('loginInfo').innerHTML=`✅ Online as ${name} ${vehicle} ${phone} - Showing liberty rides - 1 at a time`;
+
+if(navigator.geolocation){
+navigator.geolocation.watchPosition(pos=>{
+driverData.lat=pos.coords.latitude; driverData.lng=pos.coords.longitude;
+if(driverMarker) map.removeLayer(driverMarker);
+driverMarker=L.marker([pos.coords.latitude,pos.coords.longitude],{icon:L.divIcon({html:'🚕',className:'',iconSize:[30,30]})}).addTo(map).bindPopup(`You: ${name}<br>${vehicle}`);
+if(activeRideId) updateDriverLocation(pos.coords.latitude,pos.coords.longitude);
+});
+}
+
+driverOnline=true;
+}
+
+function updateDriverLocation(lat,lng){
+if(!activeRideId) return;
+db.ref('rides/'+activeRideId+'/driverLocation').set({lat:lat,lng:lng,ts:Date.now()});
+}
+
+function goOffline(){
+driverOnline=false;
+localStorage.removeItem('olex_driver');
+document.getElementById('driverStatus').innerText='OFFLINE';
+document.getElementById('driverStatus').style.background='white';
+document.getElementById('ridesList').innerHTML='<div style="font-size:11px;color:#94a3b8;text-align:center;padding:20px">Offline - Go online to see liberty rides</div>';
+}
+
+function startListening(){
+db.ref('rides').orderByChild('status').equalTo('pending').on('value',snap=>{
+if(!driverOnline) return;
+if(activeRideId){
+document.getElementById('ridesList').innerHTML=`<div style="background:#fffbeb;border:1px solid #fde68a;padding:10px;border-radius:8px;font-size:11px;color:#0f172a">⚠️ You have active ride ${activeRideId} - Complete it before taking new ride! 1 active only!</div>`;
+return;
+}
+let html='';
+let count=0;
+snap.forEach(ch=>{
+let v=ch.val();
+count++;
+let fromCoordsTxt=v.fromCoords?`${v.fromCoords.lat.toFixed(4)},${v.fromCoords.lng.toFixed(4)}`:'Typed liberty - No coords';
+let toCoordsTxt=v.toCoords?`${v.toCoords.lat.toFixed(4)},${v.toCoords.lng.toFixed(4)}`:'Typed liberty';
+html+=`
+<div class="ride">
+<div style="display:flex;justify-content:space-between"><b style="color:#4ade80">🎫 ${ch.key}</b><span style="background:#f59e0b;color:white;padding:2px 8px;border-radius:10px;font-size:9px">${v.date} ${v.clock}</span></div>
+<div style="font-size:12px;margin-top:6px"><b>Pickup (Liberty):</b> ${v.from}<br><span style="font-size:10px;color:#94a3b8">🌍 ${fromCoordsTxt}</span></div>
+<div style="font-size:12px;margin-top:4px"><b>Destination (Liberty):</b> ${v.to}<br><span style="font-size:10px;color:#94a3b8">🌍 ${toCoordsTxt}</span></div>
+<div style="display:flex;gap:6px;margin-top:6px">
+<div style="flex:1;background:#0f172a;padding:6px;border-radius:6px"><div style="font-size:9px;color:#94a3b8">KM (Live Map)</div><div style="font-weight:800;color:#4ade80">${v.km}km</div><div style="font-size:8px">Base ${v.baseRate||250} + ${v.km}×${v.yFactor||42}</div></div>
+<div style="flex:1;background:#16a34a;padding:6px;border-radius:6px;text-align:center"><div style="font-size:9px">FARE</div><div style="font-weight:900;font-size:16px">KES ${v.fare}</div><div style="font-size:8px">${v.formula||''}</div></div>
+</div>
+<div style="font-size:11px;margin-top:6px">👤 ${v.name} - ${v.phone}</div>
+<div style="display:flex;gap:6px;margin-top:8px">
+<button onclick="viewOnMap('${ch.key}')" style="background:#3b82f6;color:white;flex:1;padding:8px;font-size:11px">🗺️ View on Map</button>
+<button onclick="acceptRide('${ch.key}')" style="background:#22c55e;color:white;flex:1;padding:8px;font-size:11px">✅ ACCEPT (1 Only)</button>
+</div>
+</div>
+`;
+});
+if(count===0) html='<div style="font-size:11px;color:#94a3b8;text-align:center;padding:20px">No pending rides - Liberty input waiting - Customer can type ANY pickup/destination</div>';
+else html=`<div style="font-size:10px;color:#4ade80;margin-bottom:8px">${count} pending liberty rides - 1 active only - Base 250 + KM×42</div>`+html;
+document.getElementById('ridesList').innerHTML=html;
+});
+}
+
+function viewOnMap(rideId){
+db.ref('rides/'+rideId).once('value',snap=>{
+let v=snap.val(); if(!v) return;
+if(pickupMarker) map.removeLayer(pickupMarker);
+if(destMarker) map.removeLayer(destMarker);
+if(routeLine) map.removeLayer(routeLine);
+
+if(v.fromCoords){
+pickupMarker=L.marker([v.fromCoords.lat,v.fromCoords.lng]).addTo(map).bindPopup(`<b>Pickup (Liberty):</b><br>${v.from}<br>🎫 ${rideId}<br>👤 ${v.name} ${v.phone}`).openPopup();
+}
+if(v.toCoords){
+destMarker=L.marker([v.toCoords.lat,v.toCoords.lng]).addTo(map).bindPopup(`<b>Destination (Liberty):</b><br>${v.to}<br>🎫 ${rideId}`);
+}
+if(v.fromCoords && v.toCoords){
+routeLine=L.polyline([[v.fromCoords.lat,v.fromCoords.lng],[v.toCoords.lat,v.toCoords.lng]],{color:'#22c55e',dashArray:'10,10',weight:3}).addTo(map);
+map.fitBounds([[v.fromCoords.lat,v.fromCoords.lng],[v.toCoords.lat,v.toCoords.lng]],{padding:[50,50]});
+} else if(v.fromCoords){
+map.setView([v.fromCoords.lat,v.fromCoords.lng],13);
+}
+document.getElementById('mapInfo').innerHTML=`🗺️ Showing ${rideId}:<br><b>Pickup:</b> ${v.from}<br><b>Dest:</b> ${v.to}<br>🌍 Coords: ${v.fromCoords?v.fromCoords.lat.toFixed(5)+','+v.fromCoords.lng.toFixed(5):'typed'} → ${v.toCoords?v.toCoords.lat.toFixed(5)+','+v.toCoords.lng.toFixed(5):'typed'}<br>💰 Base ${v.baseRate||250} + ${v.km}×${v.yFactor||42}=KES ${v.fare}`;
+});
+}
+
+function acceptRide(rideId){
+if(activeRideId) return alert(`⚠️ You already have active ride ${activeRideId}!\nComplete it before accepting new! 1 at a time!`);
+if(!driverData) return alert('Go online first');
+
+if(!confirm(`Accept ride ${rideId}?\nYou will have 1 active ride only!\nCustomer liberty pickup/destination will show on map`)) return;
+
+db.ref('rides/'+rideId).update({
+status:'accepted',
+driverName:driverData.name,
+driverPhone:driverData.phone,
+vehicle:driverData.vehicle,
+acceptedAt:Date.now(),
+acceptedTime:new Date().toLocaleString('en-KE')
+}).then(()=>{
+activeRideId=rideId;
+localStorage.setItem('olex_driver_active', rideId);
+document.getElementById('driverStatus').innerText='BUSY - '+rideId;
+document.getElementById('driverStatus').style.background='#f59e0b';
+viewOnMap(rideId);
+db.ref('rides/'+rideId).once('value',snap=>{showActiveRide(rideId,snap.val());});
+});
+}
+
+function showActiveRide(rideId,data){
+document.getElementById('activeRide').style.display='block';
+document.getElementById('activeRide').innerHTML=`
+<div style="display:flex;justify-content:space-between;align-items:center"><b>🚕 Active Ride ${rideId} - Liberty</b><span style="background:#f59e0b;color:white;padding:4px 10px;border-radius:12px;font-size:10px" id="driverStatusBadge">${(data.status||'accepted').toUpperCase()}</span></div>
+<div style="background:#0f172a;padding:10px;border-radius:8px;margin-top:8px">
+<div style="font-size:12px"><b>Pickup (Liberty):</b> ${data.from}</div><div style="font-size:10px;color:#94a3b8">🌍 ${data.fromCoords?data.fromCoords.lat+','+data.fromCoords.lng:'Typed liberty'}</div>
+<div style="font-size:12px;margin-top:4px"><b>Destination (Liberty):</b> ${data.to}</div><div style="font-size:10px;color:#94a3b8">🌍 ${data.toCoords?data.toCoords.lat+','+data.toCoords.lng:'Typed liberty'}</div>
+<div style="font-size:11px;margin-top:6px">👤 ${data.name} - ${data.phone} | 📅 ${data.date} ${data.clock}</div>
+<div style="display:flex;gap:6px;margin-top:6px"><div style="flex:1;background:#1e293b;padding:6px;border-radius:6px"><div style="font-size:9px">KM</div><div style="font-weight:800;color:#4ade80">${data.km}km</div></div><div style="flex:1;background:#16a34a;padding:6px;border-radius:6px;text-align:center"><div style="font-size:9px">FARE Base 250+KM×42</div><div style="font-weight:900">KES ${data.fare}</div></div></div>
+<div style="font-size:9px;margin-top:6px;color:#94a3b8">Formula: ${data.formula} | Ticket: ${data.ticket} | Time logged: ${data.time}</div>
+</div>
+<div id="driverActions" style="margin-top:10px"></div>
+<div id="driverSteps" style="margin-top:10px;background:#0f172a;padding:10px;border-radius:8px"></div>
+`;
+trackDriverRide(rideId);
+}
+
+function trackDriverRide(rideId){
+db.ref('rides/'+rideId).on('value',snap=>{
+let v=snap.val(); if(!v) return;
+let badge=document.getElementById('driverStatusBadge'); if(badge) badge.innerText=(v.status||'').toUpperCase()+' • '+v.clock;
+let stepsDiv=document.getElementById('driverSteps');
+let actionsDiv=document.getElementById('driverActions');
+
+let status=v.status;
+let htmlSteps=`<div style="font-size:11px;font-weight:800">Status: ${status} | Liberty: ${v.from} → ${v.to}</div><div style="font-size:9px;margin-top:4px;background:#1e293b;padding:5px;border-radius:5px">Base ${v.baseRate}+${v.km}×${v.yFactor}=KES ${v.fare} | Coords: ${v.fromCoords?v.fromCoords.lat.toFixed(4)+','+v.fromCoords.lng.toFixed(4):'typed'} → ${v.toCoords?v.toCoords.lat.toFixed(4)+','+v.toCoords.lng.toFixed(4):'typed'}</div>`;
+
+let actions='';
+if(status==='accepted'){
+actions=`<button onclick="driverArrived('${rideId}')" style="background:#3b82f6;color:white">📍 I HAVE ARRIVED - Show QR ${rideId}</button>`;
+} else if(status==='arrived'){
+actions=`<div style="background:#fffbeb;color:#0f172a;padding:8px;border-radius:8px;font-size:11px">Waiting client to see you arrived - QR: ${rideId}</div><button onclick="requestBoarding('${rideId}')" style="background:#f59e0b;color:white">🎫 REQUEST BOARDING QR ${rideId}</button>`;
+} else if(status==='boarding_requested'){
+actions=`<div style="background:#fffbeb;color:#0f172a;padding:8px;border-radius:8px;font-size:11px">Waiting client ACCEPT BOARDING</div>`;
+} else if(status==='boarded'){
+actions=`<button onclick="startTrip('${rideId}')" style="background:#16a34a;color:white">🚕 START TRIP ${v.from} → ${v.to} - Liberty Route</button>`;
+} else if(status==='pay_initiated'){
+actions=`<div style="background:#fffbeb;color:#0f172a;padding:8px;border-radius:8px;font-size:11px">Waiting client PAY KES ${v.fare}</div>`;
+} else if(status==='paid'){
+actions=`<button onclick="completeRide('${rideId}')" style="background:#16a34a;color:white">✅ END RIDE - Complete Trip ${rideId} - Allow New Booking</button>`;
+} else if(status==='completed'){
+actions=`<div style="background:#f0fdf4;color:#0f172a;padding:10px;border-radius:8px;text-align:center"><b>✅ Ride ${rideId} Completed!</b><br>Review: ${v.feedback?`⭐${v.feedback.stars} ${v.feedback.text}`:'Pending'}<br><br><button onclick="clearActive()" style="background:#334155;color:white;padding:8px">Clear - Take New Ride (1 at a time)</button></div>`;
+}
+
+if(stepsDiv) stepsDiv.innerHTML=htmlSteps;
+if(actionsDiv) actionsDiv.innerHTML=actions;
+
+if(status==='completed'){
+// Show review if exists
+if(v.feedback){
+if(stepsDiv) stepsDiv.innerHTML+=`<div style="margin-top:8px;background:#f0fdf4;color:#0f172a;padding:8px;border-radius:6px;font-size:11px">⭐ Client Review: ${v.feedback.stars} stars - ${v.feedback.text} - ${v.feedback.date} ${v.feedback.time}</div>`;
+}
+}
+});
+}
+
+function driverArrived(id){db.ref('rides/'+id).update({status:'arrived',arrivedAt:Date.now(),arrivedTime:new Date().toLocaleString('en-KE')});}
+function requestBoarding(id){db.ref('rides/'+id).update({status:'boarding_requested'});}
+function startTrip(id){
+db.ref('rides/'+id).update({status:'boarded'});
+viewOnMap(id);
+}
+function completeRide(id){
+db.ref('rides/'+id).update({status:'completed',completedAt:Date.now(),completedTime:new Date().toLocaleString('en-KE')}).then(()=>{
+// Also initiate pay if not yet
+db.ref('rides/'+id).once('value',snap=>{
+let v=snap.val();
+if(v.status!=='paid' && v.status!=='completed'){
+// Driver already initiated pay before?
+}
+});
+});
+}
+function clearActive(){
+activeRideId=null;
+localStorage.removeItem('olex_driver_active');
+document.getElementById('activeRide').style.display='none';
+document.getElementById('driverStatus').innerText='ONLINE - '+(driverData?driverData.name:'Driver');
+document.getElementById('driverStatus').style.background='#22c55e';
+if(pickupMarker) map.removeLayer(pickupMarker);
+if(destMarker) map.removeLayer(destMarker);
+if(routeLine) map.removeLayer(routeLine);
+startListening();
+}
+
+// Auto restore driver
+let savedDriver=localStorage.getItem('olex_driver');
+if(savedDriver){
+let d=JSON.parse(savedDriver);
+document.getElementById('driverName').value=d.name||'';
+document.getElementById('driverPhone').value=d.phone||'';
+document.getElementById('vehicleNo').value=d.vehicle||'';
+}
+let savedActiveDriver=localStorage.getItem('olex_driver_active');
+if(savedActiveDriver && savedDriver){
+let d=JSON.parse(savedDriver);
+driverData=d;
+driverOnline=true;
+activeRideId=savedActiveDriver;
+db.ref('rides/'+savedActiveDriver).once('value',snap=>{
+let v=snap.val();
+if(v && v.status!=='completed'){
+showActiveRide(savedActiveDriver,v);
+viewOnMap(savedActiveDriver);
+document.getElementById('driverStatus').innerText='BUSY - '+savedActiveDriver;
+document.getElementById('driverStatus').style.background='#f59e0b';
+} else {
+localStorage.removeItem('olex_driver_active');
+}
+});
+}
 </script>
 </body>
 </html>
