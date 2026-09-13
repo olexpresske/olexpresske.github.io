@@ -1,72 +1,22 @@
-<!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>OlexPress - Your Ride Everywhere</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#050805;color:#fff;font-family:system-ui}
-.hero{text-align:center;padding:20px;background:radial-gradient(circle at center,#0f2f14,#050805)}
-.logo-sphere{width:140px;height:140px;margin:12px auto;background:radial-gradient(circle at 35% 35%,#1a3a1f,#000);border-radius:50%;box-shadow:0 0 50px rgba(212,175,55,.7);display:flex;align-items:center;justify-content:center;position:relative}
-#orbit{position:absolute;inset:-20px;width:180px;height:180px}
-.card{background:#111;border:1px solid #222;border-radius:12px;padding:12px;margin:12px}
-.gold{color:#D4AF37}input{width:100%;padding:12px;margin:6px 0;border-radius:8px;background:#000;color:#fff;border:1px solid #333}
-.btn{width:100%;padding:14px;background:linear-gradient(90deg,#D4AF37,#FFD700);color:#000;font-weight:900;border:none;border-radius:10px;margin-top:8px}
-#qr{background:#fff;padding:6px;border-radius:8px;width:104px;height:104px}
-</style></head><body>
-<div class="hero">
-<div style="display:flex;align-items:center;justify-content:center;gap:8px"><img src="./logo.png" style="width:36px"><h2 style="margin:0;letter-spacing:1px">OlexPress</h2></div>
-<div class="logo-sphere"><img src="./logo.png" style="width:72px;z-index:2;filter:drop-shadow(0 0 12px #D4AF37)"><canvas id="orbit"></canvas></div>
-<div class="gold">Your Ride Everywhere</div></div>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OlexPress — Your Ride Everywhere</title>
+    <meta name="description" content="Nyandarua-based ride hailing service starting from Ol Kalou to anywhere in Kenya. Featuring real road routing, live tracking, driver dashboard, and ticket management." />
+    <meta property="og:title" content="OlexPress — Your Ride Everywhere" />
+    <meta property="og:description" content="Nyandarua-based ride hailing service starting from Ol Kalou to anywhere in Kenya. Featuring real road routing, live tracking, driver dashboard, and ticket management." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  </head>
+  <body class="bg-black text-white antialiased selection:bg-amber-400 selection:text-black">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
 
-<div class="card">
-<input id="from" value="Ol Kalou"><input id="to" placeholder="Where to? Nyahururu, Gilgil, Nyeri">
-<button onclick="calc()" class="btn" style="background:#222;color:#D4AF37;border:1px solid #D4AF37">Get Fare & Route</button>
-<div id="map" style="height:210px;border-radius:10px;margin-top:10px"></div>
-<div id="fareBox" style="display:none;margin-top:8px"><b id="fareTxt" class="gold"></b> • <span id="distTxt"></span></div>
-</div>
-
-<div id="ticket" class="card" style="display:none;border-color:#D4AF37">
-<div style="display:flex;justify-content:space-between"><b>RIDE TICKET</b><b class="gold" id="tFare"></b></div>
-<div style="display:flex;gap:14px;margin-top:10px">
-<div><div id="qr"></div><div id="tId" class="gold" style="font-size:.75rem;font-weight:900;text-align:center;margin-top:4px"></div></div>
-<div style="font-size:.86rem;line-height:1.6">
-<div>Date: <b id="tDate"></b></div><div>Time: <b id="tTime"></b></div>
-<div>From: <b id="tFrom"></b></div><div>To: <b id="tTo"></b></div>
-<div>Distance: <span id="tDist"></span> • <span id="tCalc" style="font-size:.7rem;color:#aaa"></span></div>
-</div></div>
-<input id="phone" placeholder="Phone 07..."><button class="btn" onclick="requestRide()">CONFIRM & REQUEST</button>
-</div>
-
-<script>
-// REPLACE WITH YOUR REAL CONFIG FROM FIREBASE CONSOLE
-const firebaseConfig={apiKey:"AIzaSy...YOURS",authDomain:"olexpresske.firebaseapp.com",databaseURL:"https://olexpresske-default-rtdb.firebaseio.com",projectId:"olexpresske"};
-firebase.initializeApp(firebaseConfig);const db=firebase.database();
-let map=L.map('map').setView([-0.23,36.37],9);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-let line,marks=[],cur={};
-async function calc(){
-let f=from.value,t=to.value;if(!t)return alert('Enter destination');
-let g1=await fetch(`https://nominatim.openstreetmap.org/search?q=${f}&format=json&limit=1`).then(r=>r.json());
-let g2=await fetch(`https://nominatim.openstreetmap.org/search?q=${t}&format=json&limit=1`).then(r=>r.json());
-if(!g1[0]||!g2[0])return alert('Place not found');
-let p1=[g1[0].lat,g1[0].lon],p2=[g2[0].lat,g2[0].lon];
-let r=await fetch(`https://router.project-osrm.org/route/v1/driving/${p1[1]},${p1[0]};${p2[1]},${p2[0]}?overview=full&geometries=geojson`).then(r=>r.json());
-let km=r.routes[0].distance/1000;let coords=r.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
-if(line)map.removeLayer(line);marks.forEach(m=>map.removeLayer(m));marks=[];
-line=L.polyline(coords,{color:'#D4AF37',weight:5}).addTo(map);marks.push(L.marker(p1).addTo(map));marks.push(L.marker(p2).addTo(map));map.fitBounds(line.getBounds());
-let fare=250+Math.round(km*42);let now=new Date();let tid='OLX-'+now.getTime().toString().slice(-6);
-cur={tid,f,t,km:km.toFixed(1),fare,date:now.toLocaleDateString('en-GB'),time:now.toLocaleTimeString()};
-fareBox.style.display='block';fareTxt.textContent='KSH '+fare;distTxt.textContent=km.toFixed(1)+' KM via road';
-ticket.style.display='block';tFare.textContent='KSH '+fare;tId.textContent=tid;tDate.textContent=cur.date;tTime.textContent=cur.time;tFrom.textContent=f;tTo.textContent=t;tDist.textContent=km.toFixed(1)+' KM';tCalc.textContent=`Calc: ${km.toFixed(1)} KM x 42 + 250 base`;
-qr.innerHTML='';new QRCode(qr,{text:`https://olexpresske.github.io/track.html?id=${tid}`,width:92,height:92});
-}
-function requestRide(){
-let ph=phone.value;if(!ph)return alert('Enter phone');
-let data={ticketId:cur.tid,clientPhone:ph,pickup:cur.f,to:cur.t,distance:cur.km,fare:cur.fare,date:cur.date,time:cur.time,status:'pending',timestamp:Date.now()};
-db.ref('tickets/'+cur.tid).set(data).then(()=>{alert('Ticket '+cur.tid+' sent to driver!');location.href='track.html?id='+cur.tid;});
-}
-let cv=document.getElementById('orbit'),cx=cv.getContext('2d');cv.width=180;cv.height=180;let a=0;setInterval(()=>{cx.clearRect(0,0,180,180);a+=0.018;[{c:'#D4AF37',r:70},{c:'#00c853',r:58},{c:'#29b6f6',r:82}].forEach((o,i)=>{cx.strokeStyle=o.c;cx.lineWidth=2;cx.shadowBlur=10;cx.shadowColor=o.c;cx.beginPath();cx.ellipse(90,90,o.r,o.r*0.34,a+i*0.9,0,6.28);cx.stroke();})},30);
-</script></body></html>

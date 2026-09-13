@@ -1,0 +1,6 @@
+{
+  "name": "OlexPress — Your Ride Everywhere",
+  "description": "Nyandarua-based ride hailing service starting from Ol Kalou to anywhere in Kenya. Featuring real road routing, live tracking, driver dashboard, and ticket management.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
