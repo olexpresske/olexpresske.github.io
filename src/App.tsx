@@ -9,18 +9,16 @@ function App() {
   return (
     <div>
       <div style={{display:'flex', gap:'10px', padding:'10px', background:'#000', justifyContent:'center'}}>
-        <button onClick={()=>setActiveTab('customer')} style={{padding:'10px', background: activeTab==='customer' ? '#FFC107' : '#fff', fontWeight:'bold'}}>CUSTOMER</button>
-        <button onClick={()=>setActiveTab('driver')} style={{padding:'10px', background: activeTab==='driver' ? '#FFC107' : '#fff', fontWeight:'bold'}}>DRIVER</button>
-        <button onClick={()=>setActiveTab('admin')} style={{padding:'10px', background: activeTab==='admin' ? '#FFC107' : '#fff', fontWeight:'bold'}}>ADMIN</button>
+        <button onClick={()=>setActiveTab('customer')} style={{padding:'10px', background: activeTab==='customer'?'#FFC107':'#fff'}}>CUSTOMER</button>
+        <button onClick={()=>setActiveTab('driver')} style={{padding:'10px', background: activeTab==='driver'?'#FFC107':'#fff'}}>DRIVER</button>
+        <button onClick={()=>setActiveTab('admin')} style={{padding:'10px', background: activeTab==='admin'?'#FFC107':'#fff'}}>ADMIN</button>
       </div>
-
       <div style={{padding:'20px'}}>
-        {activeTab === 'customer' && <BookingCard />}
-        {activeTab === 'driver' && <DriverDashboard />}
-        {activeTab === 'admin' && <AdminDashboard />}
+        {activeTab==='customer' && <BookingCard />}
+        {activeTab==='driver' && <DriverDashboard />}
+        {activeTab==='admin' && <AdminDashboard />}
       </div>
     </div>
   )
 }
-
 export default App
