@@ -19,6 +19,15 @@ import {
   ExternalLink,
   ChevronRight,
   User,
+  Gauge,
+  BatteryCharging,
+  Wifi,
+  Wallet,
+  Volume2,
+  VolumeX,
+  Sparkles,
+  Radio,
+  Compass,
 } from 'lucide-react';
 import { Ticket, TicketStatus } from '../types';
 import { ticketStore, DriverProfile } from '../services/ticketStore';
@@ -37,6 +46,16 @@ export function DriverDashboard({ onViewTicketOnMap }: DriverDashboardProps) {
   const [inputTicketId, setInputTicketId] = useState('');
   const [boardingError, setBoardingError] = useState<string | null>(null);
   const [isQrScanning, setIsQrScanning] = useState(false);
+
+  // Audio chimes
+  const [audioEnabled, setAudioEnabled] = useState(true);
+
+  // Cashout Modal state
+  const [payoutModalOpen, setPayoutModalOpen] = useState(false);
+  const [payoutAmount, setPayoutAmount] = useState('');
+  const [payoutReceipt, setPayoutReceipt] = useState<string | null>(null);
+  const [isProcessingPayout, setIsProcessingPayout] = useState(false);
+  const [withdrawnTotal, setWithdrawnTotal] = useState(0);
 
   // Driver reply to admin comment state
   const [selectedAdminComment, setSelectedAdminComment] = useState<{
@@ -85,8 +104,44 @@ export function DriverDashboard({ onViewTicketOnMap }: DriverDashboardProps) {
     .filter((t) => t.status === 'Completed')
     .reduce((sum, t) => sum + t.fare, 0);
 
+  // Play audio dispatch chime
+  const playChime = (type: 'accept' | 'step' | 'complete' | 'cashout') => {
+    if (!audioEnabled) return;
+    try {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const now = ctx.currentTime;
+
+      if (type === 'accept') {
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.15);
+      } else if (type === 'step') {
+        osc.frequency.setValueAtTime(659.25, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+      } else if (type === 'complete') {
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.linearRampToValueAtTime(880, now + 0.25);
+      } else if (type === 'cashout') {
+        osc.frequency.setValueAtTime(880, now);
+        osc.frequency.exponentialRampToValueAtTime(1320, now + 0.2);
+      }
+
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.25);
+    } catch {
+      // Audio not supported or blocked
+    }
+  };
+
   // Driver lifecycle actions
   const handleAccept = (ticket: Ticket) => {
+    playChime('accept');
     ticketStore.updateTicketStatus(ticket.id, 'Accepted', {
       driverId: driver.id,
       driverName: driver.name,
@@ -106,10 +161,12 @@ export function DriverDashboard({ onViewTicketOnMap }: DriverDashboardProps) {
   };
 
   const handleStartTrip = (ticket: Ticket) => {
+    playChime('step');
     ticketStore.updateTicketStatus(ticket.id, 'Enroute to Pickup');
   };
 
   const handleArrivedAtPickup = (ticket: Ticket) => {
+    playChime('step');
     ticketStore.updateTicketStatus(ticket.id, 'Arrived at Pickup');
     // Simulate mobile vibration if supported
     if (navigator.vibrate) {
@@ -132,6 +189,7 @@ export function DriverDashboard({ onViewTicketOnMap }: DriverDashboardProps) {
       return;
     }
 
+    playChime('step');
     ticketStore.updateTicketStatus(boardingModalTicket.id, 'Boarded');
     setBoardingModalTicket(null);
   };
@@ -147,10 +205,12 @@ export function DriverDashboard({ onViewTicketOnMap }: DriverDashboardProps) {
   };
 
   const handleStartJourneyToDropoff = (ticket: Ticket) => {
+    playChime('step');
     ticketStore.updateTicketStatus(ticket.id, 'Enroute to Drop Off');
   };
 
   const handleArrivedAtDropoff = (ticket: Ticket) => {
+    playChime('step');
     ticketStore.updateTicketStatus(ticket.id, 'Arrived at Drop Off');
   };
 
@@ -159,14 +219,30 @@ export function DriverDashboard({ onViewTicketOnMap }: DriverDashboardProps) {
   };
 
   const handleConfirmPaymentReceived = (ticket: Ticket, mode: 'M-Pesa' | 'Cash') => {
+    playChime('complete');
     ticketStore.updateTicketStatus(ticket.id, 'Payment Confirmed', {
       paymentMethod: mode,
     });
   };
 
   const handleEndTrip = (ticket: Ticket) => {
+    playChime('complete');
     ticketStore.updateTicketStatus(ticket.id, 'Completed');
     setActiveTab('history');
+  };
+
+  // M-Pesa Payout Execution
+  const handleExecutePayout = () => {
+    const amt = parseFloat(payoutAmount);
+    if (isNaN(amt) || amt <= 0) return;
+    setIsProcessingPayout(true);
+    setTimeout(() => {
+      const receipt = `MP${Math.floor(10000000 + Math.random() * 90000000)}KE`;
+      setWithdrawnTotal((prev) => prev + amt);
+      setPayoutReceipt(receipt);
+      setIsProcessingPayout(false);
+      playChime('cashout');
+    }, 1200);
   };
 
   const handleSendDriverReply = (e: FormEvent) => {
@@ -229,24 +305,121 @@ export function DriverDashboard({ onViewTicketOnMap }: DriverDashboardProps) {
           </div>
         </div>
 
-        {/* Driver Quick Stats */}
-        <div className="grid grid-cols-3 gap-3 mt-4 pt-3 border-t border-zinc-800/80 text-center">
-          <div className="bg-zinc-950/80 p-2.5 rounded-xl border border-zinc-800">
+        {/* Driver Quick Stats & Financials */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-3 border-t border-zinc-800/80">
+          <div className="bg-zinc-950/80 p-2.5 rounded-xl border border-zinc-800 text-center">
             <span className="text-[10px] text-zinc-400 uppercase font-mono">Pending Rides</span>
             <p className="text-lg font-bold text-amber-400 font-mono">{pendingTickets.length}</p>
           </div>
-          <div className="bg-zinc-950/80 p-2.5 rounded-xl border border-zinc-800">
+          <div className="bg-zinc-950/80 p-2.5 rounded-xl border border-zinc-800 text-center">
             <span className="text-[10px] text-zinc-400 uppercase font-mono">Active Trips</span>
             <p className="text-lg font-bold text-cyan-400 font-mono">{activeTickets.length}</p>
           </div>
-          <div className="bg-zinc-950/80 p-2.5 rounded-xl border border-zinc-800">
-            <span className="text-[10px] text-zinc-400 uppercase font-mono">Total Earnings</span>
-            <p className="text-lg font-bold text-emerald-400 font-mono">
+          <div className="bg-zinc-950/80 p-2.5 rounded-xl border border-zinc-800 text-center">
+            <span className="text-[10px] text-zinc-400 uppercase font-mono">Gross Bookings</span>
+            <p className="text-lg font-bold text-zinc-200 font-mono">
               KSH {totalEarnings.toLocaleString()}
             </p>
           </div>
+          <div className="bg-emerald-950/40 p-2.5 rounded-xl border border-emerald-500/40 text-center flex flex-col justify-between">
+            <div>
+              <span className="text-[10px] text-emerald-400 uppercase font-mono font-bold">Net Payout (85%)</span>
+              <p className="text-lg font-black text-emerald-300 font-mono">
+                KSH {Math.max(0, Math.round(totalEarnings * 0.85) - withdrawnTotal).toLocaleString()}
+              </p>
+            </div>
+            <button
+              type="button"
+              id="driver-cashout-btn"
+              onClick={() => {
+                setPayoutAmount(String(Math.max(0, Math.round(totalEarnings * 0.85) - withdrawnTotal)));
+                setPayoutReceipt(null);
+                setPayoutModalOpen(true);
+              }}
+              className="mt-1.5 px-2 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-[11px] font-bold flex items-center justify-center space-x-1 transition-all"
+            >
+              <Wallet className="w-3 h-3" />
+              <span>M-Pesa Cashout</span>
+            </button>
+          </div>
+        </div>
+
+        {/* COCKPIT TELEMETRY STRIP */}
+        <div className="mt-3.5 p-3 rounded-xl bg-zinc-950/90 border border-zinc-800 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+          <div className="flex items-center space-x-2 p-1.5 rounded-lg bg-zinc-900/60 border border-zinc-800/80">
+            <Gauge className={`w-4 h-4 ${activeTickets.some(t => t.status.includes('Enroute')) ? 'text-emerald-400 animate-pulse' : 'text-zinc-500'}`} />
+            <div>
+              <div className="text-[10px] text-zinc-500 uppercase font-mono">Speedometer</div>
+              <div className="font-mono font-bold text-zinc-200">
+                {activeTickets.some(t => t.status.includes('Enroute')) ? '68 km/h • Highway' : '0 km/h • Parked'}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 p-1.5 rounded-lg bg-zinc-900/60 border border-zinc-800/80">
+            <BatteryCharging className="w-4 h-4 text-emerald-400" />
+            <div>
+              <div className="text-[10px] text-zinc-500 uppercase font-mono">Battery / Range</div>
+              <div className="font-mono font-bold text-emerald-300">88% • 420 km</div>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 p-1.5 rounded-lg bg-zinc-900/60 border border-zinc-800/80">
+            <Radio className="w-4 h-4 text-cyan-400" />
+            <div>
+              <div className="text-[10px] text-zinc-500 uppercase font-mono">Tyres & GPS</div>
+              <div className="font-mono font-bold text-cyan-300">32 PSI • Dual L1/L5</div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-1.5 rounded-lg bg-zinc-900/60 border border-zinc-800/80">
+            <div>
+              <div className="text-[10px] text-zinc-500 uppercase font-mono">Driver Rating</div>
+              <div className="font-mono font-bold text-amber-400">4.98 ★ (512 Trips)</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAudioEnabled(!audioEnabled)}
+              className="p-1 rounded text-zinc-400 hover:text-white"
+              title={audioEnabled ? 'Mute Dispatch Chimes' : 'Enable Dispatch Chimes'}
+            >
+              {audioEnabled ? <Volume2 className="w-3.5 h-3.5 text-emerald-400" /> : <VolumeX className="w-3.5 h-3.5 text-zinc-600" />}
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* TURN-BY-TURN GPS HUD (WHEN TRIP ACTIVE) */}
+      {activeTickets.length > 0 && (
+        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/60 to-zinc-900 border-2 border-emerald-500/70 shadow-lg flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+              <Compass className="w-5 h-5 animate-spin" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="text-[10px] font-mono font-bold uppercase text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-500/40">
+                  LIVE HUD NAV
+                </span>
+                <span className="text-xs text-zinc-300 font-semibold">
+                  Trip {activeTickets[0].id}: {activeTickets[0].pickup} → {activeTickets[0].destination}
+                </span>
+              </div>
+              <p className="text-xs text-zinc-200 mt-0.5">
+                {activeTickets[0].status === 'Enroute to Pickup'
+                  ? `Proceed to pickup point at ${activeTickets[0].pickup} (GPS tracked)`
+                  : activeTickets[0].status === 'Enroute to Drop Off'
+                  ? `In 450m, follow Ol Kalou highway toward ${activeTickets[0].destination} • Traffic clear`
+                  : `Status: ${activeTickets[0].status} • Ready for next stage`}
+              </p>
+            </div>
+          </div>
+          <div className="text-right hidden sm:block">
+            <div className="text-[11px] font-mono text-zinc-400">Road Distance</div>
+            <div className="text-sm font-bold font-mono text-amber-400">{activeTickets[0].distanceKm} KM</div>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex items-center space-x-2 border-b border-zinc-800 pb-2">
@@ -952,6 +1125,115 @@ export function DriverDashboard({ onViewTicketOnMap }: DriverDashboardProps) {
                 Confirm Decline
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: M-Pesa Instant Cashout */}
+      {payoutModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-zinc-900 border-2 border-emerald-500 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div className="flex items-center space-x-2 text-emerald-400 mb-2">
+              <Wallet className="w-6 h-6" />
+              <h3 className="font-bold text-white text-base">Instant M-Pesa Driver Cashout</h3>
+            </div>
+            <p className="text-xs text-zinc-300 mb-4">
+              Payout directly to your registered Safaricom number <strong className="text-emerald-400 font-mono">{driver.phone}</strong>. Funds reflect within 10 seconds.
+            </p>
+
+            {payoutReceipt ? (
+              <div className="bg-emerald-950/60 border border-emerald-500/60 rounded-xl p-4 text-center mb-4 space-y-2">
+                <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto animate-bounce" />
+                <div className="text-emerald-300 font-bold text-sm">Payout Dispatched Successfully!</div>
+                <div className="text-xs text-zinc-300 font-mono">
+                  Receipt: <strong className="text-white">{payoutReceipt}</strong>
+                </div>
+                <div className="text-[11px] text-zinc-400">
+                  Transferred KSH {parseFloat(payoutAmount || '0').toLocaleString()} to {driver.phone}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPayoutModalOpen(false)}
+                  className="mt-3 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs w-full cursor-pointer"
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1">
+                    Withdrawal Amount (KSH)
+                  </label>
+                  <input
+                    type="number"
+                    value={payoutAmount}
+                    onChange={(e) => setPayoutAmount(e.target.value)}
+                    placeholder="Enter amount"
+                    className="w-full px-3.5 py-2.5 bg-zinc-950 border border-zinc-700 rounded-xl text-white font-mono font-bold focus:outline-none focus:border-emerald-500"
+                  />
+                  <div className="flex gap-2 mt-2">
+                    {[500, 1000, 2000].map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => setPayoutAmount(String(preset))}
+                        className="px-2 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-mono cursor-pointer"
+                      >
+                        +{preset}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPayoutAmount(
+                          String(Math.max(0, Math.round(totalEarnings * 0.85) - withdrawnTotal))
+                        )
+                      }
+                      className="px-2 py-1 rounded-lg bg-emerald-950 border border-emerald-500/40 text-emerald-400 text-xs font-mono cursor-pointer"
+                    >
+                      Max Available
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-[11px] space-y-1 text-zinc-400 font-mono">
+                  <div className="flex justify-between">
+                    <span>M-Pesa B2C Fee:</span>
+                    <span className="text-emerald-400 font-bold">KSH 0 (Free)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Recipient:</span>
+                    <span className="text-white">{driver.name} ({driver.phone})</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setPayoutModalOpen(false)}
+                    className="px-4 py-2.5 rounded-xl bg-zinc-800 text-zinc-300 text-xs font-semibold flex-1 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isProcessingPayout || !payoutAmount || parseFloat(payoutAmount) <= 0}
+                    onClick={handleExecutePayout}
+                    className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:bg-zinc-800 disabled:text-zinc-600 text-black font-bold text-xs flex-1 flex items-center justify-center space-x-1 cursor-pointer"
+                  >
+                    {isProcessingPayout ? (
+                      <span>Sending M-Pesa...</span>
+                    ) : (
+                      <>
+                        <Send className="w-3.5 h-3.5" />
+                        <span>Withdraw Now</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

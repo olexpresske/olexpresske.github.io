@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Header } from './components/Header';
-import { BookingCard } from './components/BookingCard';
+import { BookingCard, RideClassType } from './components/BookingCard';
 import { DarkMap } from './components/DarkMap';
 import { TicketCard } from './components/TicketCard';
 import { TrackingView } from './components/TrackingView';
@@ -52,6 +52,7 @@ export default function App() {
   const [termsOpen, setTermsOpen] = useState(false);
   const [galaxyModalOpen, setGalaxyModalOpen] = useState(false);
   const [showHeroGalaxy, setShowHeroGalaxy] = useState(true);
+  const [rideClass, setRideClass] = useState<RideClassType>('Standard');
 
   // Reference for scrolling to ticket card
   const ticketCardRef = useRef<HTMLDivElement>(null);
@@ -162,7 +163,7 @@ export default function App() {
   };
 
   // Confirm booking action (Section 4 & 5)
-  const handleConfirmBooking = (mobile: string, telephone?: string) => {
+  const handleConfirmBooking = (mobile: string, telephone?: string, finalFare?: number) => {
     if (!routeData) return;
 
     const newTicket = ticketStore.createTicket({
@@ -173,7 +174,8 @@ export default function App() {
       routeCoords: routeData.routeCoords,
       distanceKm: routeData.distanceKm,
       estimatedTime: routeData.timeFormatted,
-      fare: routeData.fare,
+      fare: finalFare ?? routeData.fare,
+      rideClass,
       mobile,
       telephone,
     });
@@ -293,6 +295,8 @@ export default function App() {
                   activeTicket={activeTicket}
                   onTrackCurrentTicket={handleTrackCurrentTicket}
                   isCalculating={isCalculating}
+                  rideClass={rideClass}
+                  onChangeRideClass={setRideClass}
                 />
 
                 {/* SECTION 3: LIVE DARK ROAD MAP */}
@@ -315,6 +319,7 @@ export default function App() {
                       destination={destination}
                       routeData={routeData}
                       onConfirmBooking={handleConfirmBooking}
+                      rideClass={rideClass}
                     />
                   </div>
                 )}

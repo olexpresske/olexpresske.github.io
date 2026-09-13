@@ -10,10 +10,11 @@
 
 - **🌌 World-Class 3D Galaxy Globe**: Real-time Three.js cosmos with 3,000+ drifting stars, spiral galaxy dust, shooting meteor streaks, and an interactive 3D Earth with a pulsing pinpoint beacon on **Ol Kalou, Kenya** (Lat `-0.2721°`, Lon `36.3792°`).
 - **🗺️ Live Dark Road Map**: OpenStreetMap Leaflet integration rendered in a high-contrast dark theme with route calculations, town snapping, distance/ETA estimation, and live GPS car simulation.
+- **⚡ Interactive Ride Class Tiers**: Real-time selection among **Standard** (affordable town cruising), **Express** (priority highway pickup), **Cargo** (rural produce & goods transport), and **VIP** (executive luxury travel).
 - **📍 Nyandarua Origin Rule**: Strict county origin validation covering Ol Kalou, Nyahururu, Engineer, Ndunyu Njeru, Mairo Inya, Miharati, Wanjohi, and destinations across all 47 counties of Kenya.
 - **🎫 Reactive Ticket & Dispatch Engine**: Custom Pub/Sub store managing ride requests, driver assignments, QR boarding passes, trip progression, and 5-minute passenger review locks.
-- **🚗 Driver Portal**: Instant ride acceptance, stage updates (*En Route to Pickup* → *Arrived* → *Boarded* → *In Transit* → *Completed*), and fare settlement.
-- **🛡️ Admin Dispatch Dashboard**: Real-time fleet overview, active rides monitoring, driver-to-admin two-way dispatch messages, and revenue analytics.
+- **🚗 Driver Cockpit Telemetry Hub**: Live simulated Speedometer (highway cruising vs parked), 88% battery range gauge, tyre pressure monitor (32 PSI), GPS satellite accuracy, Web Audio API dispatch chimes, and instant M-Pesa driver earnings cashouts.
+- **🛡️ Admin Nyandarua Tactical Satellite Radar**: Real-time 360° rotating radar sweep monitoring Nyandarua fleet units, click-to-inspect driver telemetry, system operations health bar, revenue/commission financial breakdown (15% platform / 85% driver), and instant driver fleet broadcast dispatcher.
 
 ---
 

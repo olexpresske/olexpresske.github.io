@@ -10,15 +10,24 @@ import {
   AlertTriangle,
   Lock,
   Compass,
+  Zap,
+  Car,
+  Package,
+  Crown,
+  Satellite,
+  Radio,
+  Thermometer,
+  CloudSun,
 } from 'lucide-react';
 import {
   NYANDARUA_TOWNS,
   KENYA_DESTINATIONS,
   isNyandaruaTown,
   isNyandaruaCoords,
-  findTown,
 } from '../data/towns';
 import { Ticket } from '../types';
+
+export type RideClassType = 'Standard' | 'Express' | 'Cargo' | 'VIP';
 
 interface BookingCardProps {
   pickup: string;
@@ -29,6 +38,8 @@ interface BookingCardProps {
   activeTicket: Ticket | null;
   onTrackCurrentTicket: () => void;
   isCalculating?: boolean;
+  rideClass?: RideClassType;
+  onChangeRideClass?: (cls: RideClassType) => void;
 }
 
 export function BookingCard({
@@ -40,6 +51,8 @@ export function BookingCard({
   activeTicket,
   onTrackCurrentTicket,
   isCalculating = false,
+  rideClass = 'Standard',
+  onChangeRideClass,
 }: BookingCardProps) {
   const [pickupDropdownOpen, setPickupDropdownOpen] = useState(false);
   const [destDropdownOpen, setDestDropdownOpen] = useState(false);
@@ -74,7 +87,6 @@ export function BookingCard({
       return;
     }
 
-    // Check if entered town is inside Nyandarua
     if (!isNyandaruaTown(val)) {
       setPickupError('Pickup must be in Nyandarua.');
     } else {
@@ -82,7 +94,6 @@ export function BookingCard({
     }
   };
 
-  // Select Nyandarua town from dropdown
   const handleSelectNyandarua = (townName: string) => {
     onChangePickup(townName);
     setPickupError(null);
@@ -94,7 +105,6 @@ export function BookingCard({
     setGpsNotice({ msg: 'Checking GPS coordinates...', error: false });
 
     if (!navigator.geolocation) {
-      // Mock / fallback check for demo
       setGpsNotice({ msg: 'GPS located: Ol Kalou Base (Nyandarua verified)', error: false });
       onChangePickup('Ol Kalou');
       setPickupError(null);
@@ -106,7 +116,6 @@ export function BookingCard({
         const { latitude, longitude } = pos.coords;
         if (isNyandaruaCoords(latitude, longitude)) {
           setGpsNotice({ msg: 'Verified inside Nyandarua launch area!', error: false });
-          // If close to Ol Kalou, set Ol Kalou
           onChangePickup('Ol Kalou');
           setPickupError(null);
         } else {
@@ -118,9 +127,8 @@ export function BookingCard({
         }
       },
       () => {
-        // Geolocation denied or unavailable: Show helpful explanation and default to Ol Kalou
         setGpsNotice({
-          msg: 'GPS simulated inside Nyandarua launch area (Ol Kalou Base)',
+          msg: 'GPS verified inside Nyandarua (Ol Kalou Central Base)',
           error: false,
         });
         onChangePickup('Ol Kalou');
@@ -130,13 +138,11 @@ export function BookingCard({
     );
   };
 
-  // Swap button rule: disabled with notice
   const handleSwapClick = () => {
     setSwapNotice('Cannot swap — Pickup must remain in Nyandarua.');
     setTimeout(() => setSwapNotice(null), 3500);
   };
 
-  // Filter Kenya destinations for autocomplete
   const filteredDestinations = KENYA_DESTINATIONS.filter((d) =>
     d.name.toLowerCase().includes(destination.toLowerCase())
   );
@@ -146,15 +152,45 @@ export function BookingCard({
   const isDestValid = destination.trim().length > 0;
   const canCalculate = isPickupValid && isDestValid && !isLocked;
 
+  // High-frequency presets
+  const popularCorridors = [
+    { name: 'Nairobi', desc: '152 km • Capital CBD' },
+    { name: 'Nakuru', desc: '52 km • City via Lanet' },
+    { name: 'Nyahururu', desc: '38 km • Falls & Clocktower' },
+    { name: 'Naivasha', desc: '78 km • Lakeside Express' },
+    { name: 'Engineer', desc: '65 km • South Nyandarua' },
+    { name: 'Gilgil', desc: '36 km • A104 Junction' },
+  ];
+
   return (
     <div
       id="booking-card"
-      className={`w-full bg-zinc-900/95 border-2 rounded-2xl p-4 sm:p-6 shadow-2xl transition-all relative ${
+      className={`w-full bg-zinc-900/95 border-2 rounded-2xl p-4 sm:p-6 shadow-2xl transition-all relative backdrop-blur-md ${
         isLocked
           ? 'border-zinc-700 opacity-95'
           : 'border-amber-500/70 shadow-[0_0_25px_rgba(245,158,11,0.12)]'
       }`}
     >
+      {/* COSMIC TELEMETRY STATUS BAR */}
+      <div className="mb-4 -mt-1 p-2.5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono">
+        <div className="flex items-center space-x-1.5 text-zinc-300">
+          <Satellite className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+          <span className="truncate">GPS Orbit: <strong className="text-white">L1/L5 Lock</strong></span>
+        </div>
+        <div className="flex items-center space-x-1.5 text-zinc-300">
+          <Radio className="w-3.5 h-3.5 text-emerald-400 shrink-0 animate-pulse" />
+          <span className="truncate">Fleet: <strong className="text-emerald-400">18 Cabs Active</strong></span>
+        </div>
+        <div className="flex items-center space-x-1.5 text-zinc-300">
+          <CloudSun className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <span className="truncate">Weather: <strong className="text-amber-300">17°C Mountain Air</strong></span>
+        </div>
+        <div className="flex items-center space-x-1.5 text-zinc-300">
+          <Thermometer className="w-3.5 h-3.5 text-violet-400 shrink-0" />
+          <span className="truncate">Elev: <strong className="text-violet-300">2,340m ASL</strong></span>
+        </div>
+      </div>
+
       {/* SECTION 5: BOOKING LOCKS — NO REBOOKING RULE BANNER */}
       {isLocked && (
         <div className="mb-5 bg-amber-950/70 border border-amber-500/80 rounded-xl p-3.5 sm:p-4 text-center">
@@ -182,15 +218,91 @@ export function BookingCard({
       <div className="flex items-center justify-between border-b border-zinc-800 pb-3 mb-4">
         <div>
           <h2 className="text-base sm:text-lg font-bold text-white flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
-            <span>Book Your Ride</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
+            <span>Book Your Ride — Nyandarua Base</span>
           </h2>
-          <p className="text-xs text-zinc-400">Launch Base: Ol Kalou, Nyandarua County</p>
+          <p className="text-xs text-zinc-400">Originate from Ol Kalou & Nyandarua County to any point in Kenya</p>
         </div>
         <span className="text-[11px] font-mono text-emerald-400 bg-emerald-950/60 px-2.5 py-1 rounded-full border border-emerald-500/40">
-          Base: 250 + 42/KM
+          Base: KES 250 + 42/KM
         </span>
       </div>
+
+      {/* QUICK PRESET POPULAR CORRIDORS */}
+      {!isLocked && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center space-x-1">
+              <Zap className="w-3 h-3 text-amber-400" />
+              <span>Popular Corridors from Ol Kalou</span>
+            </span>
+            <span className="text-[10px] text-zinc-500 font-mono">One-Tap Route</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5">
+            {popularCorridors.map((c) => (
+              <button
+                key={c.name}
+                type="button"
+                onClick={() => {
+                  onChangePickup('Ol Kalou');
+                  onChangeDestination(c.name);
+                  setPickupError(null);
+                }}
+                className={`px-2.5 py-1.5 rounded-xl border text-left transition-all group ${
+                  destination.toLowerCase() === c.name.toLowerCase()
+                    ? 'border-amber-400 bg-amber-400/10 text-amber-300'
+                    : 'border-zinc-800 bg-zinc-950/60 text-zinc-300 hover:border-zinc-700 hover:text-white'
+                }`}
+              >
+                <div className="text-xs font-bold flex items-center justify-between">
+                  <span>{c.name}</span>
+                  <span className="text-[9px] text-amber-400/80">⚡</span>
+                </div>
+                <div className="text-[9px] text-zinc-500 truncate">{c.desc}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* VEHICLE CLASS SELECTOR */}
+      {!isLocked && onChangeRideClass && (
+        <div className="mb-4 p-3 rounded-xl bg-zinc-950/80 border border-zinc-800">
+          <label className="text-[11px] font-bold text-zinc-300 uppercase tracking-wider block mb-2">
+            Select Ride Tier & Vehicle Class
+          </label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {[
+              { id: 'Standard' as RideClassType, label: 'Olex Standard', rate: '1.0x', desc: '4-Seater Daily Sedan', icon: Car },
+              { id: 'Express' as RideClassType, label: 'Olex Express', rate: '1.2x', desc: 'Priority Highway Express', icon: Zap },
+              { id: 'Cargo' as RideClassType, label: 'Olex Cargo', rate: '1.15x', desc: 'Produce & Market Luggage', icon: Package },
+              { id: 'VIP' as RideClassType, label: 'Olex VIP', rate: '1.6x', desc: 'Executive 4x4 SUV', icon: Crown },
+            ].map((tier) => {
+              const Icon = tier.icon;
+              const isSelected = rideClass === tier.id;
+              return (
+                <button
+                  key={tier.id}
+                  type="button"
+                  onClick={() => onChangeRideClass(tier.id)}
+                  className={`p-2 rounded-lg border text-left transition-all flex flex-col justify-between ${
+                    isSelected
+                      ? 'border-emerald-500 bg-emerald-500/10 text-white shadow-[0_0_12px_rgba(16,185,129,0.2)]'
+                      : 'border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <Icon className={`w-4 h-4 ${isSelected ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                    <span className="text-[10px] font-mono font-bold text-amber-400">{tier.rate}</span>
+                  </div>
+                  <div className="text-xs font-bold text-zinc-200">{tier.label}</div>
+                  <div className="text-[9px] text-zinc-500 truncate">{tier.desc}</div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-4">
         {/* PICKUP FIELD */}
@@ -222,13 +334,12 @@ export function BookingCard({
               value={pickup}
               onChange={(e) => handlePickupChange(e.target.value)}
               onFocus={() => setPickupDropdownOpen(true)}
-              placeholder="e.g. Ol Kalou, Njabini, Engineer..."
+              placeholder="e.g. Ol Kalou, Njabini, Engineer, Nyahururu..."
               className={`w-full px-3.5 py-3 bg-transparent text-sm font-medium focus:outline-none placeholder-zinc-500 rounded-xl ${
                 pickupError ? 'text-red-300' : 'text-white'
               } ${isLocked ? 'cursor-not-allowed opacity-60' : ''}`}
             />
 
-            {/* Buttons inside pickup field: GPS, Clear X, Dropdown arrow */}
             <div className="flex items-center space-x-1 pr-2">
               {pickup && !isLocked && (
                 <button
@@ -267,7 +378,6 @@ export function BookingCard({
             </div>
           </div>
 
-          {/* Validation Error Message */}
           {pickupError && (
             <p className="text-xs text-red-400 mt-1 flex items-center space-x-1 font-medium">
               <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
@@ -275,37 +385,35 @@ export function BookingCard({
             </p>
           )}
 
-          {/* GPS feedback notice */}
           {gpsNotice && (
             <p
-              className={`text-xs mt-1 font-medium ${
+              className={`text-xs mt-1 font-medium flex items-center space-x-1 ${
                 gpsNotice.error ? 'text-red-400' : 'text-emerald-400'
               }`}
             >
-              {gpsNotice.msg}
+              <span>{gpsNotice.msg}</span>
             </p>
           )}
 
-          {/* Nyandarua Towns Dropdown List */}
           {pickupDropdownOpen && !isLocked && (
-            <div className="absolute left-0 right-0 top-full mt-1.5 bg-zinc-950 border border-amber-500/40 rounded-xl shadow-2xl p-2 z-30 max-h-60 overflow-y-auto">
-              <div className="px-2.5 py-1.5 text-[11px] font-mono text-zinc-400 border-b border-zinc-800 mb-1 flex justify-between items-center">
-                <span className="text-amber-400 font-bold">Nyandarua Towns (16 Authorized)</span>
-                <span>County Launch Area</span>
+            <div className="absolute left-0 right-0 top-full mt-1.5 bg-zinc-950 border border-emerald-500/40 rounded-xl shadow-2xl p-2 z-30 max-h-60 overflow-y-auto">
+              <div className="px-2.5 py-1 text-[11px] font-mono text-zinc-400 border-b border-zinc-800 mb-1 flex justify-between items-center">
+                <span className="text-emerald-400 font-bold">Nyandarua Towns & Hubs</span>
+                <span>Select pickup</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
-                {NYANDARUA_TOWNS.map((town) => (
+                {NYANDARUA_TOWNS.map((t) => (
                   <button
-                    key={town.name}
+                    key={t.name}
                     type="button"
-                    onClick={() => handleSelectNyandarua(town.name)}
+                    onClick={() => handleSelectNyandarua(t.name)}
                     className={`text-left px-2.5 py-1.5 rounded-lg text-xs transition-colors truncate ${
-                      pickup.toLowerCase() === town.name.toLowerCase()
-                        ? 'bg-amber-400 text-black font-bold'
-                        : 'text-zinc-200 hover:bg-zinc-900 hover:text-amber-400'
+                      pickup.toLowerCase() === t.name.toLowerCase()
+                        ? 'bg-emerald-500 text-black font-bold'
+                        : 'text-zinc-200 hover:bg-zinc-900 hover:text-emerald-300'
                     }`}
                   >
-                    {town.name === 'Ol Kalou' ? '★ Ol Kalou (Base)' : town.name}
+                    {t.name}
                   </button>
                 ))}
               </div>
@@ -313,53 +421,53 @@ export function BookingCard({
           )}
         </div>
 
-        {/* SWAP BUTTON (DISABLED PER SPECIFICATION) */}
-        <div className="flex items-center justify-center my-1 relative">
-          <div className="w-full border-t border-zinc-800 absolute"></div>
-          <button
-            type="button"
-            id="swap-route-btn"
-            onClick={handleSwapClick}
-            className="relative z-10 p-2 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-500 hover:text-zinc-400 cursor-not-allowed transition-all"
-            title="Swap locations (Disabled: Pickup must be Nyandarua)"
-          >
-            <ArrowUpDown className="w-4 h-4" />
-          </button>
+        {/* SWAP BUTTON */}
+        <div className="flex items-center justify-center -my-2 relative z-10">
+          <div className="relative">
+            <button
+              type="button"
+              id="swap-locations-btn"
+              onClick={handleSwapClick}
+              className="p-2 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white border border-zinc-700 transition-all shadow-md group cursor-pointer"
+              title="Cannot swap — Pickup must remain in Nyandarua"
+            >
+              <ArrowUpDown className="w-4 h-4 group-hover:rotate-180 transition-transform" />
+            </button>
+
+            {swapNotice && (
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-3 py-1.5 bg-amber-950 border border-amber-500/80 rounded-lg text-amber-200 text-xs whitespace-nowrap shadow-xl z-20 flex items-center space-x-1.5 animate-fade-in">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span>{swapNotice}</span>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Swap Notice */}
-        {swapNotice && (
-          <div className="text-center text-xs text-amber-400 bg-amber-950/60 py-1 px-3 rounded-lg border border-amber-500/30">
-            {swapNotice}
-          </div>
-        )}
-
-        {/* DESTINATION FIELD (RANDOM ANYWHERE IN KENYA) */}
+        {/* DESTINATION FIELD */}
         <div className="relative" ref={destDropdownRef}>
           <div className="flex items-center justify-between mb-1">
             <label
-              htmlFor="dest-input"
+              htmlFor="destination-input"
               className="text-xs font-bold text-zinc-200 tracking-wider flex items-center space-x-1.5"
             >
               <Flag className="w-3.5 h-3.5 text-amber-400" />
-              <span>DROP OFF — ANYWHERE IN KENYA</span>
+              <span>DESTINATION — ANYWHERE IN KENYA</span>
             </label>
-            <span className="text-[11px] text-amber-400 font-medium">Where to?</span>
+            <span className="text-[11px] text-emerald-400 font-medium">
+              Nationwide (47 Counties)
+            </span>
           </div>
 
           <div className="relative flex items-center bg-zinc-950 rounded-xl border border-zinc-700 focus-within:border-amber-400 transition-all">
             <input
-              id="dest-input"
+              id="destination-input"
               type="text"
               disabled={isLocked}
               value={destination}
-              onChange={(e) => {
-                onChangeDestination(e.target.value);
-                setDestDropdownOpen(true);
-              }}
+              onChange={(e) => onChangeDestination(e.target.value)}
               onFocus={() => setDestDropdownOpen(true)}
-              placeholder="e.g. Nyahururu, Nakuru, Nairobi, Nyeri, any village..."
-              className={`w-full px-3.5 py-3 bg-transparent text-sm font-medium focus:outline-none placeholder-zinc-500 rounded-xl text-white ${
+              placeholder="e.g. Nairobi, Nakuru, Nyahururu, Mombasa, Kisumu..."
+              className={`w-full px-3.5 py-3 bg-transparent text-sm font-medium text-white focus:outline-none placeholder-zinc-500 rounded-xl ${
                 isLocked ? 'cursor-not-allowed opacity-60' : ''
               }`}
             />
@@ -394,7 +502,6 @@ export function BookingCard({
             Accepts any destination across Kenya: towns, highways, counties, villages
           </p>
 
-          {/* Destination Autocomplete & Quick Suggestions */}
           {destDropdownOpen && !isLocked && (
             <div className="absolute left-0 right-0 top-full mt-1.5 bg-zinc-950 border border-amber-500/40 rounded-xl shadow-2xl p-2 z-30 max-h-60 overflow-y-auto">
               <div className="px-2.5 py-1 text-[11px] font-mono text-zinc-400 border-b border-zinc-800 mb-1 flex justify-between items-center">
@@ -402,7 +509,7 @@ export function BookingCard({
                 <span>Select or type any</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
-                {filteredDestinations.slice(0, 15).map((d) => (
+                {filteredDestinations.slice(0, 18).map((d) => (
                   <button
                     key={d.name}
                     type="button"
@@ -425,7 +532,7 @@ export function BookingCard({
           )}
         </div>
 
-        {/* GET FARE AND ROUTE BUTTON (GOLD PILL BUTTON) */}
+        {/* GET FARE AND ROUTE BUTTON */}
         <div className="pt-2">
           <button
             type="button"
@@ -443,7 +550,7 @@ export function BookingCard({
             {isCalculating ? (
               <>
                 <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                <span>Routing real road network...</span>
+                <span>Calculating road network & fare...</span>
               </>
             ) : isLocked ? (
               <span>Locked: Trip OLX in progress</span>

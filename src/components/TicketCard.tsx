@@ -2,12 +2,14 @@ import { useState, useEffect, FormEvent } from 'react';
 import QRCode from 'qrcode';
 import { Phone, PhoneCall, ShieldCheck, CheckCircle2, RotateCcw, ArrowRight } from 'lucide-react';
 import { RouteComputation } from '../data/towns';
+import { RideClassType } from './BookingCard';
 
 interface TicketCardProps {
   pickup: string;
   destination: string;
   routeData: RouteComputation;
-  onConfirmBooking: (mobile: string, telephone?: string) => void;
+  onConfirmBooking: (mobile: string, telephone?: string, finalFare?: number) => void;
+  rideClass?: RideClassType;
 }
 
 export function TicketCard({
@@ -15,6 +17,7 @@ export function TicketCard({
   destination,
   routeData,
   onConfirmBooking,
+  rideClass = 'Standard',
 }: TicketCardProps) {
   const [ticketPreviewId] = useState(() => `OLX-${Math.floor(100000 + Math.random() * 900000)}`);
   const [currentDate] = useState(() => {
@@ -78,13 +81,17 @@ export function TicketCard({
 
   const isFormValid = isValidKenyanNumber(mobile);
 
+  const fareMultiplier =
+    rideClass === 'VIP' ? 1.6 : rideClass === 'Express' ? 1.2 : rideClass === 'Cargo' ? 1.15 : 1.0;
+  const finalFare = Math.round(routeData.fare * fareMultiplier);
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!isFormValid) {
       setMobileError('Please enter a valid M-Pesa mobile number (e.g. 0712345678)');
       return;
     }
-    onConfirmBooking(mobile.trim(), telephone.trim() || undefined);
+    onConfirmBooking(mobile.trim(), telephone.trim() || undefined, finalFare);
   };
 
   return (
@@ -131,10 +138,17 @@ export function TicketCard({
               </span>
             </div>
 
+            <div className="flex justify-between items-center py-1 border-b border-zinc-900">
+              <span className="text-xs text-zinc-400">Ride Tier</span>
+              <span className="text-xs font-mono font-bold text-amber-300 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/30">
+                {rideClass} {fareMultiplier > 1 ? `(${fareMultiplier}x)` : ''}
+              </span>
+            </div>
+
             <div className="flex justify-between items-center pt-1 text-base">
               <span className="font-semibold text-zinc-300">Total Fare</span>
               <span className="text-2xl font-black text-amber-400 font-mono">
-                KSH {routeData.fare.toLocaleString()}
+                KSH {finalFare.toLocaleString()}
               </span>
             </div>
           </div>

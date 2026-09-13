@@ -15,15 +15,35 @@ import {
   Car,
   Eye,
   X,
+  Satellite,
+  Radio,
+  Zap,
+  BellRing,
+  AlertOctagon,
+  Percent,
 } from 'lucide-react';
 import { Ticket, TicketStatus } from '../types';
 import { ticketStore } from '../services/ticketStore';
+import { TacticalRadar } from './TacticalRadar';
 
 export function AdminDashboard() {
   const [tickets, setTickets] = useState<Ticket[]>(() => ticketStore.getTickets());
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | 'Pending' | 'Accepted' | 'In Progress' | 'Completed' | 'No Review'>('All');
   const [dateFilter, setDateFilter] = useState<'Today' | 'Yesterday' | 'This Week' | 'All Time'>('All Time');
+
+  // Broadcast to Drivers state
+  const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [broadcastPriority, setBroadcastPriority] = useState<'Normal' | 'Urgent Weather' | 'Market Demand'>('Normal');
+  const [broadcastHistory, setBroadcastHistory] = useState<Array<{ id: string; text: string; time: string; priority: string }>>([
+    {
+      id: 'BC-01',
+      text: 'Morning notice: Ol Kalou to Nyahururu highway (B5) dry and clear. High passenger demand expected at Ol Kalou central market.',
+      time: '08:15 AM',
+      priority: 'Market Demand',
+    },
+  ]);
+  const [broadcastSentBadge, setBroadcastSentBadge] = useState(false);
 
   // Comment to Driver modal state
   const [commentModalTicket, setCommentModalTicket] = useState<Ticket | null>(null);
@@ -167,6 +187,21 @@ export function AdminDashboard() {
     ticketStore.closeAdminComment(ticketId, commentId);
   };
 
+  const handleSendBroadcast = (e: FormEvent) => {
+    e.preventDefault();
+    if (!broadcastMessage.trim()) return;
+    const newBc = {
+      id: `BC-0${broadcastHistory.length + 1}`,
+      text: broadcastMessage.trim(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      priority: broadcastPriority,
+    };
+    setBroadcastHistory([newBc, ...broadcastHistory]);
+    setBroadcastMessage('');
+    setBroadcastSentBadge(true);
+    setTimeout(() => setBroadcastSentBadge(false), 3500);
+  };
+
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6 pb-12 animate-in fade-in duration-300">
       {/* Header */}
@@ -187,7 +222,7 @@ export function AdminDashboard() {
           <button
             id="admin-export-btn"
             onClick={handleExportExcel}
-            className="px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 hover:text-white hover:bg-zinc-800 text-xs font-semibold flex items-center space-x-1.5 transition-colors"
+            className="px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 hover:text-white hover:bg-zinc-800 text-xs font-semibold flex items-center space-x-1.5 transition-colors cursor-pointer"
           >
             <Download className="w-3.5 h-3.5 text-emerald-400" />
             <span>Export to Excel (CSV)</span>
@@ -196,13 +231,51 @@ export function AdminDashboard() {
           <button
             id="admin-refresh-btn"
             onClick={handleRefresh}
-            className="p-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
+            className="p-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
             title="Refresh dashboard"
           >
             <RotateCw className="w-4 h-4" />
           </button>
         </div>
       </div>
+
+      {/* OPERATIONS SYSTEM HEALTH TELEMETRY BAR */}
+      <div className="p-3 rounded-2xl bg-zinc-950 border border-zinc-800 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+        <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-zinc-900/70 border border-zinc-800/80">
+          <Satellite className="w-4 h-4 text-emerald-400 animate-pulse" />
+          <div>
+            <div className="text-[10px] text-zinc-500 uppercase font-mono">GPS Constellation</div>
+            <div className="font-mono font-bold text-emerald-300">24/24 Satellites Locked</div>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-zinc-900/70 border border-zinc-800/80">
+          <Zap className="w-4 h-4 text-cyan-400" />
+          <div>
+            <div className="text-[10px] text-zinc-500 uppercase font-mono">Dispatch Edge Latency</div>
+            <div className="font-mono font-bold text-cyan-300">9ms • Kenya Node</div>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-zinc-900/70 border border-zinc-800/80">
+          <Radio className="w-4 h-4 text-amber-400" />
+          <div>
+            <div className="text-[10px] text-zinc-500 uppercase font-mono">M-Pesa Webhook API</div>
+            <div className="font-mono font-bold text-amber-300">99.9% Uptime (Instant)</div>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-zinc-900/70 border border-zinc-800/80">
+          <Car className="w-4 h-4 text-purple-400" />
+          <div>
+            <div className="text-[10px] text-zinc-500 uppercase font-mono">Nyandarua Corridors</div>
+            <div className="font-mono font-bold text-purple-300">B5 & C67 All Clear</div>
+          </div>
+        </div>
+      </div>
+
+      {/* NYANDARUA TACTICAL SATELLITE RADAR SCOPE */}
+      <TacticalRadar />
 
       {/* TOP SUMMARY CARDS (Specified in Blueprint Section 9) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -245,6 +318,101 @@ export function AdminDashboard() {
           <span className="text-[11px] font-mono text-zinc-400 uppercase block">No Review</span>
           <p className="text-2xl font-black text-zinc-300 font-mono mt-1">{noReviewCount}</p>
           <span className="text-[10px] text-zinc-400">Auto-unlocked / skipped</span>
+        </div>
+      </div>
+
+      {/* FINANCIAL SETTLEMENT & COMMISSION BREAKDOWN */}
+      <div className="bg-gradient-to-r from-zinc-900 to-zinc-950 border border-zinc-800 p-4 rounded-2xl grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800">
+          <span className="text-[10px] text-zinc-400 uppercase font-mono font-bold">Gross Passenger Billings</span>
+          <p className="text-xl font-black text-white font-mono mt-0.5">KSH {totalRevenue.toLocaleString()}</p>
+          <p className="text-[11px] text-zinc-500 mt-1">100% processed through M-Pesa & Cash</p>
+        </div>
+
+        <div className="p-3 rounded-xl bg-amber-950/30 border border-amber-500/40">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-amber-400 uppercase font-mono font-bold">Platform Dispatch Fee (15%)</span>
+            <Percent className="w-3.5 h-3.5 text-amber-400" />
+          </div>
+          <p className="text-xl font-black text-amber-300 font-mono mt-0.5">
+            KSH {Math.round(totalRevenue * 0.15).toLocaleString()}
+          </p>
+          <p className="text-[11px] text-zinc-400 mt-1">Platform operations & 24/7 emergency dispatch</p>
+        </div>
+
+        <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/40">
+          <span className="text-[10px] text-emerald-400 uppercase font-mono font-bold">Driver Net Payouts (85%)</span>
+          <p className="text-xl font-black text-emerald-300 font-mono mt-0.5">
+            KSH {Math.round(totalRevenue * 0.85).toLocaleString()}
+          </p>
+          <p className="text-[11px] text-zinc-400 mt-1">Instantly withdrawable by drivers to M-Pesa</p>
+        </div>
+      </div>
+
+      {/* FLEET BROADCAST DISPATCH TERMINAL */}
+      <div className="bg-zinc-900/95 border border-zinc-800 p-4 rounded-2xl space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <BellRing className="w-4 h-4 text-amber-400" />
+            <h3 className="text-sm font-bold text-white uppercase tracking-wide">
+              Instant Fleet Broadcast Dispatcher
+            </h3>
+          </div>
+          {broadcastSentBadge && (
+            <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950 px-2.5 py-0.5 rounded-full border border-emerald-500/50 flex items-center space-x-1 animate-bounce">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Broadcast Dispatched to 6 Drivers!</span>
+            </span>
+          )}
+        </div>
+
+        <form onSubmit={handleSendBroadcast} className="flex flex-col sm:flex-row gap-2">
+          <select
+            value={broadcastPriority}
+            onChange={(e) => setBroadcastPriority(e.target.value as any)}
+            className="px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-amber-400"
+          >
+            <option value="Normal">Normal Notice</option>
+            <option value="Urgent Weather">Urgent Weather (Fog/Rain)</option>
+            <option value="Market Demand">High Demand / Surge Base</option>
+          </select>
+
+          <input
+            type="text"
+            value={broadcastMessage}
+            onChange={(e) => setBroadcastMessage(e.target.value)}
+            placeholder="Type advisory to all Nyandarua drivers (e.g. Heavy fog near Ndunyu Njeru, reduce speed)..."
+            className="flex-1 px-3.5 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400"
+          />
+
+          <button
+            type="submit"
+            className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-bold text-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
+          >
+            <Send className="w-3.5 h-3.5" />
+            <span>Broadcast Now</span>
+          </button>
+        </form>
+
+        {/* Broadcast log */}
+        <div className="pt-2 border-t border-zinc-800/80 space-y-1.5">
+          <div className="text-[10px] font-mono text-zinc-500 uppercase">Recent Broadcast Transmissions:</div>
+          <div className="space-y-1">
+            {broadcastHistory.slice(0, 2).map((bc) => (
+              <div
+                key={bc.id}
+                className="flex items-center justify-between p-2 rounded-lg bg-zinc-950/80 border border-zinc-800/70 text-xs"
+              >
+                <div className="flex items-center space-x-2">
+                  <span className="text-[10px] font-mono font-bold text-amber-400 bg-amber-950 px-1.5 py-0.2 rounded border border-amber-500/30">
+                    {bc.priority}
+                  </span>
+                  <span className="text-zinc-300 text-[11px]">{bc.text}</span>
+                </div>
+                <span className="text-[10px] font-mono text-zinc-500 shrink-0 ml-2">{bc.time}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

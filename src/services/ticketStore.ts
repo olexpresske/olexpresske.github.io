@@ -234,6 +234,7 @@ class TicketStore {
     distanceKm: number;
     estimatedTime: string;
     fare: number;
+    rideClass?: 'Standard' | 'Express' | 'Cargo' | 'VIP';
     mobile: string;
     telephone?: string;
   }): Ticket {
@@ -265,6 +266,7 @@ class TicketStore {
       distanceKm: params.distanceKm,
       estimatedTime: params.estimatedTime,
       fare: params.fare,
+      rideClass: params.rideClass || 'Standard',
       mobile: params.mobile,
       telephone: params.telephone || '',
       status: 'Waiting for Driver',

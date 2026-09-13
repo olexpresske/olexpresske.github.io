@@ -44,6 +44,7 @@ export interface Ticket {
   distanceKm: number; // e.g. 47.4
   estimatedTime: string; // e.g. 1h 10m
   fare: number; // e.g. KSH 2242
+  rideClass?: 'Standard' | 'Express' | 'Cargo' | 'VIP';
   mobile: string;
   telephone?: string;
   status: TicketStatus;
