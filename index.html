@@ -8,7 +8,7 @@
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
 body{background:#f8fafc;color:#0f172a;padding:12px}
 .card{background:white;border:1px solid #e2e8f0;border-radius:14px;padding:16px;margin:10px 0;box-shadow:0 4px 12px rgba(0,0,0,.05)}
-input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #cbd5e1;background:white;color:#0f172a;margin:6px 0}
+input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #cbd5e1;background:white;color:#0f172a;margin:6px 0;font-weight:500}
 button{width:100%;padding:14px;border-radius:10px;border:0;font-weight:800;cursor:pointer;font-size:14px}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 </style>
@@ -19,15 +19,15 @@ button{width:100%;padding:14px;border-radius:10px;border:0;font-weight:800;curso
 <div style="width:80px;height:80px;background:#334155;border-radius:50%;display:flex;align-items:center;justify-content:center;animation:float 3s infinite">
 <svg viewBox="0 0 140 60" width="70" height="30"><path d="M10 32 L20 16 L90 16 L102 20 L118 20 L122 32 L120 42 L10 42 Z" fill="white"/><circle cx="32" cy="42" r="6" fill="#0f172a"/><circle cx="88" cy="42" r="6" fill="#0f172a"/></svg>
 </div>
-<div style="flex:1"><div style="font-weight:900">OlexPress - Your Ride Everywhere in Kenya</div><div style="font-size:11px;color:#4ade80">Olkalou • Gilgil • Nyahururu • Nakuru etc</div><div id="ticketPreview" style="font-size:10px;opacity:.8;margin-top:4px;background:rgba(255,255,255,.1);padding:6px;border-radius:6px">🎫 Ticket: Will auto-generate | 📅 Time/Date auto-logged</div></div>
+<div style="flex:1"><div style="font-weight:900;font-size:15px">OlexPress - Your Ride Everywhere in Kenya</div><div style="font-size:11px;color:#4ade80">Olkalou • Gilgil • Nyahururu • Nakuru • Base 250 + KM×42</div><div id="ticketPreview" style="font-size:10px;opacity:.9;margin-top:6px;background:rgba(255,255,255,.12);padding:6px;border-radius:6px">🎫 Ticket: Auto-generates | 📅 Time/Date auto-logged | 💰 Base 250 + KM×42</div></div>
 </div>
 
 <div class="card">
-<h3 style="font-size:14px;margin-bottom:10px">Online Booking</h3>
+<h3 style="font-size:14px;margin-bottom:10px">📍 Online Booking - Base Rate KES 250</h3>
 
 <label style="font-size:11px;font-weight:700">FROM *</label>
 <select id="from" onchange="autoCalc()">
-<option value="">Select From Location</option>
+<option value="">Select From</option>
 <option value="Olkalou">Olkalou</option>
 <option value="Gilgil">Gilgil</option>
 <option value="Nyahururu">Nyahururu</option>
@@ -38,7 +38,7 @@ button{width:100%;padding:14px;border-radius:10px;border:0;font-weight:800;curso
 
 <label style="font-size:11px;font-weight:700">TO *</label>
 <select id="to" onchange="autoCalc()">
-<option value="">Select To Location</option>
+<option value="">Select To</option>
 <option value="Olkalou">Olkalou</option>
 <option value="Gilgil">Gilgil</option>
 <option value="Nyahururu">Nyahururu</option>
@@ -48,20 +48,20 @@ button{width:100%;padding:14px;border-radius:10px;border:0;font-weight:800;curso
 </select>
 
 <div style="display:flex;gap:8px">
-<div style="flex:1"><label style="font-size:11px;font-weight:700">KM</label><input id="km" type="number" placeholder="Auto" value="35"></div>
-<div style="flex:1"><label style="font-size:11px;font-weight:700">FARE KES (×42)</label><input id="fare" type="number" placeholder="Auto" value="1470" style="font-weight:800;color:#16a34a"></div>
+<div style="flex:1"><label style="font-size:11px;font-weight:700">KM (Auto)</label><input id="km" type="number" placeholder="Auto" value="35" oninput="calcFare()"></div>
+<div style="flex:1"><label style="font-size:11px;font-weight:700">FARE KES (250+KM×42)</label><input id="fare" type="number" placeholder="Auto" value="1720" readonly style="font-weight:800;color:#16a34a;background:#f0fdf4"></div>
 </div>
 
 <div style="display:flex;gap:8px">
-<div style="flex:1"><label style="font-size:11px;font-weight:700">Your Name *</label><input id="name" placeholder="John"></div>
+<div style="flex:1"><label style="font-size:11px;font-weight:700">Your Name *</label><input id="name" placeholder="John Doe"></div>
 <div style="flex:1"><label style="font-size:11px;font-weight:700">Phone 07... *</label><input id="phone" placeholder="07..."></div>
 </div>
 
 <div id="calcInfo" style="background:#f0fdf4;border:1px solid #bbf7d0;padding:10px;border-radius:8px;margin:8px 0;font-size:11px">
-✅ FIXED: Auto-calc works even if map missing. Default 35km × 42 = 1470. Ticket number auto-generated.
+✅ Formula: <b>Base 250 + (KM × 42)</b> = Fare<br>Example: 35km → 250 + 1470 = KES 1720<br>Ticket number auto-generates on booking + Time/Date logged
 </div>
 
-<button onclick="bookRide()" style="background:#16a34a;color:white;font-size:16px;margin-top:8px">🚕 BOOK NOW - Generate Ticket Number</button>
+<button onclick="bookRide()" style="background:#16a34a;color:white;font-size:16px;margin-top:8px">🚕 BOOK NOW - Generate Ticket + Log Time/Date</button>
 
 <div id="status" style="margin-top:12px"></div>
 </div>
@@ -86,44 +86,45 @@ const distances={
 "Gilgil-Naivasha":30,"Naivasha-Gilgil":30
 };
 
+const BASE_RATE=250;
+const PER_KM=42;
+
 function autoCalc(){
 let from=document.getElementById('from').value;
 let to=document.getElementById('to').value;
 if(!from||!to) return;
-if(from===to){document.getElementById('to').value=''; alert('From and To cannot be same! Select different'); return;}
+if(from===to){document.getElementById('to').value=''; alert('From and To cannot be same!'); return;}
 let key=from+'-'+to;
-let km=distances[key]||35; // FIXED: Default 35 if not in map - no more fail
+let km=distances[key]||35;
 document.getElementById('km').value=km;
 calcFare();
 }
 
 function calcFare(){
 let km=parseFloat(document.getElementById('km').value)||35;
-let fare=Math.round(km*42);
+let fare=BASE_RATE + Math.round(km*PER_KM);
 document.getElementById('fare').value=fare;
 let previewId='OLX-'+Math.floor(100000+Math.random()*900000);
-document.getElementById('ticketPreview').innerHTML=`🎫 Ticket: <b>${previewId}</b> (final on book) | 📅 ${new Date().toLocaleString()} | 💰 KES ${fare} for ${km}km`;
-document.getElementById('calcInfo').innerHTML=`✅ ${document.getElementById('from').value||'FROM'} → ${document.getElementById('to').value||'TO'} = ${km}km × 42 = <b>KES ${fare}</b><br>🎫 Ticket auto-generates on booking | 📅 Time/Date auto-logged`;
+document.getElementById('ticketPreview').innerHTML=`🎫 Ticket: <b>${previewId}</b> (final on booking) | 📅 ${new Date().toLocaleString('en-KE')} | 💰 Base ${BASE_RATE} + ${km}km×${PER_KM} = KES ${fare}`;
+document.getElementById('calcInfo').innerHTML=`✅ ${document.getElementById('from').value||'FROM'} → ${document.getElementById('to').value||'TO'} = Base KES ${BASE_RATE} + ${km}km × ${PER_KM} = <b>KES ${fare}</b><br>Formula: 250 + (KM × 42) = ${BASE_RATE} + ${km*PER_KM} = ${fare}`;
 }
 
-// FIXED BOOK - NO MORE "Fill all" BUG
 function bookRide(){
 let from=document.getElementById('from').value.trim();
 let to=document.getElementById('to').value.trim();
-let km=document.getElementById('km').value.trim() || '35';
-let fare=document.getElementById('fare').value.trim() || '1470';
+let km=document.getElementById('km').value.trim()||'35';
+let fare=document.getElementById('fare').value.trim();
 let name=document.getElementById('name').value.trim();
 let phone=document.getElementById('phone').value.trim();
 
-// FIXED VALIDATION - Show exact missing field, not generic "Fill all"
-if(!from) return alert('Please SELECT FROM location - Olkalou, Gilgil etc');
+if(!from) return alert('Please SELECT FROM location');
 if(!to) return alert('Please SELECT TO location');
 if(!name) return alert('Please ENTER Your Name');
 if(!phone) return alert('Please ENTER Phone 07...');
-if(phone.length<10) return alert('Phone must be 10 digits - 07...');
+if(phone.length<10) return alert('Phone must be 10 digits');
 
-if(!km) km='35';
-if(!fare) fare=Math.round(parseFloat(km)*42).toString();
+let kmVal=parseFloat(km)||35;
+let fareVal=parseInt(fare)||(BASE_RATE + Math.round(kmVal*PER_KM));
 
 let ticketNumber='OLX-'+Date.now().toString().slice(-6)+'-'+Math.floor(100+Math.random()*900);
 let now=new Date();
@@ -136,19 +137,20 @@ let ts=Date.now();
 let rideData={
 id:ticketNumber,ticket:ticketNumber,
 from:from,to:to,
-km:parseFloat(km),fare:parseInt(fare),
+km:kmVal,fare:fareVal,
 name:name,phone:phone,
 status:'pending',ts:ts,
 time:timeStr,date:dateStr,clock:clockStr,iso:isoStr,
-yFactor:42
+baseRate:BASE_RATE,yFactor:PER_KM,
+formula:`${BASE_RATE} + ${kmVal}×${PER_KM} = ${fareVal}`
 };
 
-document.getElementById('status').innerHTML=`<div style="background:#fffbeb;padding:10px;border-radius:8px;border:1px solid #fde68a">⏳ Booking ${ticketNumber}... Logging time/date...</div>`;
+document.getElementById('status').innerHTML=`<div style="background:#fffbeb;padding:10px;border-radius:8px;border:1px solid #fde68a">⏳ Booking ${ticketNumber}... Base ${BASE_RATE} + ${kmVal}×${PER_KM} = KES ${fareVal}... Logging time/date...</div>`;
 
 db.ref('rides/'+ticketNumber).set(rideData).then(()=>{
-document.getElementById('status').innerHTML=`<div style="background:#f0fdf4;border:2px solid #22c55e;padding:12px;border-radius:10px"><b>✅ BOOKED SUCCESS!</b><br>🎫 Ticket Number: <b style="font-size:18px;color:#16a34a">${ticketNumber}</b><br>📅 DATE LOGGED: ${dateStr}<br>⏰ TIME LOGGED: ${clockStr}<br>💰 ${km}km × 42 = KES ${fare}<br>📞 ${phone} - Driver will contact</div>`;
+document.getElementById('status').innerHTML=`<div style="background:#f0fdf4;border:2px solid #22c55e;padding:12px;border-radius:10px;color:#0f172a"><b>✅ BOOKED SUCCESS!</b><br>🎫 Ticket Number: <b style="font-size:18px;color:#16a34a">${ticketNumber}</b><br>📅 DATE LOGGED: ${dateStr}<br>⏰ TIME LOGGED: ${clockStr}<br>💰 Formula: ${BASE_RATE} + ${kmVal}km×${PER_KM} = KES ${fareVal}<br>📞 ${phone} - Driver will contact - QR Code below</div>`;
 showActiveTicket(ticketNumber,rideData);
-}).catch(e=>alert('Booking Error: '+e.message+' - Check Firebase config'));
+}).catch(e=>alert('Booking Error: '+e.message));
 }
 
 function showActiveTicket(ticketId,data){
@@ -156,14 +158,15 @@ document.getElementById('activeTicket').style.display='block';
 document.getElementById('activeTicket').innerHTML=`
 <div style="display:flex;justify-content:space-between"><b>🎫 Active Ticket ${ticketId}</b><span style="background:#f59e0b;color:white;padding:4px 10px;border-radius:12px;font-size:10px" id="statusBadge">PENDING - ${data.clock}</span></div>
 <div style="background:#f8fafc;padding:10px;border-radius:8px;margin-top:10px;border-left:4px solid #16a34a">
-<div style="font-size:12px">From <b>${data.from}</b> → <b>${data.to}</b> • ${data.km}km • KES ${data.fare}</div>
-<div style="font-size:10px;margin-top:6px">📅 DATE LOGGED: ${data.date}<br>⏰ TIME LOGGED: ${data.clock}<br>🎫 ${data.time}</div>
+<div style="font-size:12px">From <b>${data.from}</b> → <b>${data.to}</b> • ${data.km}km</div>
+<div style="font-size:12px;font-weight:800;color:#16a34a">💰 Base ${data.baseRate} + ${data.km}×${data.yFactor} = KES ${data.fare}</div>
+<div style="font-size:10px;margin-top:6px">📅 DATE LOGGED: ${data.date}<br>⏰ TIME LOGGED: ${data.clock}<br>🎫 FULL: ${data.time}<br>Formula: ${data.formula}</div>
 </div>
 <div style="background:white;padding:12px;border-radius:10px;text-align:center;margin-top:10px;border:2px dashed #16a34a">
-<div style="font-size:11px;font-weight:800">QR CODE + TICKET</div>
+<div style="font-size:11px;font-weight:800">QR CODE + TICKET NUMBER</div>
 <div style="font-size:16px;font-weight:900">${ticketId}</div>
-<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${ticketId}" style="width:120px;height:120px;margin-top:8px">
-<div style="font-size:9px;color:#64748b">Show QR + Ticket to driver</div>
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${ticketId}" style="width:120px;height:120px;margin-top:8px;border:1px solid #e2e8f0;border-radius:8px">
+<div style="font-size:9px;color:#64748b;margin-top:4px">Show QR + Ticket number to driver for boarding</div>
 </div>
 <div id="stepsClient" style="margin-top:10px;background:#0f172a;color:white;padding:10px;border-radius:8px"></div>
 <div id="reviewBox" style="margin-top:12px;display:none"></div>
@@ -182,11 +185,11 @@ let steps={
 pending:{label:'Waiting driver accept',pct:10},
 accepted:{label:'Driver accepted - coming',pct:25},
 arrived:{label:'Driver arrived - Confirm QR '+ticketId,pct:40},
-boarding_requested:{label:'Driver requested boarding',pct:55,action:true},
+boarding_requested:{label:'Driver requested boarding - Accept boarding',pct:55,action:true},
 boarded:{label:'Boarded! On trip '+v.from+' → '+v.to,pct:70},
-pay_initiated:{label:'Reached '+v.to+' - Pay KES '+v.fare,pct:85,actionPay:true},
-paid:{label:'Paid - Driver ending',pct:95},
-completed:{label:'Completed - Please review',pct:100,review:true}
+pay_initiated:{label:'Reached '+v.to+' - Driver initiated pay KES '+v.fare,pct:85,actionPay:true},
+paid:{label:'Paid KES '+v.fare+' - Driver ending ride',pct:95},
+completed:{label:'Ride completed - Please review',pct:100,review:true}
 };
 let cur=steps[status]||steps.pending;
 let stepsDiv=document.getElementById('stepsClient');
@@ -194,26 +197,26 @@ if(stepsDiv){
 stepsDiv.innerHTML=`
 <div style="font-size:11px;font-weight:800">Progress: ${cur.pct}% - ${cur.label}</div>
 <div style="background:#334155;height:8px;border-radius:4px;margin-top:6px;overflow:hidden"><div style="width:${cur.pct}%;background:#22c55e;height:100%"></div></div>
-<div style="font-size:10px;margin-top:6px;background:#1e293b;padding:6px;border-radius:6px">📅 ${v.date} | ⏰ ${v.clock} | 🎫 ${v.time}</div>
+<div style="font-size:10px;margin-top:6px;background:#1e293b;padding:6px;border-radius:6px">📅 ${v.date} | ⏰ ${v.clock} | 💰 Base ${v.baseRate||250} + ${v.km}×${v.yFactor||42} = KES ${v.fare} | 🎫 ${v.time}</div>
 ${cur.action?`<button onclick="acceptBoarding('${ticketId}')" style="background:#16a34a;color:white;margin-top:8px;padding:10px">✅ ACCEPT BOARDING QR ${ticketId}</button>`:''}
 ${cur.actionPay?`<button onclick="acceptPay('${ticketId}')" style="background:#f59e0b;color:white;margin-top:8px;padding:10px">✅ ACCEPT & PAY KES ${v.fare}</button>`:''}
 `;
 }
 if(cur.review){
 let rb=document.getElementById('reviewBox'); rb.style.display='block';
-rb.innerHTML=`<div style="background:#f0fdf4;padding:12px;border-radius:10px;border:1px solid #22c55e"><b>⭐ Rate Trip</b><div style="display:flex;gap:6px;margin:8px 0"><span onclick="setStars(1)" class="star" style="font-size:24px;cursor:pointer">⭐</span><span onclick="setStars(2)" class="star" style="font-size:24px;cursor:pointer">⭐</span><span onclick="setStars(3)" class="star" style="font-size:24px;cursor:pointer">⭐</span><span onclick="setStars(4)" class="star" style="font-size:24px;cursor:pointer">⭐</span><span onclick="setStars(5)" class="star" style="font-size:24px;cursor:pointer">⭐</span></div><textarea id="reviewText" placeholder="Review..." style="width:100%;padding:8px;border-radius:6px;border:1px solid #cbd5e1;min-height:60px"></textarea><button onclick="submitReview('${ticketId}')" style="background:#16a34a;color:white;margin-top:8px;padding:10px">Submit Review - ${v.date}</button></div>`;
+rb.innerHTML=`<div style="background:#f0fdf4;padding:12px;border-radius:10px;border:1px solid #22c55e"><b>⭐ Rate Trip - ${v.date} ${v.clock}</b><div style="display:flex;gap:6px;margin:8px 0"><span onclick="setStars(1)" class="star" style="font-size:24px;cursor:pointer">⭐</span><span onclick="setStars(2)" class="star" style="font-size:24px;cursor:pointer">⭐</span><span onclick="setStars(3)" class="star" style="font-size:24px;cursor:pointer">⭐</span><span onclick="setStars(4)" class="star" style="font-size:24px;cursor:pointer">⭐</span><span onclick="setStars(5)" class="star" style="font-size:24px;cursor:pointer">⭐</span></div><textarea id="reviewText" placeholder="Your review..." style="width:100%;padding:8px;border-radius:6px;border:1px solid #cbd5e1;min-height:60px"></textarea><button onclick="submitReview('${ticketId}')" style="background:#16a34a;color:white;margin-top:8px;padding:10px">Submit Review - Logged with ${v.date} ${v.clock}</button></div>`;
 }
 });
 }
 window.currentStars=5;
 function setStars(n){window.currentStars=n; document.querySelectorAll('.star').forEach((s,i)=>s.style.opacity=i<n?1:.3);}
 function acceptBoarding(id){db.ref('rides/'+id).update({status:'boarded'});}
-function acceptPay(id){db.ref('rides/'+id).update({status:'paid'}).then(()=>alert('Paid!'));}
+function acceptPay(id){db.ref('rides/'+id).update({status:'paid'}).then(()=>alert('Paid! Waiting driver to end'));}
 function submitReview(id){
 let stars=window.currentStars;let text=document.getElementById('reviewText').value.trim()||'Good service';let now=new Date();
 db.ref('rides/'+id+'/feedback').set({stars:stars,text:text,time:now.toLocaleTimeString(),date:now.toLocaleDateString(),full:now.toLocaleString(),ts:Date.now()}).then(()=>{
 db.ref('rides/'+id).update({status:'completed'});
-alert('Review logged! Date/Time: '+now.toLocaleString());
+alert('⭐ Review logged! Time/Date: '+now.toLocaleString());
 });
 }
 calcFare();
