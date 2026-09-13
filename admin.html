@@ -1,104 +1,94 @@
-<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>OlexPress Admin - Owner Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
-body{background:#0f172a;color:#fff;min-height:100vh;padding:14px}
-.head{background:linear-gradient(135deg,#1e293b,#0f172a);border-radius:20px;padding:18px;border:1px solid #334155;display:flex;justify-content:space-between;align-items:center}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
-.stat{background:#1e293b;border:1px solid #334155;border-radius:18px;padding:16px;text-align:center}
-.stat .lbl{font-size:10px;color:#94a3b8;letter-spacing:1px;font-weight:800}.stat b{font-size:22px;display:block;margin-top:4px}
-.stat.earn{border-color:#22c55e33;background:linear-gradient(135deg,#1e293b,#14532d22)}
-.stat.comm{border-color:#f59e0b33;background:linear-gradient(135deg,#1e293b,#78350f22)}
-.filters{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
-.fbtn{padding:8px 14px;border-radius:20px;border:1.5px solid #334155;background:#1e293b;color:#94a3b8;font-weight:800;font-size:11px;cursor:pointer}.fbtn.on{background:#fff;color:#111;border-color:#fff}
-.card{background:#fff;color:#111;border-radius:18px;padding:16px;margin:10px 0;box-shadow:0 8px 24px rgba(0,0,0,0.25);border-left:6px solid #22c55e}
-.badge{padding:4px 10px;border-radius:20px;color:#fff;font-size:10px;font-weight:900}
-button{padding:8px 12px;border:none;border-radius:10px;font-weight:800;font-size:11px;cursor:pointer;margin:4px 4px 0 0}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}body{background:#0f172a;color:#fff;padding:12px}
+.card{background:#1e293b;border-radius:16px;padding:14px;margin-bottom:12px;border:1px solid #334155}
+.top{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.top>div{background:#1e293b;padding:14px;border-radius:14px;text-align:center}
+.b{font-size:22px;font-weight:900}
+.filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filter button{padding:8px 14px;border-radius:20px;border:none;background:#334155;color:#fff;font-weight:700;cursor:pointer}
+.filter button.active{background:#fff;color:#0f172a}
+.ride{background:#fff;color:#111;border-radius:16px;padding:14px;margin-bottom:10px}
+.stars{color:#f59e0b;font-size:18px;font-weight:900}
+.fbBox{background:#fef3c7;border:1px solid #fcd34d;padding:10px;border-radius:10px;margin-top:8px}
+.btn{padding:6px 12px;border-radius:8px;border:none;font-weight:700;cursor:pointer;margin-right:6px}
 </style></head><body>
+<h2 style="margin-bottom:10px">OlexPress Admin • Owner Dashboard • XXX Fleet</h2>
 
-<div class="head">
-<div><div style="font-weight:900;font-size:20px">🔑 OlexPress Admin</div><div style="font-size:11px;color:#94a3b8">Owner Dashboard • All Rides Live • Nyandarua</div></div>
-<div style="text-align:right"><div style="background:#f59e0b;color:#fff;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:900">OWNER ONLY</div><div style="font-size:10px;color:#64748b;margin-top:4px">olexpresske Firebase</div></div>
+<div class="top">
+<div><div style="font-size:11px;opacity:.6">TOTAL FARES</div><div class="b" id="totalF">KES 0</div><div style="font-size:10px;opacity:.6">collected</div></div>
+<div><div style="font-size:11px;opacity:.6">DRIVERS EARN 80%</div><div class="b" id="drvE" style="color:#4ade80">KES 0</div><div style="font-size:10px;opacity:.6">paid to drivers</div></div>
+<div><div style="font-size:11px;opacity:.6">YOUR 20%</div><div class="b" id="yourP" style="color:#f59e0b">KES 0</div><div style="font-size:10px;opacity:.6">commission</div></div>
+<div><div style="font-size:11px;opacity:.6">RIDES</div><div class="b" id="rideC">0</div><div style="font-size:10px;opacity:.6">total</div></div>
 </div>
 
-<div class="stats">
-<div class="stat"><div class="lbl">TOTAL RIDES</div><b id="tTotal">0</b><div style="font-size:10px;color:#64748b" id="tTotalSub">all time</div></div>
-<div class="stat"><div class="lbl" style="color:#f59e0b">ACTIVE NOW</div><b id="tActive" style="color:#f59e0b">0</b><div style="font-size:10px;color:#64748b">searching→payment</div></div>
-<div class="stat"><div class="lbl" style="color:#22c55e">COMPLETED</div><b id="tComp" style="color:#22c55e">0</b><div style="font-size:10px;color:#64748b">done</div></div>
-<div class="stat"><div class="lbl">TOTAL FARES</div><b id="tFares">KES 0</b><div style="font-size:10px;color:#64748b">collected by drivers</div></div>
-<div class="stat earn"><div class="lbl" style="color:#22c55e">DRIVERS EARN 80%</div><b id="tEarn" style="color:#22c55e">KES 0</b><div style="font-size:10px;color:#64748b">paid to drivers</div></div>
-<div class="stat comm"><div class="lbl" style="color:#f59e0b">YOUR COMMISSION 20%</div><b id="tComm" style="color:#f59e0b">KES 0</b><div style="font-size:10px;color:#64748b">owed to you</div></div>
+<div class="filter">
+<button class="active" onclick="setF('all',this)">All Rides</button>
+<button onclick="setF('searching',this)">Searching</button>
+<button onclick="setF('enroute',this)">Enroute</button>
+<button onclick="setF('arrived',this)">Arrived</button>
+<button onclick="setF('boarding_pending',this)">Boarding Req</button>
+<button onclick="setF('boarded',this)">On-Boarding</button>
+<button onclick="setF('payment_pending',this)">Payment Req</button>
+<button onclick="setF('completed',this)">Completed</button>
 </div>
 
-<div class="filters">
-<button class="fbtn on" onclick="filterStatus('all',this)">All Rides</button>
-<button class="fbtn" onclick="filterStatus('searching',this)">Searching</button>
-<button class="fbtn" onclick="filterStatus('enroute',this)">Enroute</button>
-<button class="fbtn" onclick="filterStatus('arrived',this)">Arrived</button>
-<button class="fbtn" onclick="filterStatus('boarding_pending',this)">Boarding Req</button>
-<button class="fbtn" onclick="filterStatus('boarded',this)">On-Boarding</button>
-<button class="fbtn" onclick="filterStatus('payment_pending',this)">Payment Req</button>
-<button class="fbtn" onclick="filterStatus('completed',this)">Completed</button>
-</div>
-
-<div id="list"><div style="background:#1e293b;border-radius:16px;padding:20px;text-align:center;color:#94a3b8">Loading all rides from Firebase rides node...</div></div>
+<div id="list">Loading rides...</div>
 
 <script>
 const cfg={apiKey:"AIzaSyDc6N5dULG6i72EWrLTtunwhbKQxaVi2KY",authDomain:"olexpresske.firebaseapp.com",databaseURL:"https://olexpresske-default-rtdb.firebaseio.com",projectId:"olexpresske",storageBucket:"olexpresske.firebasestorage.app",messagingSenderId:"953335654623",appId:"1:953335654623:web:1b91cbd29c1f63a23ba16a"};
 firebase.initializeApp(cfg);const db=firebase.database();
-let allRides=[];let currentFilter='all';
-function filterStatus(s,el){
-currentFilter=s;
-document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('on'));
-if(el)el.classList.add('on');
-render();
+
+let allRides=[];let filter='all';
+
+function setF(f,btn){
+filter=f;document.querySelectorAll('.filter button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render();
 }
+
 function render(){
-let el=document.getElementById('list');
-let list=currentFilter=='all'?allRides:allRides.filter(x=>x.status==currentFilter);
-if(!list.length){el.innerHTML=`<div style="background:#1e293b;border-radius:16px;padding:20px;text-align:center;color:#94a3b8">No rides for ${currentFilter}</div>`;return;}
-el.innerHTML='';
-list.forEach(r=>{
-let colors={searching:'#3b82f6',enroute:'#f59e0b',arrived:'#22c55e',boarding_pending:'#f59e0b',boarded:'#0f172a',payment_pending:'#f59e0b',completed:'#64748b',cancelled:'#ef4444'};
-let col=colors[r.status]||'#22c55e';
-let gets=(r.price-r.commission)||0;
-let time=new Date(r.created).toLocaleString();
-el.innerHTML+=`<div class="card" style="border-left-color:${col}">
-<div style="display:flex;justify-content:space-between">
-<div><b>${r.ticket}</b> <span class="badge" style="background:${col}">${r.status.replace('_',' ').toUpperCase()}</span><div style="font-size:11px;color:#64748b;margin-top:4px">${time}</div></div>
-<div style="text-align:right"><div style="font-size:10px;color:#64748b">FARE</div><b>KES ${r.price?.toLocaleString()}</b><div style="font-size:10px"><span style="color:#16a34a">Driver KES ${gets}</span> • <span style="color:#f59e0b">You KES ${r.commission}</span></div></div>
+let list=document.getElementById('list');list.innerHTML='';
+let filtered=allRides;
+if(filter!=='all')filtered=allRides.filter(r=>r.status===filter);
+if(!filtered.length){list.innerHTML='<div class="card">No rides in '+filter+'</div>';return;}
+filtered.forEach(r=>{
+let fb=r.feedback?`<div class="fbBox"><div class="stars">${'★'.repeat(r.feedback.stars||0)}${'☆'.repeat(5-(r.feedback.stars||0))} (${r.feedback.stars}/5)</div><div style="margin-top:4px;font-size:13px;font-weight:600">Review: ${r.feedback.text||'No comment'}</div><div style="font-size:10px;color:#6b7280;margin-top:4px">Time: ${r.feedback.time} • Ticket: ${r.feedback.ticket||r.ticket}</div></div>`:`<div style="margin-top:6px;font-size:11px;background:#f3f4f6;padding:6px 10px;border-radius:8px;color:#6b7280">No review yet</div>`;
+
+let div=document.createElement('div');div.className='ride';
+div.innerHTML=`
+<div style="display:flex;justify-content:space-between;align-items:center">
+<div><b style="font-size:16px">${r.ticket}</b> <span style="background:#e2e8f0;padding:3px 8px;border-radius:12px;font-size:10px;font-weight:800">${(r.status||'').toUpperCase()}</span></div>
+<div style="font-size:11px;color:#6b7280">${r.date||''}</div>
 </div>
-<div style="margin-top:8px;font-size:13px;font-weight:700">📍 ${r.pickup} → ${r.dropoff} • ${r.distance||''}</div>
-<div style="font-size:12px;color:#475569">📱 ${r.phone} • Ticket ${r.ticket} • QR ${r.ticket}</div>
+<div style="margin-top:6px;font-size:13px"><b>📍 ${r.pickup} → ${r.dropoff} • ${r.distance}</b></div>
+<div style="font-size:12px;color:#374151;margin-top:2px">📱 ${r.phone||''} • Ticket ${r.ticket} • QR ${r.ticket} • Total KES ${r.total?.toLocaleString()||0} • Your 20% KES ${r.commission||0}</div>
+${fb}
 <div style="margin-top:10px">
-<button style="background:#fee2e2;color:#dc2626" onclick="if(confirm('Delete ${r.ticket}?'))firebase.database().ref('rides/${r.ticket}').remove()">🗑 Delete</button>
-<button style="background:#0f172a;color:#fff" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'completed'})">Force Complete</button>
-<button style="background:#f1f5f9;color:#111" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'searching'})">Reset to Searching</button>
+<button class="btn" style="background:#fee2e2;color:#dc2626" onclick="if(confirm('Delete ${r.ticket}?'))firebase.database().ref('rides/${r.ticket}').remove()">🗑 Delete</button>
+<button class="btn" style="background:#1e293b;color:#fff" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'completed'})">Force Complete</button>
+<button class="btn" style="background:#f1f5f9" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'searching'})">Reset to Searching</button>
+<button class="btn" style="background:#dcfce7;color:#166534" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'enroute'})">Enroute</button>
+<button class="btn" style="background:#fef3c7" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'arrived'})">Arrived</button>
+<button class="btn" style="background:#e0e7ff" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'boarding_pending'})">Boarding Req</button>
+<button class="btn" style="background:#d1fae5" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'boarded'})">On-Boat</button>
+<button class="btn" style="background:#fde68a" onclick="firebase.database().ref('rides/${r.ticket}').update({status:'payment_pending'})">Payment Req</button>
 </div>
-</div>`;
+`;
+list.appendChild(div);
 });
 }
 
-db.ref('rides').on('value',s=>{
-let d=s.val();
-if(!d){allRides=[];render();['tTotal','tActive','tComp','tFares','tEarn','tComm'].forEach(id=>{let e=document.getElementById(id);if(e)e.innerText=id.includes('Total')||id.includes('Active')||id.includes('Comp')?0:'KES 0';});return;}
-allRides=Object.values(d).sort((a,b)=>b.created-a.created);
-let total=allRides.length;
-let active=allRides.filter(x=>['searching','enroute','arrived','boarding_pending','boarded','payment_pending'].includes(x.status)).length;
-let comp=allRides.filter(x=>x.status=='completed').length;
-let fares=allRides.filter(x=>x.status=='completed').reduce((a,x)=>a+(x.price||0),0);
-let earn=allRides.filter(x=>x.status=='completed').reduce((a,x)=>a+((x.price-x.commission)||0),0);
-let comm=allRides.filter(x=>x.status=='completed').reduce((a,x)=>a+(x.commission||0),0);
-document.getElementById('tTotal').innerText=total;
-document.getElementById('tActive').innerText=active;
-document.getElementById('tComp').innerText=comp;
-document.getElementById('tFares').innerText='KES '+fares.toLocaleString();
-document.getElementById('tEarn').innerText='KES '+earn.toLocaleString();
-document.getElementById('tComm').innerText='KES '+comm.toLocaleString();
+db.ref('rides').on('value',snap=>{
+allRides=[];let total=0;let cnt=0;
+snap.forEach(c=>{let r=c.val();if(!r)return;allRides.push(r);total+=r.total||0;cnt++;});
+allRides.sort((a,b)=>b.created-a.created);
+document.getElementById('totalF').innerText='KES '+total.toLocaleString();
+document.getElementById('drvE').innerText='KES '+Math.round(total*0.8).toLocaleString();
+document.getElementById('yourP').innerText='KES '+Math.round(total*0.2).toLocaleString();
+document.getElementById('rideC').innerText=cnt;
 render();
 });
 </script></body></html>
