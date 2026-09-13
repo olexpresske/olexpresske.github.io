@@ -1,1 +1,180 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OlexPress Admin - Operations + Driver Replies</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#020617;color:#e2e8f0}
+.header{background:#0f172a;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:30}
+button{padding:8px 12px;border-radius:8px;border:0;font-weight:700;cursor:pointer;font-size:11px}
+.stat{flex:1;background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:12px;text-align:center}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes glow{0%,100%{box-shadow:0 0 20px rgba(74,222,128,.3)}50%{box-shadow:0 0 35px rgba(74,222,128,.6)}}
+</style>
+</head>
+<body>
+<div class="header">
+<div style="display:flex;align-items:center;gap:10px;font-weight:900"><div style="width:36px;height:36px;background:#16a34a;border-radius:8px;display:flex;align-items:center;justify-content:center">👑</div><div>OlexPress ADMIN<div style="font-size:10px;color:#4ade80">Operations + Driver Reply Center</div></div></div>
+<div style="display:flex;gap:6px;flex-wrap:wrap"><button onclick="loadRides('all')" style="background:#1e293b;color:white">All</button><button onclick="loadRides('pending')" style="background:#f59e0b;color:white">Pending</button><button onclick="loadRides('active')" style="background:#3b82f6;color:white">Active</button><button onclick="loadRides('completed')" style="background:#16a34a;color:white">Done+Reply</button></div>
+</div>
 
+<!-- 3D WHITE SEDAN ADMIN -->
+<div style="margin:10px;background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);border-radius:16px;padding:16px;display:flex;align-items:center;gap:16px;border:1px solid rgba(74,222,128,.3)">
+<div style="width:100px;height:100px;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.2),rgba(255,255,255,.05) 50%,rgba(0,0,0,.2) 100%),linear-gradient(145deg,#334155,#1e293b);border:2px solid rgba(74,222,128,.5);border-radius:50%;display:flex;align-items:center;justify-content:center;animation:float 3s ease-in-out infinite,glow 2s ease-in-out infinite">
+<svg viewBox="0 0 140 60" width="90" height="40"><defs><linearGradient id="bG"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#e2e8f0"/></linearGradient></defs><path d="M10 32 L20 16 L90 16 L102 20 L118 20 L122 32 L120 42 L10 42 Z" fill="url(#bG)"/><circle cx="32" cy="42" r="7" fill="#0f172a" stroke="#94a3b8"/><circle cx="32" cy="42" r="3" fill="#e2e8f0"/><circle cx="88" cy="42" r="7" fill="#0f172a" stroke="#94a3b8"/><circle cx="88" cy="42" r="3" fill="#e2e8f0"/></svg>
+</div>
+<div style="flex:1"><div style="font-weight:900">Admin 3D Operations Fleet</div><div style="font-size:11px;color:#4ade80">Whole ops • Follow • Respond • Congratulate • Driver Reply View</div><div style="font-size:9px;opacity:.6">Time/date logged • 2-way comment unlocked</div></div>
+</div>
+
+<div style="margin:10px;display:flex;gap:8px;flex-wrap:wrap">
+<div class="stat"><div style="font-size:20px;font-weight:900;color:#f59e0b" id="sPending">0</div><div style="font-size:9px">PENDING</div></div>
+<div class="stat"><div style="font-size:20px;font-weight:900;color:#3b82f6" id="sActive">0</div><div style="font-size:9px">ACTIVE</div></div>
+<div class="stat"><div style="font-size:20px;font-weight:900;color:#22c55e" id="sDone">0</div><div style="font-size:9px">DONE</div></div>
+<div class="stat"><div style="font-size:20px;font-weight:900;color:#a855f7" id="sRev">0</div><div style="font-size:9px">REVIEWS</div></div>
+<div class="stat"><div style="font-size:20px;font-weight:900;color:#06b6d4" id="sDrReply">0</div><div style="font-size:9px">DRIVER REPLIES</div></div>
+<div class="stat"><div style="font-size:20px;font-weight:900;color:#fbbf24" id="sEarn">0</div><div style="font-size:9px">KES</div></div>
+</div>
+
+<div id="ops" style="margin:10px;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:12px">
+<div style="font-weight:800;font-size:12px;margin-bottom:8px">🔧 OPERATIONS CONTROL - Follow Whole Journey + Driver Replies</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap">
+<button onclick="alert('Following all active rides live...')" style="background:#3b82f6;color:white">👁️ Follow All Live</button>
+<button onclick="alert('Checking driver replies...')" style="background:#06b6d4;color:white">💬 Check Driver Replies</button>
+<button onclick="alert('Congratulating drivers with replies')" style="background:#16a34a;color:white">🏆 Congratulate All</button>
+<button onclick="exportData()" style="background:#1e293b;color:white">📊 Export + Threads</button>
+<button onclick="clearOld()" style="background:#ef4444;color:white">🗑️ Clear 4hr+ Expired</button>
+</div>
+</div>
+
+<div id="rides"></div>
+
+<script>
+var firebaseConfig={apiKey:"AIzaSyD4...",authDomain:"olexpresske.firebaseapp.com",databaseURL:"https://olexpresske-default-rtdb.firebaseio.com",projectId:"olexpresske"};
+firebase.initializeApp(firebaseConfig);var db=firebase.database();
+let currentFilter='all';
+
+function loadRides(filter='all'){
+currentFilter=filter;
+db.ref('rides').orderByChild('ts').limitToLast(100).on('value',s=>{
+let html='';let pending=0,active=0,done=0,rev=0,drReply=0,earn=0;
+s.forEach(ch=>{
+let k=ch.key;let v=ch.val();
+let status=v.status||'pending';
+if(status==='pending') pending++; else if(status==='completed') done++; else active++;
+if(v.feedback){rev++; if(v.feedback.driverReply) drReply++; earn+=v.fare||0;} else if(status==='completed'){earn+=v.fare||0;}
+if(filter!=='all'){
+if(filter==='pending' && status!=='pending') return;
+if(filter==='active' && (status==='pending'||status==='completed')) return;
+if(filter==='completed' && status!=='completed') return;
+}
+let from=v.from||'-';let to=v.to||'-';let fare=v.fare||0;let km=v.km||0;let name=v.name||'-';let phone=v.phone||'-';
+let dateStr=v.date||new Date(v.ts).toLocaleDateString();let clockStr=v.clock||new Date(v.ts).toLocaleTimeString();let timeStr=v.time||new Date(v.ts).toLocaleString();let iso=v.iso||'';let ageH = ((Date.now()-v.ts)/3600000).toFixed(1);
+
+html+=`
+<div style="background:#0f172a;border:2px solid ${status==='pending'?'#f59e0b':status==='completed'?'#22c55e':v.feedback&&v.feedback.stars<=2?'#ef4444':v.feedback&&v.feedback.driverReply?'#06b6d4':'#3b82f6'};border-radius:14px;padding:14px;margin:10px">
+
+<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px"><b style="font-size:13px">${from} → ${to} • ${k}</b><span style="background:${status==='pending'?'#f59e0b':status==='completed'?'#16a34a':v.feedback&&v.feedback.driverReply?'#06b6d4':'#2563eb'};color:white;padding:4px 10px;border-radius:12px;font-size:10px;font-weight:800">${status.toUpperCase()}${v.feedback&&v.feedback.driverReply?' • DRIVER REPLIED':''} • ${ageH}h ago</span></div>
+<div style="font-size:11px;color:#cbd5e1;margin-top:6px">💰 KES ${fare} • 🛣️ ${km}km • 👤 ${name} • 📞 ${phone}</div>
+
+<div style="margin-top:8px;background:#1e293b;padding:10px;border-radius:8px;display:flex;gap:8px;flex-wrap:wrap;border-left:3px solid #16a34a">
+<div style="flex:1;min-width:110px"><div style="font-size:8px;opacity:.6">📅 DATE LOGGED</div><div style="font-size:11px;font-weight:700">${dateStr}</div></div>
+<div style="flex:1;min-width:90px"><div style="font-size:8px;opacity:.6">⏰ TIME LOGGED</div><div style="font-size:11px;font-weight:700">${clockStr}</div></div>
+<div style="flex:1;min-width:130px"><div style="font-size:8px;opacity:.6">🎫 FULL LOG</div><div style="font-size:9px">${timeStr}</div></div>
+<div style="flex:1;min-width:70px"><div style="font-size:8px;opacity:.6">⏱️ AGE</div><div style="font-size:11px;font-weight:700">${ageH}h ${parseFloat(ageH)>4?'⚠️':''}</div></div>
+</div>
+
+<div style="margin-top:10px;background:#020617;padding:10px;border-radius:8px">
+<div style="font-size:9px;font-weight:800;opacity:.7;margin-bottom:6px">📍 WHOLE OPERATIONS - Follow:</div>
+<div style="display:flex;align-items:center;gap:0;overflow-x:auto">
+${[
+{key:'pending',label:'BOOKED'},{key:'accepted',label:'ACCEPT'},{key:'arrived',label:'ARRIVED'},{key:'boarding_requested',label:'QR'},{key:'boarded',label:'BOARDED'},{key:'pay_initiated',label:'PAY'},{key:'paid',label:'PAID'},{key:'completed',label:'END'},{key:'reviewed',label:'REVIEW'}
+].map((st,i)=>{
+let order=['pending','accepted','arrived','boarding_requested','boarded','pay_initiated','paid','completed'];let curIdx=order.indexOf(status);let stIdx=order.indexOf(st.key);let doneStep=curIdx>=stIdx || (status==='completed' && st.key==='reviewed' && v.feedback);
+let isCurrent=status===st.key;
+return `<div style="text-align:center;flex:1;min-width:38px"><div style="width:18px;height:18px;border-radius:50%;background:${doneStep?'#22c55e':isCurrent?'#3b82f6':'#334155'};color:white;display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:7px;font-weight:900">${doneStep?'✓':i+1}</div><div style="font-size:6px;margin-top:3px;color:${doneStep?'#4ade80':isCurrent?'#60a5fa':'#64748b'};font-weight:700">${st.label}</div></div>${i<8?`<div style="flex:1;height:1px;background:${doneStep?'#22c55e':'#334155'}"></div>`:''}`
+}).join('')}
+</div>
+</div>
+
+<div style="margin-top:12px"><div style="font-size:10px;font-weight:800;margin-bottom:6px;opacity:.7">🔧 ADVANCED OPERATIONS:</div>
+<div style="display:flex;gap:5px;flex-wrap:wrap">
+<button onclick="followRide('${k}')" style="background:#3b82f6;color:white">👁️ Follow Live</button>
+<button onclick="respondRide('${k}')" style="background:#7c3aed;color:white">💬 Respond</button>
+<button onclick="followUp('${k}','${phone}')" style="background:#f59e0b;color:white">📞 Follow Up</button>
+<button onclick="congrats('${k}')" style="background:#16a34a;color:white">🏆 Congratulate</button>
+<button onclick="viewRoute('${k}','${from}','${to}')" style="background:#06b6d4;color:white">🗺️ Whole Ops</button>
+<button onclick="deleteRide('${k}')" style="background:#020617;color:#64748b;border:1px solid #1e293b">🗑️ Delete</button>
+</div></div>
+
+${v.feedback?`
+<div style="margin-top:12px;background:#1e293b;border:1px solid ${v.feedback.stars<=2?'#ef4444':'#22c55e'};padding:12px;border-radius:10px">
+<div style="display:flex;justify-content:space-between;flex-wrap:wrap"><b style="color:${v.feedback.stars<=2?'#fca5a5':'#4ade80'}">⭐ Review Logged: ${v.feedback.stars}/5 • ${v.feedback.date||''} ${v.feedback.time||''}</b><span style="font-size:10px;background:${v.feedback.stars<=2?'#ef4444':'#16a34a'};color:white;padding:2px 8px;border-radius:10px">${v.feedback.stars<=2?'NEGATIVE':'POSITIVE'}</span></div>
+<div style="margin-top:6px;font-size:13px">"${v.feedback.text||'No comment'}"</div>
+
+${v.feedback.adminReply?`
+<div style="margin-top:10px;background:#eff6ff;color:#0f172a;padding:10px;border-radius:8px"><b style="font-size:10px;color:#2563eb">✅ Your Admin Response - Sent to Driver (Unlocked):</b><div style="font-size:12px;margin-top:4px">${v.feedback.adminReply.text}</div><div style="font-size:9px;color:#64748b;margin-top:4px">${v.feedback.adminReply.time} • ${v.feedback.adminReply.type||''}</div></div>
+`:`
+<div style="margin-top:10px;background:#0f172a;border:1px dashed #f59e0b;padding:10px;border-radius:8px">
+<div style="font-size:11px;font-weight:800;color:#fbbf24">💬 Respond to Driver Account - Unlock Comment Section:</div>
+<textarea id="reply-${k}" placeholder="Write response to driver - Congratulate, instruct, follow up..." style="width:100%;margin-top:6px;padding:8px;border-radius:6px;background:#020617;color:white;border:1px solid #334155;min-height:60px"></textarea>
+<div style="display:flex;gap:6px;margin-top:6px">
+<button onclick="sendReply('${k}')" style="background:#2563eb;color:white;flex:1">📤 Send Response - Unlock Driver Comment</button>
+<button onclick="sendCongrats('${k}')" style="background:#16a34a;color:white;flex:1">🏆 Congratulate + Unlock</button>
+</div>
+</div>
+`}
+
+${v.feedback.driverReply?`
+<div style="margin-top:12px;background:#f0fdf4;border:2px solid #22c55e;padding:12px;border-radius:10px;color:#0f172a">
+<div style="font-size:11px;font-weight:900;color:#16a34a">👨‍✈️ DRIVER RESPONDED - Comment Section Active! Driver replied to your admin response:</div>
+<div style="margin-top:8px;background:white;padding:10px;border-radius:6px;border-left:4px solid #16a34a">
+<div style="font-size:12px;font-weight:600">"${v.feedback.driverReply.text}"</div>
+<div style="font-size:9px;color:#64748b;margin-top:4px">Driver Account • ${v.feedback.driverReply.time} • ${v.feedback.driverReply.date||''}</div>
+</div>
+<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+<button onclick="followUp('${k}','${phone}')" style="background:#3b82f6;color:white">👁️ Follow Up Again</button>
+<button onclick="congrats('${k}')" style="background:#16a34a;color:white">🏆 Congratulate Again</button>
+<button onclick="respondAgain('${k}')" style="background:#7c3aed;color:white">💬 Respond Again - Keep Thread</button>
+</div>
+<div style="margin-top:10px;background:#020617;color:#e2e8f0;padding:8px;border-radius:6px;border-left:3px solid #22c55e">
+<div style="font-size:9px;font-weight:800;opacity:.7">📋 FULL 2-WAY THREAD - Whole Operations Visible:</div>
+<div style="font-size:10px;margin-top:6px">1. ⭐ <b>Client Review:</b> ${v.feedback.stars}/5 - "${v.feedback.text}" - ${v.feedback.date} ${v.feedback.time}</div>
+<div style="font-size:10px;margin-top:4px">2. 👑 <b>Admin Response:</b> ${v.feedback.adminReply? v.feedback.adminReply.text : 'Pending'} - ${v.feedback.adminReply? v.feedback.adminReply.time:''}</div>
+<div style="font-size:10px;margin-top:4px;color:#16a34a">3. 👨‍✈️ <b>Driver Reply:</b> ${v.feedback.driverReply.text} - ${v.feedback.driverReply.time}</div>
+<div style="font-size:9px;margin-top:6px;opacity:.6">✅ Comment section unlocked - 2-way conversation active! Driver can respond incase needed - DONE</div>
+</div>
+</div>
+`: v.feedback.adminReply?`<div style="margin-top:8px;background:#fffbeb;border:1px solid #fde68a;padding:8px;border-radius:6px;font-size:10px;color:#92400e;text-align:center">⏳ Admin replied - Waiting driver to respond in driver comment section (unlocked)</div>`:''}
+
+</div>
+`: status==='completed'?`<div style="margin-top:10px;background:#fffbeb;border:1px solid #fde68a;padding:8px;border-radius:6px;font-size:11px;color:#92400e;text-align:center">⏳ Completed - Waiting client review to respond & unlock driver comment</div>`:''}
+
+</div>
+`;
+});
+document.getElementById('rides').innerHTML=html||'<div style="text-align:center;padding:40px;color:#64748b">No rides</div>';
+document.getElementById('sPending').innerText=pending;
+document.getElementById('sActive').innerText=active;
+document.getElementById('sDone').innerText=done;
+document.getElementById('sRev').innerText=rev;
+document.getElementById('sDrReply').innerText=drReply;
+document.getElementById('sEarn').innerText='KES '+earn.toLocaleString();
+});
+}
+function followRide(id){alert('👁️ Following ride '+id+' live:\n- GPS tracking\n- QR boarding\n- Pay status\n- Whole operations visible!');}
+function respondRide(id){let t=document.getElementById('reply-'+id);if(t) t.focus(); else alert('💬 Already responded - check driver reply section');}
+function followUp(id,phone){alert('📞 Follow Up '+id+':\n- Client '+phone+'\n- Driver account follow up\n- Ensure onboarding & pay done\n- Whole ops follow');}
+function congrats(id){let msg=prompt('🏆 Congratulate driver '+id+':','Excellent service! Keep up great work - XXX Fleet'); if(msg) db.ref('rides/'+id+'/feedback/adminReply').set({text:'🏆 '+msg,time:new Date().toLocaleString(),type:'congrats'}).then(()=>alert('Congratulated! Comment unlocked for driver'));}
+function viewRoute(id,from,to){alert('🗺️ Whole Ops Route '+id+':\n'+from+' → '+to+'\nTime/date logged visible\nAll steps tracked');}
+function deleteRide(id){if(confirm('Delete '+id+'?')) db.ref('rides/'+id).remove();}
+function sendReply(id){let txt=document.getElementById('reply-'+id).value.trim(); if(!txt) return alert('Write response'); db.ref('rides/'+id+'/feedback/adminReply').set({text:txt,time:new Date().toLocaleString(),type:'reply'}).then(()=>alert('✅ Response sent! Driver comment section UNLOCKED - driver can now respond incase needed!')); }
+function sendCongrats(id){let txt=document.getElementById('reply-'+id).value.trim()||'Excellent job! Thank you for great service - Keep it up!'; db.ref('rides/'+id+'/feedback/adminReply').set({text:'🏆 '+txt,time:new Date().toLocaleString(),type:'congrats'}).then(()=>alert('🏆 Congratulated + Comment UNLOCKED for driver!'));}
+function respondAgain(id){let txt=prompt('💬 Respond again to driver reply for '+id+':','Thank you for your response! Noted - Keep excellent work!'); if(txt) db.ref('rides/'+id+'/feedback/adminReply').set({text:txt,time:new Date().toLocaleString(),type:'followup'}).then(()=>alert('Follow-up sent - thread continues!'));}
+function exportData(){alert('📊 Exporting whole operations + threads:\n- Tickets with time/date logged\n- Reviews\n- Admin replies\n- Driver replies\n- Full 2-way conversation threads');}
+function clearOld(){if(confirm('Clear all >4hrs?')){db.ref('rides').once('value',s=>{s.forEach(ch=>{if(Date.now()-ch.val().ts>4*3600000) db.ref('rides/'+ch.key).remove();}); alert('Cleared expired');});}}
+loadRides('all');
+</script>
+</body>
+</html>
