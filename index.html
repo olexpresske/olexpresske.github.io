@@ -7,7 +7,6 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <link rel="manifest" href="manifest.json"><meta name="theme-color" content="#16a34a">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
@@ -16,38 +15,37 @@ body{background:#f8fafc;color:#0f172a;padding:10px}
 input{width:100%;padding:12px;border-radius:8px;border:1px solid #cbd5e1;background:white;color:#0f172a;margin:6px 0;font-weight:500}
 button{width:100%;padding:14px;border-radius:10px;border:0;font-weight:800;cursor:pointer}
 #map{height:280px;border-radius:12px;border:2px solid #16a34a;margin:10px 0}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 </style>
 </head>
 <body>
 
 <div style="background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px;color:white">
-<div style="width:70px;height:70px;background:#334155;border-radius:50%;display:flex;align-items:center;justify-content:center;animation:float 3s infinite">🚕</div>
-<div style="flex:1"><div style="font-weight:900">OlexPress - Your Ride Everywhere</div><div style="font-size:11px;color:#4ade80">LIBERTY Input - Type ANY Pickup & Destination - Live Map - Base 250 + KM×42 - 1 Ticket Only</div><div id="ticketPreview" style="font-size:10px;opacity:.9;margin-top:4px;background:rgba(255,255,255,.12);padding:5px;border-radius:6px">🎫 Ticket auto | 📍 Map Coords | 💰 Base 250 + KM×42 | 1 Active Only</div></div>
+<div style="width:70px;height:70px;background:#334155;border-radius:50%;display:flex;align-items:center;justify-content:center">🚕</div>
+<div style="flex:1"><div style="font-weight:900">OlexPress - Your Ride Everywhere in Kenya</div><div style="font-size:11px;color:#4ade80">Enter your pickup & destination - Live map pricing</div><div id="ticketPreview" style="font-size:10px;opacity:.9;margin-top:4px;background:rgba(255,255,255,.12);padding:5px;border-radius:6px">🎫 Instant booking | 📍 Live location | 💰 Fair pricing</div></div>
 </div>
 
 <div class="card">
-<h3 style="font-size:13px">📍 Picks & Destination - CUSTOMER LIBERTY</h3>
+<h3 style="font-size:13px">📍 Where to?</h3>
 
-<label style="font-size:11px;font-weight:700">PICKUP - Type ANYWHERE (Liberty) *</label>
-<input id="from" placeholder="Type pickup - e.g. My house Olkalou, Equity Bank Gilgil..." oninput="geocodeFrom()" autocomplete="off">
+<label style="font-size:11px;font-weight:700">Pickup Location *</label>
+<input id="from" placeholder="Enter pickup - e.g. Olkalou Town, My House, Equity Bank..." oninput="geocodeFrom()" autocomplete="off">
 <div id="fromSug" style="background:white;border:1px solid #e2e8f0;border-radius:8px;display:none;max-height:120px;overflow-y:auto"></div>
 
-<label style="font-size:11px;font-weight:700">DESTINATION - Type ANYWHERE (Liberty) *</label>
-<input id="to" placeholder="Type destination - e.g. Nakuru CBD, My shamba, Nairobi..." oninput="geocodeTo()" autocomplete="off">
+<label style="font-size:11px;font-weight:700">Destination *</label>
+<input id="to" placeholder="Enter destination - e.g. Nakuru CBD, Naivasha, Nairobi..." oninput="geocodeTo()" autocomplete="off">
 <div id="toSug" style="background:white;border:1px solid #e2e8f0;border-radius:8px;display:none;max-height:120px;overflow-y:auto"></div>
 
 <div style="display:flex;gap:6px;margin-top:8px">
-<button onclick="useMyLocation()" style="background:#3b82f6;color:white;flex:1;padding:10px;font-size:11px">📍 Use My GPS as Pickup</button>
-<button onclick="clearMap()" style="background:#1e293b;color:white;flex:1;padding:10px;font-size:11px">🗺️ Clear Map</button>
+<button onclick="useMyLocation()" style="background:#3b82f6;color:white;flex:1;padding:10px;font-size:11px">📍 Use My Current Location</button>
+<button onclick="clearMap()" style="background:#1e293b;color:white;flex:1;padding:10px;font-size:11px">🗺️ Clear</button>
 </div>
 
 <div id="map"></div>
-<div style="font-size:10px;color:#64748b;text-align:center">Tap map: 1st tap=Pickup, 2nd tap=Destination | Drag pins | Liberty typing allowed</div>
+<div style="font-size:10px;color:#64748b;text-align:center">Tap map to set locations or type above - Map calculates distance</div>
 
 <div style="display:flex;gap:8px;margin-top:8px">
-<div style="flex:1;background:#f0fdf4;border:1px solid #bbf7d0;padding:8px;border-radius:8px"><div style="font-size:9px">KM (Live Map)</div><input id="km" type="number" value="0" readonly style="background:#f0fdf4;border:0;font-weight:800;color:#16a34a;padding:4px 0;margin:0"><div id="coordsInfo" style="font-size:8px;color:#64748b">Coords: not set</div></div>
-<div style="flex:1;background:#0f172a;color:white;padding:8px;border-radius:8px"><div style="font-size:9px;color:#4ade80">FARE KES (250+KM×42)</div><input id="fare" type="number" value="250" readonly style="background:#0f172a;border:0;font-weight:900;color:#4ade80;padding:4px 0;margin:0;font-size:18px"><div id="formulaInfo" style="font-size:8px;color:#94a3b8">250 + 0×42 = 250</div></div>
+<div style="flex:1;background:#f0fdf4;border:1px solid #bbf7d0;padding:8px;border-radius:8px"><div style="font-size:9px">Distance</div><input id="km" type="number" value="0" readonly style="background:#f0fdf4;border:0;font-weight:800;color:#16a34a;padding:4px 0;margin:0"><div id="coordsInfo" style="font-size:8px;color:#64748b">Select locations</div></div>
+<div style="flex:1;background:#0f172a;color:white;padding:8px;border-radius:8px"><div style="font-size:9px;color:#4ade80">Total Fare</div><input id="fare" type="number" value="250" readonly style="background:#0f172a;border:0;font-weight:900;color:#4ade80;padding:4px 0;margin:0;font-size:18px"><div id="formulaInfo" style="font-size:8px;color:#94a3b8">Base 250 + KM×42</div></div>
 </div>
 
 <div style="display:flex;gap:8px;margin-top:8px">
@@ -56,10 +54,10 @@ button{width:100%;padding:14px;border-radius:10px;border:0;font-weight:800;curso
 </div>
 
 <div id="calcInfo" style="background:#f8fafc;border:1px solid #e2e8f0;padding:8px;border-radius:8px;margin:8px 0;font-size:11px">
-✅ Liberty: Type ANY pickup/destination - Same place allowed (min fare 250)<br>📍 Live map coords → distance ×1.3 road factor → Base 250 + KM×42<br>⚠️ 1 Active Ticket Only - Multiple blocked!
+✅ Type any pickup & destination - We calculate from map<br>📍 Tap map or search - Distance and fare auto
 </div>
 
-<button onclick="bookRide()" style="background:#16a34a;color:white;font-size:16px;margin-top:8px">🚕 BOOK NOW - Liberty + Map Coords + 1 Ticket Only</button>
+<button onclick="bookRide()" style="background:#16a34a;color:white;font-size:16px;margin-top:8px">🚕 BOOK NOW</button>
 
 <div id="status" style="margin-top:10px"></div>
 </div>
@@ -74,30 +72,29 @@ let map, pickupMarker, destMarker, fromCoords=null, toCoords=null;
 
 function initMap(){
 map=L.map('map').setView([-0.3,36.3],8);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OlexPress Live'}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OlexPress'}).addTo(map);
 map.on('click',function(e){
 if(!fromCoords){
 fromCoords=e.latlng;
 if(pickupMarker) map.removeLayer(pickupMarker);
 pickupMarker=L.marker(e.latlng,{draggable:true}).addTo(map).bindPopup('Pickup').openPopup();
 pickupMarker.on('dragend',function(ev){fromCoords=ev.target.getLatLng(); calcLiveDistance();});
-document.getElementById('from').value=`Map Pickup ${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
+document.getElementById('from').value=`Map Location ${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
 } else {
 toCoords=e.latlng;
 if(destMarker) map.removeLayer(destMarker);
 destMarker=L.marker(e.latlng,{draggable:true}).addTo(map).bindPopup('Destination').openPopup();
 destMarker.on('dragend',function(ev){toCoords=ev.target.getLatLng(); calcLiveDistance();});
-document.getElementById('to').value=`Map Destination ${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
+document.getElementById('to').value=`Map Location ${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
 }
 calcLiveDistance();
 });
-// AUTO-RESTORE ACTIVE TICKET - BLOCK MULTIPLE
 let savedActive=localStorage.getItem('olex_active_ticket');
 if(savedActive){
 db.ref('rides/'+savedActive).once('value',snap=>{
 let v=snap.val();
 if(v && v.status!=='completed'){
-document.getElementById('status').innerHTML=`<div style="background:#fffbeb;border:1px solid #fde68a;padding:10px;border-radius:8px">⚠️ Active ticket ${savedActive} - Complete before new booking</div>`;
+document.getElementById('status').innerHTML=`<div style="background:#fffbeb;border:1px solid #fde68a;padding:10px;border-radius:8px">⚠️ You have active trip ${savedActive} - Complete before booking new</div>`;
 showActiveTicket(savedActive,v);
 } else {localStorage.removeItem('olex_active_ticket');}
 });
@@ -111,7 +108,7 @@ navigator.geolocation.getCurrentPosition(pos=>{
 let latlng={lat:pos.coords.latitude,lng:pos.coords.longitude};
 fromCoords=latlng;
 if(pickupMarker) map.removeLayer(pickupMarker);
-pickupMarker=L.marker(latlng).addTo(map).bindPopup('Your Location - Pickup').openPopup();
+pickupMarker=L.marker(latlng).addTo(map).bindPopup('Your Location').openPopup();
 map.setView(latlng,14);
 document.getElementById('from').value=`My Location ${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
 calcLiveDistance();
@@ -124,8 +121,8 @@ if(destMarker) map.removeLayer(destMarker);
 pickupMarker=null; destMarker=null;
 document.getElementById('km').value=0;
 document.getElementById('fare').value=BASE_RATE;
-document.getElementById('coordsInfo').innerText='Coords: not set';
-document.getElementById('formulaInfo').innerText=`${BASE_RATE} + 0×${PER_KM} = ${BASE_RATE}`;
+document.getElementById('coordsInfo').innerText='Select locations';
+document.getElementById('formulaInfo').innerText=`Base ${BASE_RATE} + 0×${PER_KM}`;
 }
 function calcLiveDistance(){
 if(!fromCoords||!toCoords) return;
@@ -140,10 +137,10 @@ let kmRounded=Math.max(1,Math.round(roadKm*10)/10);
 let fare=BASE_RATE + Math.round(kmRounded*PER_KM);
 document.getElementById('km').value=kmRounded;
 document.getElementById('fare').value=fare;
-document.getElementById('coordsInfo').innerText=`Pickup: ${fromCoords.lat.toFixed(4)},${fromCoords.lng.toFixed(4)} → Dest: ${toCoords.lat.toFixed(4)},${toCoords.lng.toFixed(4)}`;
+document.getElementById('coordsInfo').innerText=`${fromCoords.lat.toFixed(4)},${fromCoords.lng.toFixed(4)} → ${toCoords.lat.toFixed(4)},${toCoords.lng.toFixed(4)}`;
 document.getElementById('formulaInfo').innerText=`${BASE_RATE} + ${kmRounded}×${PER_KM} = ${fare}`;
-document.getElementById('ticketPreview').innerText=`🎫 Ticket auto | 📍 ${kmRounded}km live map | 💰 ${BASE_RATE}+${kmRounded}×${PER_KM}=KES ${fare}`;
-document.getElementById('calcInfo').innerHTML=`✅ Live Map: ${kmRounded}km (straight ${km.toFixed(1)}km ×1.3) = Base ${BASE_RATE} + ${kmRounded}×${PER_KM} = <b>KES ${fare}</b><br>Pickup: ${fromCoords.lat.toFixed(5)},${fromCoords.lng.toFixed(5)} → Dest: ${toCoords.lat.toFixed(5)},${toCoords.lng.toFixed(5)}<br>⚠️ 1 Ticket Only - Multiple blocked`;
+document.getElementById('ticketPreview').innerText=`🎫 Instant ticket | 📍 ${kmRounded}km | 💰 KES ${fare}`;
+document.getElementById('calcInfo').innerHTML=`✅ Distance: ${kmRounded}km | Fare: <b>KES ${fare}</b><br>From: ${fromCoords.lat.toFixed(5)},${fromCoords.lng.toFixed(5)} → To: ${toCoords.lat.toFixed(5)},${toCoords.lng.toFixed(5)}`;
 }
 let fromTimer, toTimer;
 function geocodeFrom(){
@@ -199,19 +196,19 @@ let km=parseFloat(document.getElementById('km').value)||0;
 let fare=parseInt(document.getElementById('fare').value)||BASE_RATE;
 let name=document.getElementById('name').value.trim();
 let phone=document.getElementById('phone').value.trim();
-if(!from) return alert('Type PICKUP - liberty - any location');
-if(!to) return alert('Type DESTINATION - liberty - any location');
-if(!name) return alert('Enter Name');
+if(!from) return alert('Enter pickup location');
+if(!to) return alert('Enter destination');
+if(!name) return alert('Enter Your Name');
 if(!phone||phone.length<10) return alert('Enter Phone 07... 10 digits');
 let activeId=localStorage.getItem('olex_active_ticket');
-if(activeId){return alert(`⚠️ ACTIVE ticket ${activeId} exists!\nCannot book new until completed!\nComplete: Board → Pay → Review`);}
+if(activeId){return alert(`⚠️ You have active trip ${activeId}\nComplete current trip before booking new`);}
 if(km===0){km=1; fare=BASE_RATE + Math.round(km*PER_KM);}
-document.getElementById('status').innerHTML=`<div style="background:#fffbeb;padding:10px;border-radius:8px;border:1px solid #fde68a">⏳ Checking active ticket for ${phone}...</div>`;
+document.getElementById('status').innerHTML=`<div style="background:#fffbeb;padding:10px;border-radius:8px;border:1px solid #fde68a">⏳ Checking...</div>`;
 db.ref('rides').orderByChild('phone').equalTo(phone).once('value',snap=>{
 let hasActive=false; let activeTicketId='';
 snap.forEach(ch=>{let v=ch.val(); if(v.status!=='completed'){hasActive=true; activeTicketId=ch.key;}});
 if(hasActive){
-document.getElementById('status').innerHTML=`<div style="background:#fee2e2;border:2px solid #ef4444;padding:12px;border-radius:10px;color:#991b1b"><b>⚠️ MULTIPLE TICKETS BLOCKED!</b><br>Active ticket <b>${activeTicketId}</b> status ${snap.child(activeTicketId).val()?.status}<br>Complete it first!</div>`;
+document.getElementById('status').innerHTML=`<div style="background:#fee2e2;border:2px solid #ef4444;padding:12px;border-radius:10px;color:#991b1b"><b>⚠️ Active trip exists!</b><br>Ticket <b>${activeTicketId}</b> - ${snap.child(activeTicketId).val()?.status}<br>Complete it first!</div>`;
 showActiveTicket(activeTicketId, snap.child(activeTicketId).val());
 localStorage.setItem('olex_active_ticket', activeTicketId);
 return;
@@ -231,13 +228,12 @@ date:now.toLocaleDateString('en-KE'),
 clock:now.toLocaleTimeString('en-KE'),
 iso:now.toISOString(),
 baseRate:BASE_RATE,yFactor:PER_KM,
-formula:`${BASE_RATE} + ${km}×${PER_KM} = ${fare}`,
-libertyInput:true
+formula:`${BASE_RATE} + ${km}×${PER_KM} = ${fare}`
 };
 db.ref('rides/'+ticketNumber).set(rideData).then(()=>{
 localStorage.setItem('olex_active_ticket', ticketNumber);
 localStorage.setItem('olex_phone', phone);
-document.getElementById('status').innerHTML=`<div style="background:#f0fdf4;border:2px solid #22c55e;padding:12px;border-radius:10px"><b>✅ BOOKED! 1 Ticket Only!</b><br>🎫 <b style="font-size:18px;color:#16a34a">${ticketNumber}</b><br>📍 Pickup: ${from}<br>📍 Dest: ${to}<br>🌍 Coords: ${fromCoords?fromCoords.lat.toFixed(4)+','+fromCoords.lng.toFixed(4):'typed'} → ${toCoords?toCoords.lat.toFixed(4)+','+toCoords.lng.toFixed(4):'typed'}<br>💰 ${BASE_RATE}+${km}×${PER_KM}=KES ${fare}<br>📅 ${rideData.date} ${rideData.clock}<br>⚠️ Cannot book new until completed!</div>`;
+document.getElementById('status').innerHTML=`<div style="background:#f0fdf4;border:2px solid #22c55e;padding:12px;border-radius:10px"><b>✅ BOOKED!</b><br>🎫 Ticket: <b style="font-size:18px;color:#16a34a">${ticketNumber}</b><br>📍 ${from} → ${to}<br>💰 KES ${fare}<br>📅 ${rideData.date} ${rideData.clock}</div>`;
 showActiveTicket(ticketNumber,rideData);
 });
 });
@@ -245,14 +241,14 @@ showActiveTicket(ticketNumber,rideData);
 function showActiveTicket(ticketId,data){
 document.getElementById('activeTicket').style.display='block';
 document.getElementById('activeTicket').innerHTML=`
-<div style="display:flex;justify-content:space-between"><b>🎫 ${ticketId} - Liberty</b><span style="background:#f59e0b;color:white;padding:4px 10px;border-radius:12px;font-size:10px" id="statusBadge">PENDING</span></div>
+<div style="display:flex;justify-content:space-between"><b>🎫 ${ticketId}</b><span style="background:#f59e0b;color:white;padding:4px 10px;border-radius:12px;font-size:10px" id="statusBadge">PENDING</span></div>
 <div style="background:#f8fafc;padding:10px;border-radius:8px;margin-top:8px;border-left:4px solid #16a34a">
-<div style="font-size:12px"><b>Pickup:</b> ${data.from}</div>
-<div style="font-size:12px"><b>Dest:</b> ${data.to}</div>
-<div style="font-size:10px;margin-top:4px;color:#64748b">🌍 From: ${data.fromCoords?data.fromCoords.lat+','+data.fromCoords.lng:'typed'}<br>🌍 To: ${data.toCoords?data.toCoords.lat+','+data.toCoords.lng:'typed'}<br>📅 ${data.date} ${data.clock} | 💰 Base ${data.baseRate} + ${data.km}×${data.yFactor} = KES ${data.fare}</div>
+<div style="font-size:12px"><b>From:</b> ${data.from}</div>
+<div style="font-size:12px"><b>To:</b> ${data.to}</div>
+<div style="font-size:10px;margin-top:4px;color:#64748b">📅 ${data.date} ${data.clock} | 💰 KES ${data.fare}</div>
 </div>
 <div style="background:white;padding:10px;border-radius:10px;text-align:center;margin-top:10px;border:2px dashed #16a34a">
-<div style="font-size:11px;font-weight:800">QR + TICKET ${ticketId}</div>
+<div style="font-size:11px;font-weight:800">Ticket ${ticketId}</div>
 <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${ticketId}" style="width:110px;height:110px;margin-top:6px">
 </div>
 <div id="stepsClient" style="margin-top:10px;background:#0f172a;color:white;padding:10px;border-radius:8px"></div>
@@ -268,21 +264,21 @@ let badge=document.getElementById('statusBadge'); if(badge) badge.innerText=stat
 let steps={
 pending:{label:'Waiting driver',pct:10},
 accepted:{label:'Driver accepted',pct:25},
-arrived:{label:'Driver arrived QR '+ticketId,pct:40},
+arrived:{label:'Driver arrived',pct:40},
 boarding_requested:{label:'Driver requested boarding',pct:55,action:true},
-boarded:{label:'Boarded! On trip',pct:70},
+boarded:{label:'On trip',pct:70},
 pay_initiated:{label:'Reached - Pay KES '+v.fare,pct:85,actionPay:true},
-paid:{label:'Paid - Driver ending',pct:95},
-completed:{label:'Completed - Review',pct:100,review:true}
+paid:{label:'Paid - Completing',pct:95},
+completed:{label:'Completed - Rate trip',pct:100,review:true}
 };
 let cur=steps[status]||steps.pending;
 let div=document.getElementById('stepsClient');
 if(div){
-div.innerHTML=`<div style="font-size:11px;font-weight:800">${cur.pct}% - ${cur.label}</div><div style="background:#334155;height:8px;border-radius:4px;margin-top:6px;overflow:hidden"><div style="width:${cur.pct}%;background:#22c55e;height:100%"></div></div><div style="font-size:9px;margin-top:6px;background:#1e293b;padding:5px;border-radius:5px">Liberty input - Coords logged - Base ${v.baseRate}+${v.km}×${v.yFactor}=KES ${v.fare} | ${v.date} ${v.clock}</div>${cur.action?`<button onclick="acceptBoarding('${ticketId}')" style="background:#16a34a;color:white;margin-top:8px;padding:10px">✅ ACCEPT BOARDING</button>`:''}${cur.actionPay?`<button onclick="acceptPay('${ticketId}')" style="background:#f59e0b;color:white;margin-top:8px;padding:10px">✅ PAY KES ${v.fare}</button>`:''}`;
+div.innerHTML=`<div style="font-size:11px;font-weight:800">${cur.pct}% - ${cur.label}</div><div style="background:#334155;height:8px;border-radius:4px;margin-top:6px;overflow:hidden"><div style="width:${cur.pct}%;background:#22c55e;height:100%"></div></div><div style="font-size:9px;margin-top:6px;background:#1e293b;padding:5px;border-radius:5px">KES ${v.fare} | ${v.date} ${v.clock}</div>${cur.action?`<button onclick="acceptBoarding('${ticketId}')" style="background:#16a34a;color:white;margin-top:8px;padding:10px">✅ ACCEPT BOARDING</button>`:''}${cur.actionPay?`<button onclick="acceptPay('${ticketId}')" style="background:#f59e0b;color:white;margin-top:8px;padding:10px">✅ PAY KES ${v.fare}</button>`:''}`;
 }
 if(cur.review){
 let rb=document.getElementById('reviewBox'); rb.style.display='block';
-rb.innerHTML=`<div style="background:#f0fdf4;padding:10px;border-radius:10px;border:1px solid #22c55e"><b>⭐ Rate Trip</b><div style="display:flex;gap:5px;margin:6px 0"><span onclick="setStars(1)" class="star" style="font-size:22px;cursor:pointer">⭐</span><span onclick="setStars(2)" class="star" style="font-size:22px;cursor:pointer">⭐</span><span onclick="setStars(3)" class="star" style="font-size:22px;cursor:pointer">⭐</span><span onclick="setStars(4)" class="star" style="font-size:22px;cursor:pointer">⭐</span><span onclick="setStars(5)" class="star" style="font-size:22px;cursor:pointer">⭐</span></div><textarea id="reviewText" placeholder="Review..." style="width:100%;padding:8px;border-radius:6px;border:1px solid #cbd5e1;min-height:50px"></textarea><button onclick="submitReview('${ticketId}')" style="background:#16a34a;color:white;margin-top:6px;padding:10px">Submit Review</button></div>`;
+rb.innerHTML=`<div style="background:#f0fdf4;padding:10px;border-radius:10px;border:1px solid #22c55e"><b>⭐ Rate Trip</b><div style="display:flex;gap:5px;margin:6px 0"><span onclick="setStars(1)" class="star" style="font-size:22px;cursor:pointer">⭐</span><span onclick="setStars(2)" class="star" style="font-size:22px;cursor:pointer">⭐</span><span onclick="setStars(3)" class="star" style="font-size:22px;cursor:pointer">⭐</span><span onclick="setStars(4)" class="star" style="font-size:22px;cursor:pointer">⭐</span><span onclick="setStars(5)" class="star" style="font-size:22px;cursor:pointer">⭐</span></div><textarea id="reviewText" placeholder="How was your ride?" style="width:100%;padding:8px;border-radius:6px;border:1px solid #cbd5e1;min-height:50px"></textarea><button onclick="submitReview('${ticketId}')" style="background:#16a34a;color:white;margin-top:6px;padding:10px">Submit Review</button></div>`;
 }
 });
 }
@@ -295,9 +291,9 @@ let stars=window.currentStars;let text=document.getElementById('reviewText').val
 db.ref('rides/'+id+'/feedback').set({stars:stars,text:text,time:now.toLocaleTimeString(),date:now.toLocaleDateString(),full:now.toLocaleString(),ts:Date.now()}).then(()=>{
 db.ref('rides/'+id).update({status:'completed'}).then(()=>{
 localStorage.removeItem('olex_active_ticket');
-document.getElementById('status').innerHTML+=`<div style="background:#f0fdf4;border:2px solid #22c55e;padding:10px;border-radius:8px;margin-top:8px;text-align:center">✅ Trip ${id} COMPLETED! You can now book new!</div>`;
+document.getElementById('status').innerHTML+=`<div style="background:#f0fdf4;border:2px solid #22c55e;padding:10px;border-radius:8px;margin-top:8px;text-align:center">✅ Trip completed! You can book new ride!</div>`;
 setTimeout(()=>{document.getElementById('activeTicket').style.display='none'; document.getElementById('status').innerHTML='';},3000);
-alert('⭐ Review logged! Ticket '+id+' completed! Now you can book new ride!');
+alert('⭐ Thank you! Trip completed!');
 });
 });
 }
