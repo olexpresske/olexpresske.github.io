@@ -1,5 +1,16 @@
 import { useState } from 'react';
-import { Menu, X, Ticket as TicketIcon, Info, PhoneCall, FileText, Car, ShieldAlert } from 'lucide-react';
+import {
+  Menu,
+  X,
+  Ticket as TicketIcon,
+  Info,
+  PhoneCall,
+  FileText,
+  Car,
+  ShieldAlert,
+  Sparkles,
+} from 'lucide-react';
+import { OlexLogo } from './OlexLogo';
 
 interface HeaderProps {
   currentView: 'passenger' | 'driver' | 'admin';
@@ -8,6 +19,7 @@ interface HeaderProps {
   onOpenAbout: () => void;
   onOpenSupport: () => void;
   onOpenTerms: () => void;
+  onOpenGalaxy?: () => void;
   activeTicketCount?: number;
 }
 
@@ -18,6 +30,7 @@ export function Header({
   onOpenAbout,
   onOpenSupport,
   onOpenTerms,
+  onOpenGalaxy,
   activeTicketCount = 0,
 }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -74,11 +87,28 @@ export function Header({
 
       {/* Main Header Row */}
       <div className="max-w-5xl mx-auto flex items-center justify-between relative">
-        {/* Empty left spacer to keep logo centered */}
-        <div className="w-10 sm:w-24"></div>
+        {/* Left: 3D Galaxy Button */}
+        <div className="w-auto sm:w-28 flex items-center">
+          {onOpenGalaxy && (
+            <button
+              onClick={onOpenGalaxy}
+              className="px-2.5 py-1.5 rounded-xl bg-zinc-900/90 border border-emerald-500/40 text-emerald-400 hover:text-white hover:border-amber-400 transition-all text-xs font-semibold flex items-center space-x-1.5 shadow-sm active:scale-95"
+              title="Launch 3D Galaxy Globe with moving stars"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+              <span className="hidden sm:inline">3D Galaxy</span>
+            </button>
+          )}
+        </div>
 
         {/* Center: Glowing Green Road Pin Logo with 3 Rotating Orbits (Gold, Green, Blue) */}
-        <div className="flex flex-col items-center justify-center text-center select-none py-1">
+        <div
+          onClick={onOpenGalaxy}
+          className={`flex flex-col items-center justify-center text-center select-none py-1 ${
+            onOpenGalaxy ? 'cursor-pointer group' : ''
+          }`}
+          title={onOpenGalaxy ? 'Click to open 3D Galaxy Globe' : undefined}
+        >
           <div className="relative w-20 h-20 flex items-center justify-center">
             {/* Orbit 3 (Outer): Blue */}
             <div className="absolute inset-0 rounded-full border border-cyan-400/40 animate-[spin_30s_linear_infinite]">
@@ -95,45 +125,9 @@ export function Header({
               <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24] absolute -bottom-[3px] left-1/2 -translate-x-1/2" />
             </div>
 
-            {/* Center Green Road Pin Logo: No white box, direct on black with soft glow */}
-            <div className="relative z-10 filter drop-shadow-[0_0_12px_rgba(34,197,94,0.7)] flex items-center justify-center transition-transform hover:scale-105">
-              <svg
-                width="34"
-                height="44"
-                viewBox="0 0 34 44"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                {/* Outer Map Pin Shape in Green */}
-                <path
-                  d="M17 0C7.61116 0 0 7.61116 0 17C0 27.5 14.5 42.5 16.1 43.8C16.6 44.1 17.4 44.1 17.9 43.8C19.5 42.5 34 27.5 34 17C34 7.61116 26.3888 0 17 0Z"
-                  fill="#10B981"
-                />
-                {/* Curved Road Highway inside pin in dark black/green */}
-                <path
-                  d="M11 25L13.5 9H20.5L23 25H11Z"
-                  fill="#064E3B"
-                />
-                {/* Dashed white center road divider line */}
-                <path
-                  d="M17 11V14"
-                  stroke="#FDE047"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M17 17V20"
-                  stroke="#FDE047"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M17 22V24"
-                  stroke="#FDE047"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-              </svg>
+            {/* Center Green Road Pin Logo: Exact uploaded logo with inner circular cutout and curved highway */}
+            <div className="relative z-10 filter drop-shadow-[0_0_14px_rgba(34,197,94,0.85)] flex items-center justify-center transition-transform group-hover:scale-110">
+              <OlexLogo size={42} showGlow />
             </div>
           </div>
 
@@ -147,7 +141,7 @@ export function Header({
         </div>
 
         {/* Top right: Menu button (three lines) */}
-        <div className="w-10 sm:w-24 flex justify-end">
+        <div className="w-auto sm:w-28 flex justify-end">
           <button
             id="menu-toggle-btn"
             onClick={() => setMenuOpen(!menuOpen)}
@@ -166,6 +160,20 @@ export function Header({
             <p className="text-xs text-amber-400 font-mono font-semibold">OLEXPRESS MENU</p>
             <p className="text-[11px] text-zinc-400">Nyandarua Base • Kenya Wide</p>
           </div>
+
+          {onOpenGalaxy && (
+            <button
+              id="menu-galaxy-btn"
+              onClick={() => {
+                setMenuOpen(false);
+                onOpenGalaxy();
+              }}
+              className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm text-zinc-200 hover:bg-zinc-900 hover:text-emerald-400 transition-colors"
+            >
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span>3D Galaxy Globe</span>
+            </button>
+          )}
 
           <button
             id="menu-my-tickets-btn"

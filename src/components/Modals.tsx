@@ -11,9 +11,12 @@ import {
   Flag,
   CheckCircle2,
   ExternalLink,
+  Sparkles,
 } from 'lucide-react';
 import { Ticket } from '../types';
 import { ticketStore } from '../services/ticketStore';
+import { GalaxyGlobe3D } from './GalaxyGlobe3D';
+import { OlexLogo } from './OlexLogo';
 
 interface MyTicketsModalProps {
   isOpen: boolean;
@@ -351,3 +354,75 @@ export function TermsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     </div>
   );
 }
+
+interface GalaxyGlobeModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function GalaxyGlobeModal({ isOpen, onClose }: GalaxyGlobeModalProps) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-2 sm:p-4 animate-in fade-in">
+      <div className="relative w-full max-w-5xl h-[92vh] max-h-[850px] bg-black border-2 border-emerald-500/50 rounded-3xl overflow-hidden flex flex-col shadow-[0_0_50px_rgba(16,185,129,0.3)]">
+        {/* Modal Top Bar */}
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-zinc-950/90 border-b border-zinc-800/80 z-20">
+          <div className="flex items-center space-x-3">
+            <OlexLogo size={36} showGlow />
+            <div>
+              <div className="flex items-center space-x-2">
+                <h2 className="text-base sm:text-lg font-black tracking-wider text-amber-400 font-['Plus_Jakarta_Sans',sans-serif]">
+                  OlexPress Cosmic 3D Globe
+                </h2>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono border border-emerald-500/40">
+                  REAL-TIME 3D GALAXY
+                </span>
+              </div>
+              <p className="text-xs text-zinc-400">
+                Launch Base: <strong className="text-emerald-400">Ol Kalou, Nyandarua</strong> (Lat -0.2721°, Lon 36.3792°)
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-amber-400/50 transition-colors"
+              aria-label="Close modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* 3D Galaxy Canvas */}
+        <div className="flex-1 relative w-full h-full">
+          <GalaxyGlobe3D
+            height="100%"
+            interactive={true}
+            showControls={true}
+            isFullScreen={true}
+            onCloseFullScreen={onClose}
+          />
+        </div>
+
+        {/* Cosmic Info Bar at bottom */}
+        <div className="px-4 sm:px-6 py-2.5 bg-zinc-950/90 border-t border-zinc-800/80 flex flex-wrap items-center justify-between text-xs text-zinc-400 z-20">
+          <div className="flex items-center space-x-2 font-mono">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Cosmic Satellite Link: <strong className="text-zinc-200">Active</strong></span>
+            <span className="text-zinc-600">|</span>
+            <span>Nyandarua Dispatch: <strong className="text-amber-400">Online 24/7</strong></span>
+          </div>
+          <div className="flex items-center space-x-3 text-[11px] text-zinc-500">
+            <span>• Drag to rotate</span>
+            <span>• 3 Orbits: Gold, Emerald, Cyan</span>
+            <span>• Moving starfield & meteor trails</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+

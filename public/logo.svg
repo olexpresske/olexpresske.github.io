@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 380" fill="none">
+  <!-- OlexPress Brand Green Pin with inner winding highway road -->
+  <defs>
+    <linearGradient id="olexGreenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22c55e" />
+      <stop offset="100%" stop-color="#15803d" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Main Outer Pin Silhouette -->
+  <!-- Outer perimeter: Smooth round top tapering to bottom tip -->
+  <path
+    d="M160 10
+       C75 10 24 78 24 163
+       C24 235 125 325 152 368
+       C156 374 164 374 168 368
+       C195 325 296 235 296 163
+       C296 78 245 10 160 10 Z"
+    fill="#1da83e"
+  />
+
+  <!-- Circular Portal / Cutout (White background cutout behind the road) -->
+  <circle cx="160" cy="155" r="82" fill="#000000" />
+
+  <!-- Road entering from upper center through the tunnel/aperture -->
+  <!-- The road bends left then sweeps down-right across the pin -->
+  <path
+    d="M 125 110
+       C 150 105 185 102 225 105
+       C 225 108 190 120 170 135
+       C 145 155 130 180 125 210
+       C 120 245 135 285 150 315
+       L 190 280
+       C 210 250 240 215 250 185
+       C 230 170 185 145 190 130
+       C 195 120 220 115 235 115
+       C 200 110 150 112 125 110 Z"
+    fill="#1da83e"
+  />
+
+  <!-- Exact match geometric road filling the tunnel -->
+  <path
+    d="M 80 155
+       C 80 112 115 78 160 78
+       C 205 78 240 112 240 155
+       C 240 165 238 175 235 184
+       L 262 212
+       C 248 185 240 160 240 155
+       C 240 111 204 75 160 75
+       C 116 75 80 111 80 155 Z"
+    fill="#000000"
+  />
+</svg>

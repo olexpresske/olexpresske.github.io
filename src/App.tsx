@@ -6,7 +6,15 @@ import { TicketCard } from './components/TicketCard';
 import { TrackingView } from './components/TrackingView';
 import { DriverDashboard } from './components/DriverDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
-import { MyTicketsModal, AboutModal, SupportModal, TermsModal } from './components/Modals';
+import {
+  MyTicketsModal,
+  AboutModal,
+  SupportModal,
+  TermsModal,
+  GalaxyGlobeModal,
+} from './components/Modals';
+import { GalaxyGlobe3D } from './components/GalaxyGlobe3D';
+import { Sparkles, Maximize2, ChevronDown, ChevronUp } from 'lucide-react';
 import {
   findTown,
   calculateRoadRoute,
@@ -42,6 +50,8 @@ export default function App() {
   const [aboutOpen, setAboutOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
+  const [galaxyModalOpen, setGalaxyModalOpen] = useState(false);
+  const [showHeroGalaxy, setShowHeroGalaxy] = useState(true);
 
   // Reference for scrolling to ticket card
   const ticketCardRef = useRef<HTMLDivElement>(null);
@@ -206,6 +216,7 @@ export default function App() {
         onOpenAbout={() => setAboutOpen(true)}
         onOpenSupport={() => setSupportOpen(true)}
         onOpenTerms={() => setTermsOpen(true)}
+        onOpenGalaxy={() => setGalaxyModalOpen(true)}
         activeTicketCount={activeTicket ? 1 : 0}
       />
 
@@ -222,6 +233,56 @@ export default function App() {
               />
             ) : (
               <div className="space-y-6">
+                {/* 3D GALAXY GLOBE HERO SHOWCASE */}
+                <div className="relative rounded-2xl overflow-hidden border border-emerald-500/40 bg-zinc-950/80 shadow-2xl backdrop-blur-md">
+                  {/* Top Bar for 3D Galaxy Banner */}
+                  <div className="flex items-center justify-between px-3.5 py-2.5 bg-zinc-900/90 border-b border-zinc-800/80">
+                    <div className="flex items-center space-x-2">
+                      <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+                      <span className="text-xs font-bold text-amber-400 font-mono tracking-wider">
+                        3D COSMIC GALAXY • NYANDARUA BASE
+                      </span>
+                      <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono border border-emerald-500/30">
+                        INTERACTIVE GLOBE
+                      </span>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => setGalaxyModalOpen(true)}
+                        className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold flex items-center space-x-1 transition-all"
+                        title="Open Fullscreen Cosmic 3D Galaxy"
+                      >
+                        <Maximize2 className="w-3 h-3" />
+                        <span className="hidden sm:inline">Immersive Fullscreen</span>
+                      </button>
+
+                      <button
+                        onClick={() => setShowHeroGalaxy(!showHeroGalaxy)}
+                        className="p-1.5 rounded-lg bg-zinc-850 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-xs transition-colors"
+                        title={showHeroGalaxy ? 'Minimize 3D Galaxy' : 'Expand 3D Galaxy'}
+                      >
+                        {showHeroGalaxy ? (
+                          <ChevronUp className="w-3.5 h-3.5" />
+                        ) : (
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 3D Galaxy Globe Viewport */}
+                  {showHeroGalaxy && (
+                    <div className="relative w-full h-[320px] sm:h-[360px]">
+                      <GalaxyGlobe3D
+                        height={360}
+                        interactive={true}
+                        showControls={true}
+                      />
+                    </div>
+                  )}
+                </div>
+
                 {/* SECTION 2: BOOKING CARD */}
                 <BookingCard
                   pickup={pickup}
@@ -322,6 +383,7 @@ export default function App() {
       <AboutModal isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />
       <SupportModal isOpen={supportOpen} onClose={() => setSupportOpen(false)} />
       <TermsModal isOpen={termsOpen} onClose={() => setTermsOpen(false)} />
+      <GalaxyGlobeModal isOpen={galaxyModalOpen} onClose={() => setGalaxyModalOpen(false)} />
     </div>
   );
 }
