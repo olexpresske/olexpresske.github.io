@@ -2,68 +2,66 @@
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>OlexPress - Your Ride Everywhere in Kenya</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#16a34a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#f8fafc;color:#0f172a;padding:12px}
-.card{background:white;border:1px solid #e2e8f0;border-radius:14px;padding:16px;margin:10px 0;box-shadow:0 4px 12px rgba(0,0,0,.05)}
-input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #cbd5e1;background:white;color:#0f172a;margin:6px 0;font-weight:500}
-button{width:100%;padding:14px;border-radius:10px;border:0;font-weight:800;cursor:pointer;font-size:14px}
+body{background:#f8fafc;color:#0f172a;padding:10px}
+.card{background:white;border:1px solid #e2e8f0;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 4px 12px rgba(0,0,0,.05)}
+input{width:100%;padding:12px;border-radius:8px;border:1px solid #cbd5e1;background:white;color:#0f172a;margin:6px 0;font-weight:500}
+button{width:100%;padding:14px;border-radius:10px;border:0;font-weight:800;cursor:pointer}
+#map{height:280px;border-radius:12px;border:2px solid #16a34a;margin:10px 0}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 </style>
 </head>
 <body>
 
-<div style="background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:16px;padding:16px;display:flex;align-items:center;gap:14px;color:white;margin-bottom:12px">
-<div style="width:80px;height:80px;background:#334155;border-radius:50%;display:flex;align-items:center;justify-content:center;animation:float 3s infinite">
-<svg viewBox="0 0 140 60" width="70" height="30"><path d="M10 32 L20 16 L90 16 L102 20 L118 20 L122 32 L120 42 L10 42 Z" fill="white"/><circle cx="32" cy="42" r="6" fill="#0f172a"/><circle cx="88" cy="42" r="6" fill="#0f172a"/></svg>
-</div>
-<div style="flex:1"><div style="font-weight:900;font-size:15px">OlexPress - Your Ride Everywhere in Kenya</div><div style="font-size:11px;color:#4ade80">Olkalou • Gilgil • Nyahururu • Nakuru • Base 250 + KM×42</div><div id="ticketPreview" style="font-size:10px;opacity:.9;margin-top:6px;background:rgba(255,255,255,.12);padding:6px;border-radius:6px">🎫 Ticket: Auto-generates | 📅 Time/Date auto-logged | 💰 Base 250 + KM×42</div></div>
+<div style="background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px;color:white">
+<div style="width:70px;height:70px;background:#334155;border-radius:50%;display:flex;align-items:center;justify-content:center;animation:float 3s infinite">🚕</div>
+<div style="flex:1"><div style="font-weight:900">OlexPress - Your Ride Everywhere</div><div style="font-size:11px;color:#4ade80">LIBERTY Input - Type ANY Pickup & Destination - Live Map - Base 250 + KM×42 - 1 Ticket Only</div><div id="ticketPreview" style="font-size:10px;opacity:.9;margin-top:4px;background:rgba(255,255,255,.12);padding:5px;border-radius:6px">🎫 Ticket auto | 📍 Map Coords | 💰 Base 250 + KM×42 | 1 Active Only</div></div>
 </div>
 
 <div class="card">
-<h3 style="font-size:14px;margin-bottom:10px">📍 Online Booking - Base Rate KES 250</h3>
+<h3 style="font-size:13px">📍 Picks & Destination - CUSTOMER LIBERTY</h3>
 
-<label style="font-size:11px;font-weight:700">FROM *</label>
-<select id="from" onchange="autoCalc()">
-<option value="">Select From</option>
-<option value="Olkalou">Olkalou</option>
-<option value="Gilgil">Gilgil</option>
-<option value="Nyahururu">Nyahururu</option>
-<option value="Nakuru">Nakuru</option>
-<option value="Nairobi">Nairobi</option>
-<option value="Naivasha">Naivasha</option>
-</select>
+<label style="font-size:11px;font-weight:700">PICKUP - Type ANYWHERE (Liberty) *</label>
+<input id="from" placeholder="Type pickup - e.g. My house Olkalou, Equity Bank Gilgil..." oninput="geocodeFrom()" autocomplete="off">
+<div id="fromSug" style="background:white;border:1px solid #e2e8f0;border-radius:8px;display:none;max-height:120px;overflow-y:auto"></div>
 
-<label style="font-size:11px;font-weight:700">TO *</label>
-<select id="to" onchange="autoCalc()">
-<option value="">Select To</option>
-<option value="Olkalou">Olkalou</option>
-<option value="Gilgil">Gilgil</option>
-<option value="Nyahururu">Nyahururu</option>
-<option value="Nakuru">Nakuru</option>
-<option value="Nairobi">Nairobi</option>
-<option value="Naivasha">Naivasha</option>
-</select>
+<label style="font-size:11px;font-weight:700">DESTINATION - Type ANYWHERE (Liberty) *</label>
+<input id="to" placeholder="Type destination - e.g. Nakuru CBD, My shamba, Nairobi..." oninput="geocodeTo()" autocomplete="off">
+<div id="toSug" style="background:white;border:1px solid #e2e8f0;border-radius:8px;display:none;max-height:120px;overflow-y:auto"></div>
 
-<div style="display:flex;gap:8px">
-<div style="flex:1"><label style="font-size:11px;font-weight:700">KM (Auto)</label><input id="km" type="number" placeholder="Auto" value="35" oninput="calcFare()"></div>
-<div style="flex:1"><label style="font-size:11px;font-weight:700">FARE KES (250+KM×42)</label><input id="fare" type="number" placeholder="Auto" value="1720" readonly style="font-weight:800;color:#16a34a;background:#f0fdf4"></div>
+<div style="display:flex;gap:6px;margin-top:8px">
+<button onclick="useMyLocation()" style="background:#3b82f6;color:white;flex:1;padding:10px;font-size:11px">📍 Use My GPS as Pickup</button>
+<button onclick="clearMap()" style="background:#1e293b;color:white;flex:1;padding:10px;font-size:11px">🗺️ Clear Map</button>
 </div>
 
-<div style="display:flex;gap:8px">
-<div style="flex:1"><label style="font-size:11px;font-weight:700">Your Name *</label><input id="name" placeholder="John Doe"></div>
+<div id="map"></div>
+<div style="font-size:10px;color:#64748b;text-align:center">Tap map: 1st tap=Pickup, 2nd tap=Destination | Drag pins | Liberty typing allowed</div>
+
+<div style="display:flex;gap:8px;margin-top:8px">
+<div style="flex:1;background:#f0fdf4;border:1px solid #bbf7d0;padding:8px;border-radius:8px"><div style="font-size:9px">KM (Live Map)</div><input id="km" type="number" value="0" readonly style="background:#f0fdf4;border:0;font-weight:800;color:#16a34a;padding:4px 0;margin:0"><div id="coordsInfo" style="font-size:8px;color:#64748b">Coords: not set</div></div>
+<div style="flex:1;background:#0f172a;color:white;padding:8px;border-radius:8px"><div style="font-size:9px;color:#4ade80">FARE KES (250+KM×42)</div><input id="fare" type="number" value="250" readonly style="background:#0f172a;border:0;font-weight:900;color:#4ade80;padding:4px 0;margin:0;font-size:18px"><div id="formulaInfo" style="font-size:8px;color:#94a3b8">250 + 0×42 = 250</div></div>
+</div>
+
+<div style="display:flex;gap:8px;margin-top:8px">
+<div style="flex:1"><label style="font-size:11px;font-weight:700">Your Name *</label><input id="name" placeholder="John"></div>
 <div style="flex:1"><label style="font-size:11px;font-weight:700">Phone 07... *</label><input id="phone" placeholder="07..."></div>
 </div>
 
-<div id="calcInfo" style="background:#f0fdf4;border:1px solid #bbf7d0;padding:10px;border-radius:8px;margin:8px 0;font-size:11px">
-✅ Formula: <b>Base 250 + (KM × 42)</b> = Fare<br>Example: 35km → 250 + 1470 = KES 1720<br>Ticket number auto-generates on booking + Time/Date logged
+<div id="calcInfo" style="background:#f8fafc;border:1px solid #e2e8f0;padding:8px;border-radius:8px;margin:8px 0;font-size:11px">
+✅ Liberty: Type ANY pickup/destination - Same place allowed (min fare 250)<br>📍 Live map coords → distance ×1.3 road factor → Base 250 + KM×42<br>⚠️ 1 Active Ticket Only - Multiple blocked!
 </div>
 
-<button onclick="bookRide()" style="background:#16a34a;color:white;font-size:16px;margin-top:8px">🚕 BOOK NOW - Generate Ticket + Log Time/Date</button>
+<button onclick="bookRide()" style="background:#16a34a;color:white;font-size:16px;margin-top:8px">🚕 BOOK NOW - Liberty + Map Coords + 1 Ticket Only</button>
 
-<div id="status" style="margin-top:12px"></div>
+<div id="status" style="margin-top:10px"></div>
 </div>
 
 <div id="activeTicket" style="display:none" class="card"></div>
@@ -71,155 +69,238 @@ button{width:100%;padding:14px;border-radius:10px;border:0;font-weight:800;curso
 <script>
 var firebaseConfig={apiKey:"AIzaSyD4...",authDomain:"olexpresske.firebaseapp.com",databaseURL:"https://olexpresske-default-rtdb.firebaseio.com",projectId:"olexpresske"};
 firebase.initializeApp(firebaseConfig);var db=firebase.database();
+const BASE_RATE=250; const PER_KM=42;
+let map, pickupMarker, destMarker, fromCoords=null, toCoords=null;
 
-const distances={
-"Olkalou-Gilgil":35,"Gilgil-Olkalou":35,
-"Olkalou-Nyahururu":45,"Nyahururu-Olkalou":45,
-"Olkalou-Nakuru":80,"Nakuru-Olkalou":80,
-"Gilgil-Nyahururu":65,"Nyahururu-Gilgil":65,
-"Gilgil-Nakuru":45,"Nakuru-Gilgil":45,
-"Nyahururu-Nakuru":90,"Nakuru-Nyahururu":90,
-"Olkalou-Nairobi":180,"Nairobi-Olkalou":180,
-"Gilgil-Nairobi":120,"Nairobi-Gilgil":120,
-"Nakuru-Nairobi":160,"Nairobi-Nakuru":160,
-"Olkalou-Naivasha":70,"Naivasha-Olkalou":70,
-"Gilgil-Naivasha":30,"Naivasha-Gilgil":30
-};
-
-const BASE_RATE=250;
-const PER_KM=42;
-
-function autoCalc(){
-let from=document.getElementById('from').value;
-let to=document.getElementById('to').value;
-if(!from||!to) return;
-if(from===to){document.getElementById('to').value=''; alert('From and To cannot be same!'); return;}
-let key=from+'-'+to;
-let km=distances[key]||35;
-document.getElementById('km').value=km;
-calcFare();
+function initMap(){
+map=L.map('map').setView([-0.3,36.3],8);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OlexPress Live'}).addTo(map);
+map.on('click',function(e){
+if(!fromCoords){
+fromCoords=e.latlng;
+if(pickupMarker) map.removeLayer(pickupMarker);
+pickupMarker=L.marker(e.latlng,{draggable:true}).addTo(map).bindPopup('Pickup').openPopup();
+pickupMarker.on('dragend',function(ev){fromCoords=ev.target.getLatLng(); calcLiveDistance();});
+document.getElementById('from').value=`Map Pickup ${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
+} else {
+toCoords=e.latlng;
+if(destMarker) map.removeLayer(destMarker);
+destMarker=L.marker(e.latlng,{draggable:true}).addTo(map).bindPopup('Destination').openPopup();
+destMarker.on('dragend',function(ev){toCoords=ev.target.getLatLng(); calcLiveDistance();});
+document.getElementById('to').value=`Map Destination ${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
 }
+calcLiveDistance();
+});
+// AUTO-RESTORE ACTIVE TICKET - BLOCK MULTIPLE
+let savedActive=localStorage.getItem('olex_active_ticket');
+if(savedActive){
+db.ref('rides/'+savedActive).once('value',snap=>{
+let v=snap.val();
+if(v && v.status!=='completed'){
+document.getElementById('status').innerHTML=`<div style="background:#fffbeb;border:1px solid #fde68a;padding:10px;border-radius:8px">⚠️ Active ticket ${savedActive} - Complete before new booking</div>`;
+showActiveTicket(savedActive,v);
+} else {localStorage.removeItem('olex_active_ticket');}
+});
+}
+}
+initMap();
 
-function calcFare(){
-let km=parseFloat(document.getElementById('km').value)||35;
-let fare=BASE_RATE + Math.round(km*PER_KM);
+function useMyLocation(){
+if(!navigator.geolocation) return alert('GPS not supported');
+navigator.geolocation.getCurrentPosition(pos=>{
+let latlng={lat:pos.coords.latitude,lng:pos.coords.longitude};
+fromCoords=latlng;
+if(pickupMarker) map.removeLayer(pickupMarker);
+pickupMarker=L.marker(latlng).addTo(map).bindPopup('Your Location - Pickup').openPopup();
+map.setView(latlng,14);
+document.getElementById('from').value=`My Location ${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
+calcLiveDistance();
+});
+}
+function clearMap(){
+fromCoords=null; toCoords=null;
+if(pickupMarker) map.removeLayer(pickupMarker);
+if(destMarker) map.removeLayer(destMarker);
+pickupMarker=null; destMarker=null;
+document.getElementById('km').value=0;
+document.getElementById('fare').value=BASE_RATE;
+document.getElementById('coordsInfo').innerText='Coords: not set';
+document.getElementById('formulaInfo').innerText=`${BASE_RATE} + 0×${PER_KM} = ${BASE_RATE}`;
+}
+function calcLiveDistance(){
+if(!fromCoords||!toCoords) return;
+let R=6371;
+let dLat=(toCoords.lat-fromCoords.lat)*Math.PI/180;
+let dLon=(toCoords.lng-fromCoords.lng)*Math.PI/180;
+let a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(fromCoords.lat*Math.PI/180)*Math.cos(toCoords.lat*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+let c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+let km=R*c;
+let roadKm=km*1.3;
+let kmRounded=Math.max(1,Math.round(roadKm*10)/10);
+let fare=BASE_RATE + Math.round(kmRounded*PER_KM);
+document.getElementById('km').value=kmRounded;
 document.getElementById('fare').value=fare;
-let previewId='OLX-'+Math.floor(100000+Math.random()*900000);
-document.getElementById('ticketPreview').innerHTML=`🎫 Ticket: <b>${previewId}</b> (final on booking) | 📅 ${new Date().toLocaleString('en-KE')} | 💰 Base ${BASE_RATE} + ${km}km×${PER_KM} = KES ${fare}`;
-document.getElementById('calcInfo').innerHTML=`✅ ${document.getElementById('from').value||'FROM'} → ${document.getElementById('to').value||'TO'} = Base KES ${BASE_RATE} + ${km}km × ${PER_KM} = <b>KES ${fare}</b><br>Formula: 250 + (KM × 42) = ${BASE_RATE} + ${km*PER_KM} = ${fare}`;
+document.getElementById('coordsInfo').innerText=`Pickup: ${fromCoords.lat.toFixed(4)},${fromCoords.lng.toFixed(4)} → Dest: ${toCoords.lat.toFixed(4)},${toCoords.lng.toFixed(4)}`;
+document.getElementById('formulaInfo').innerText=`${BASE_RATE} + ${kmRounded}×${PER_KM} = ${fare}`;
+document.getElementById('ticketPreview').innerText=`🎫 Ticket auto | 📍 ${kmRounded}km live map | 💰 ${BASE_RATE}+${kmRounded}×${PER_KM}=KES ${fare}`;
+document.getElementById('calcInfo').innerHTML=`✅ Live Map: ${kmRounded}km (straight ${km.toFixed(1)}km ×1.3) = Base ${BASE_RATE} + ${kmRounded}×${PER_KM} = <b>KES ${fare}</b><br>Pickup: ${fromCoords.lat.toFixed(5)},${fromCoords.lng.toFixed(5)} → Dest: ${toCoords.lat.toFixed(5)},${toCoords.lng.toFixed(5)}<br>⚠️ 1 Ticket Only - Multiple blocked`;
 }
-
+let fromTimer, toTimer;
+function geocodeFrom(){
+clearTimeout(fromTimer);
+let q=document.getElementById('from').value.trim();
+if(q.length<3){document.getElementById('fromSug').style.display='none'; return;}
+fromTimer=setTimeout(()=>{
+fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}+Kenya&limit=5`)
+.then(r=>r.json()).then(data=>{
+let sug=document.getElementById('fromSug');
+if(!data.length){sug.style.display='none'; return;}
+sug.innerHTML=data.map(d=>`<div onclick="selectFrom('${d.display_name.replace(/'/g,'')}',${d.lat},${d.lon})" style="padding:8px;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:11px">${d.display_name}</div>`).join('');
+sug.style.display='block';
+});
+},500);
+}
+function geocodeTo(){
+clearTimeout(toTimer);
+let q=document.getElementById('to').value.trim();
+if(q.length<3){document.getElementById('toSug').style.display='none'; return;}
+toTimer=setTimeout(()=>{
+fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}+Kenya&limit=5`)
+.then(r=>r.json()).then(data=>{
+let sug=document.getElementById('toSug');
+if(!data.length){sug.style.display='none'; return;}
+sug.innerHTML=data.map(d=>`<div onclick="selectTo('${d.display_name.replace(/'/g,'')}',${d.lat},${d.lon})" style="padding:8px;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:11px">${d.display_name}</div>`).join('');
+sug.style.display='block';
+});
+},500);
+}
+function selectFrom(name,lat,lon){
+document.getElementById('from').value=name;
+document.getElementById('fromSug').style.display='none';
+fromCoords={lat:parseFloat(lat),lng:parseFloat(lon)};
+if(pickupMarker) map.removeLayer(pickupMarker);
+pickupMarker=L.marker(fromCoords).addTo(map).bindPopup('Pickup: '+name).openPopup();
+map.setView(fromCoords,13);
+calcLiveDistance();
+}
+function selectTo(name,lat,lon){
+document.getElementById('to').value=name;
+document.getElementById('toSug').style.display='none';
+toCoords={lat:parseFloat(lat),lng:parseFloat(lon)};
+if(destMarker) map.removeLayer(destMarker);
+destMarker=L.marker(toCoords).addTo(map).bindPopup('Dest: '+name).openPopup();
+map.setView(toCoords,13);
+calcLiveDistance();
+}
 function bookRide(){
 let from=document.getElementById('from').value.trim();
 let to=document.getElementById('to').value.trim();
-let km=document.getElementById('km').value.trim()||'35';
-let fare=document.getElementById('fare').value.trim();
+let km=parseFloat(document.getElementById('km').value)||0;
+let fare=parseInt(document.getElementById('fare').value)||BASE_RATE;
 let name=document.getElementById('name').value.trim();
 let phone=document.getElementById('phone').value.trim();
-
-if(!from) return alert('Please SELECT FROM location');
-if(!to) return alert('Please SELECT TO location');
-if(!name) return alert('Please ENTER Your Name');
-if(!phone) return alert('Please ENTER Phone 07...');
-if(phone.length<10) return alert('Phone must be 10 digits');
-
-let kmVal=parseFloat(km)||35;
-let fareVal=parseInt(fare)||(BASE_RATE + Math.round(kmVal*PER_KM));
-
+if(!from) return alert('Type PICKUP - liberty - any location');
+if(!to) return alert('Type DESTINATION - liberty - any location');
+if(!name) return alert('Enter Name');
+if(!phone||phone.length<10) return alert('Enter Phone 07... 10 digits');
+let activeId=localStorage.getItem('olex_active_ticket');
+if(activeId){return alert(`⚠️ ACTIVE ticket ${activeId} exists!\nCannot book new until completed!\nComplete: Board → Pay → Review`);}
+if(km===0){km=1; fare=BASE_RATE + Math.round(km*PER_KM);}
+document.getElementById('status').innerHTML=`<div style="background:#fffbeb;padding:10px;border-radius:8px;border:1px solid #fde68a">⏳ Checking active ticket for ${phone}...</div>`;
+db.ref('rides').orderByChild('phone').equalTo(phone).once('value',snap=>{
+let hasActive=false; let activeTicketId='';
+snap.forEach(ch=>{let v=ch.val(); if(v.status!=='completed'){hasActive=true; activeTicketId=ch.key;}});
+if(hasActive){
+document.getElementById('status').innerHTML=`<div style="background:#fee2e2;border:2px solid #ef4444;padding:12px;border-radius:10px;color:#991b1b"><b>⚠️ MULTIPLE TICKETS BLOCKED!</b><br>Active ticket <b>${activeTicketId}</b> status ${snap.child(activeTicketId).val()?.status}<br>Complete it first!</div>`;
+showActiveTicket(activeTicketId, snap.child(activeTicketId).val());
+localStorage.setItem('olex_active_ticket', activeTicketId);
+return;
+}
 let ticketNumber='OLX-'+Date.now().toString().slice(-6)+'-'+Math.floor(100+Math.random()*900);
 let now=new Date();
-let timeStr=now.toLocaleString('en-KE',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
-let dateStr=now.toLocaleDateString('en-KE',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-let clockStr=now.toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
-let isoStr=now.toISOString();
-let ts=Date.now();
-
 let rideData={
 id:ticketNumber,ticket:ticketNumber,
 from:from,to:to,
-km:kmVal,fare:fareVal,
+fromCoords:fromCoords?{lat:fromCoords.lat,lng:fromCoords.lng}:null,
+toCoords:toCoords?{lat:toCoords.lat,lng:toCoords.lng}:null,
+km:km,fare:fare,
 name:name,phone:phone,
-status:'pending',ts:ts,
-time:timeStr,date:dateStr,clock:clockStr,iso:isoStr,
+status:'pending',ts:Date.now(),
+time:now.toLocaleString('en-KE'),
+date:now.toLocaleDateString('en-KE'),
+clock:now.toLocaleTimeString('en-KE'),
+iso:now.toISOString(),
 baseRate:BASE_RATE,yFactor:PER_KM,
-formula:`${BASE_RATE} + ${kmVal}×${PER_KM} = ${fareVal}`
+formula:`${BASE_RATE} + ${km}×${PER_KM} = ${fare}`,
+libertyInput:true
 };
-
-document.getElementById('status').innerHTML=`<div style="background:#fffbeb;padding:10px;border-radius:8px;border:1px solid #fde68a">⏳ Booking ${ticketNumber}... Base ${BASE_RATE} + ${kmVal}×${PER_KM} = KES ${fareVal}... Logging time/date...</div>`;
-
 db.ref('rides/'+ticketNumber).set(rideData).then(()=>{
-document.getElementById('status').innerHTML=`<div style="background:#f0fdf4;border:2px solid #22c55e;padding:12px;border-radius:10px;color:#0f172a"><b>✅ BOOKED SUCCESS!</b><br>🎫 Ticket Number: <b style="font-size:18px;color:#16a34a">${ticketNumber}</b><br>📅 DATE LOGGED: ${dateStr}<br>⏰ TIME LOGGED: ${clockStr}<br>💰 Formula: ${BASE_RATE} + ${kmVal}km×${PER_KM} = KES ${fareVal}<br>📞 ${phone} - Driver will contact - QR Code below</div>`;
+localStorage.setItem('olex_active_ticket', ticketNumber);
+localStorage.setItem('olex_phone', phone);
+document.getElementById('status').innerHTML=`<div style="background:#f0fdf4;border:2px solid #22c55e;padding:12px;border-radius:10px"><b>✅ BOOKED! 1 Ticket Only!</b><br>🎫 <b style="font-size:18px;color:#16a34a">${ticketNumber}</b><br>📍 Pickup: ${from}<br>📍 Dest: ${to}<br>🌍 Coords: ${fromCoords?fromCoords.lat.toFixed(4)+','+fromCoords.lng.toFixed(4):'typed'} → ${toCoords?toCoords.lat.toFixed(4)+','+toCoords.lng.toFixed(4):'typed'}<br>💰 ${BASE_RATE}+${km}×${PER_KM}=KES ${fare}<br>📅 ${rideData.date} ${rideData.clock}<br>⚠️ Cannot book new until completed!</div>`;
 showActiveTicket(ticketNumber,rideData);
-}).catch(e=>alert('Booking Error: '+e.message));
+});
+});
 }
-
 function showActiveTicket(ticketId,data){
 document.getElementById('activeTicket').style.display='block';
 document.getElementById('activeTicket').innerHTML=`
-<div style="display:flex;justify-content:space-between"><b>🎫 Active Ticket ${ticketId}</b><span style="background:#f59e0b;color:white;padding:4px 10px;border-radius:12px;font-size:10px" id="statusBadge">PENDING - ${data.clock}</span></div>
-<div style="background:#f8fafc;padding:10px;border-radius:8px;margin-top:10px;border-left:4px solid #16a34a">
-<div style="font-size:12px">From <b>${data.from}</b> → <b>${data.to}</b> • ${data.km}km</div>
-<div style="font-size:12px;font-weight:800;color:#16a34a">💰 Base ${data.baseRate} + ${data.km}×${data.yFactor} = KES ${data.fare}</div>
-<div style="font-size:10px;margin-top:6px">📅 DATE LOGGED: ${data.date}<br>⏰ TIME LOGGED: ${data.clock}<br>🎫 FULL: ${data.time}<br>Formula: ${data.formula}</div>
+<div style="display:flex;justify-content:space-between"><b>🎫 ${ticketId} - Liberty</b><span style="background:#f59e0b;color:white;padding:4px 10px;border-radius:12px;font-size:10px" id="statusBadge">PENDING</span></div>
+<div style="background:#f8fafc;padding:10px;border-radius:8px;margin-top:8px;border-left:4px solid #16a34a">
+<div style="font-size:12px"><b>Pickup:</b> ${data.from}</div>
+<div style="font-size:12px"><b>Dest:</b> ${data.to}</div>
+<div style="font-size:10px;margin-top:4px;color:#64748b">🌍 From: ${data.fromCoords?data.fromCoords.lat+','+data.fromCoords.lng:'typed'}<br>🌍 To: ${data.toCoords?data.toCoords.lat+','+data.toCoords.lng:'typed'}<br>📅 ${data.date} ${data.clock} | 💰 Base ${data.baseRate} + ${data.km}×${data.yFactor} = KES ${data.fare}</div>
 </div>
-<div style="background:white;padding:12px;border-radius:10px;text-align:center;margin-top:10px;border:2px dashed #16a34a">
-<div style="font-size:11px;font-weight:800">QR CODE + TICKET NUMBER</div>
-<div style="font-size:16px;font-weight:900">${ticketId}</div>
-<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${ticketId}" style="width:120px;height:120px;margin-top:8px;border:1px solid #e2e8f0;border-radius:8px">
-<div style="font-size:9px;color:#64748b;margin-top:4px">Show QR + Ticket number to driver for boarding</div>
+<div style="background:white;padding:10px;border-radius:10px;text-align:center;margin-top:10px;border:2px dashed #16a34a">
+<div style="font-size:11px;font-weight:800">QR + TICKET ${ticketId}</div>
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${ticketId}" style="width:110px;height:110px;margin-top:6px">
 </div>
 <div id="stepsClient" style="margin-top:10px;background:#0f172a;color:white;padding:10px;border-radius:8px"></div>
-<div id="reviewBox" style="margin-top:12px;display:none"></div>
+<div id="reviewBox" style="margin-top:10px;display:none"></div>
 `;
 trackStatus(ticketId);
 }
-
 function trackStatus(ticketId){
 db.ref('rides/'+ticketId).on('value',snap=>{
 let v=snap.val(); if(!v) return;
 let status=v.status||'pending';
-let badge=document.getElementById('statusBadge');
-if(badge) badge.innerText=status.toUpperCase()+' • '+v.clock+' • '+v.date;
-
+let badge=document.getElementById('statusBadge'); if(badge) badge.innerText=status.toUpperCase()+' • '+v.clock;
 let steps={
-pending:{label:'Waiting driver accept',pct:10},
-accepted:{label:'Driver accepted - coming',pct:25},
-arrived:{label:'Driver arrived - Confirm QR '+ticketId,pct:40},
-boarding_requested:{label:'Driver requested boarding - Accept boarding',pct:55,action:true},
-boarded:{label:'Boarded! On trip '+v.from+' → '+v.to,pct:70},
-pay_initiated:{label:'Reached '+v.to+' - Driver initiated pay KES '+v.fare,pct:85,actionPay:true},
-paid:{label:'Paid KES '+v.fare+' - Driver ending ride',pct:95},
-completed:{label:'Ride completed - Please review',pct:100,review:true}
+pending:{label:'Waiting driver',pct:10},
+accepted:{label:'Driver accepted',pct:25},
+arrived:{label:'Driver arrived QR '+ticketId,pct:40},
+boarding_requested:{label:'Driver requested boarding',pct:55,action:true},
+boarded:{label:'Boarded! On trip',pct:70},
+pay_initiated:{label:'Reached - Pay KES '+v.fare,pct:85,actionPay:true},
+paid:{label:'Paid - Driver ending',pct:95},
+completed:{label:'Completed - Review',pct:100,review:true}
 };
 let cur=steps[status]||steps.pending;
-let stepsDiv=document.getElementById('stepsClient');
-if(stepsDiv){
-stepsDiv.innerHTML=`
-<div style="font-size:11px;font-weight:800">Progress: ${cur.pct}% - ${cur.label}</div>
-<div style="background:#334155;height:8px;border-radius:4px;margin-top:6px;overflow:hidden"><div style="width:${cur.pct}%;background:#22c55e;height:100%"></div></div>
-<div style="font-size:10px;margin-top:6px;background:#1e293b;padding:6px;border-radius:6px">📅 ${v.date} | ⏰ ${v.clock} | 💰 Base ${v.baseRate||250} + ${v.km}×${v.yFactor||42} = KES ${v.fare} | 🎫 ${v.time}</div>
-${cur.action?`<button onclick="acceptBoarding('${ticketId}')" style="background:#16a34a;color:white;margin-top:8px;padding:10px">✅ ACCEPT BOARDING QR ${ticketId}</button>`:''}
-${cur.actionPay?`<button onclick="acceptPay('${ticketId}')" style="background:#f59e0b;color:white;margin-top:8px;padding:10px">✅ ACCEPT & PAY KES ${v.fare}</button>`:''}
-`;
+let div=document.getElementById('stepsClient');
+if(div){
+div.innerHTML=`<div style="font-size:11px;font-weight:800">${cur.pct}% - ${cur.label}</div><div style="background:#334155;height:8px;border-radius:4px;margin-top:6px;overflow:hidden"><div style="width:${cur.pct}%;background:#22c55e;height:100%"></div></div><div style="font-size:9px;margin-top:6px;background:#1e293b;padding:5px;border-radius:5px">Liberty input - Coords logged - Base ${v.baseRate}+${v.km}×${v.yFactor}=KES ${v.fare} | ${v.date} ${v.clock}</div>${cur.action?`<button onclick="acceptBoarding('${ticketId}')" style="background:#16a34a;color:white;margin-top:8px;padding:10px">✅ ACCEPT BOARDING</button>`:''}${cur.actionPay?`<button onclick="acceptPay('${ticketId}')" style="background:#f59e0b;color:white;margin-top:8px;padding:10px">✅ PAY KES ${v.fare}</button>`:''}`;
 }
 if(cur.review){
 let rb=document.getElementById('reviewBox'); rb.style.display='block';
-rb.innerHTML=`<div style="background:#f0fdf4;padding:12px;border-radius:10px;border:1px solid #22c55e"><b>⭐ Rate Trip - ${v.date} ${v.clock}</b><div style="display:flex;gap:6px;margin:8px 0"><span onclick="setStars(1)" class="star" style="font-size:24px;cursor:pointer">⭐</span><span onclick="setStars(2)" class="star" style="font-size:24px;cursor:pointer">⭐</span><span onclick="setStars(3)" class="star" style="font-size:24px;cursor:pointer">⭐</span><span onclick="setStars(4)" class="star" style="font-size:24px;cursor:pointer">⭐</span><span onclick="setStars(5)" class="star" style="font-size:24px;cursor:pointer">⭐</span></div><textarea id="reviewText" placeholder="Your review..." style="width:100%;padding:8px;border-radius:6px;border:1px solid #cbd5e1;min-height:60px"></textarea><button onclick="submitReview('${ticketId}')" style="background:#16a34a;color:white;margin-top:8px;padding:10px">Submit Review - Logged with ${v.date} ${v.clock}</button></div>`;
+rb.innerHTML=`<div style="background:#f0fdf4;padding:10px;border-radius:10px;border:1px solid #22c55e"><b>⭐ Rate Trip</b><div style="display:flex;gap:5px;margin:6px 0"><span onclick="setStars(1)" class="star" style="font-size:22px;cursor:pointer">⭐</span><span onclick="setStars(2)" class="star" style="font-size:22px;cursor:pointer">⭐</span><span onclick="setStars(3)" class="star" style="font-size:22px;cursor:pointer">⭐</span><span onclick="setStars(4)" class="star" style="font-size:22px;cursor:pointer">⭐</span><span onclick="setStars(5)" class="star" style="font-size:22px;cursor:pointer">⭐</span></div><textarea id="reviewText" placeholder="Review..." style="width:100%;padding:8px;border-radius:6px;border:1px solid #cbd5e1;min-height:50px"></textarea><button onclick="submitReview('${ticketId}')" style="background:#16a34a;color:white;margin-top:6px;padding:10px">Submit Review</button></div>`;
 }
 });
 }
 window.currentStars=5;
 function setStars(n){window.currentStars=n; document.querySelectorAll('.star').forEach((s,i)=>s.style.opacity=i<n?1:.3);}
 function acceptBoarding(id){db.ref('rides/'+id).update({status:'boarded'});}
-function acceptPay(id){db.ref('rides/'+id).update({status:'paid'}).then(()=>alert('Paid! Waiting driver to end'));}
+function acceptPay(id){db.ref('rides/'+id).update({status:'paid'});}
 function submitReview(id){
-let stars=window.currentStars;let text=document.getElementById('reviewText').value.trim()||'Good service';let now=new Date();
+let stars=window.currentStars;let text=document.getElementById('reviewText').value.trim()||'Good';let now=new Date();
 db.ref('rides/'+id+'/feedback').set({stars:stars,text:text,time:now.toLocaleTimeString(),date:now.toLocaleDateString(),full:now.toLocaleString(),ts:Date.now()}).then(()=>{
-db.ref('rides/'+id).update({status:'completed'});
-alert('⭐ Review logged! Time/Date: '+now.toLocaleString());
+db.ref('rides/'+id).update({status:'completed'}).then(()=>{
+localStorage.removeItem('olex_active_ticket');
+document.getElementById('status').innerHTML+=`<div style="background:#f0fdf4;border:2px solid #22c55e;padding:10px;border-radius:8px;margin-top:8px;text-align:center">✅ Trip ${id} COMPLETED! You can now book new!</div>`;
+setTimeout(()=>{document.getElementById('activeTicket').style.display='none'; document.getElementById('status').innerHTML='';},3000);
+alert('⭐ Review logged! Ticket '+id+' completed! Now you can book new ride!');
+});
 });
 }
-calcFare();
 </script>
 </body>
 </html>
