@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>OlexPress - Your Ride Everywhere</title>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -9,127 +8,91 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#f8fafc;color:#0f172a}
-.header{background:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 10px rgba(0,0,0,0.06);position:sticky;top:0;z-index:10}
-.logo{display:flex;align-items:center;gap:8px;font-weight:900;font-size:18px}
-.logo-pin{width:36px;height:36px;background:#16a34a;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;color:#fff}
-.logo-pin span{transform:rotate(45deg);font-weight:900}
+body{background:#f8fafc}
+.header{background:#fff;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 10px rgba(0,0,0,.06);position:sticky;top:0;z-index:20}
 .wrap{max-width:900px;margin:0 auto;padding:0 12px 30px}
-.card{background:#fff;border-radius:14px;padding:16px;margin-top:14px;box-shadow:0 4px 20px rgba(0,0,0,0.05)}
+.card{background:#fff;border-radius:14px;padding:16px;margin-top:14px;box-shadow:0 4px 20px rgba(0,0,0,.05)}
 input,button{width:100%;padding:13px;border-radius:10px;border:1px solid #e2e8f0;font-size:15px}
 button{background:#16a34a;color:#fff;border:0;font-weight:800;cursor:pointer;margin-top:10px}
 button:disabled{background:#cbd5e1}
-.ticket{display:none}
-.ticket.show{display:block}
-.stars span{font-size:32px;cursor:pointer;filter:grayscale(1)}
-.stars span.on{filter:none}
-@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-@keyframes spinR{0%{transform:rotate(360deg)}100%{transform:rotate(0deg)}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-</style>
-</head>
-<body>
+.ticket{display:none}.ticket.show{display:block}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}@keyframes spinR{0%{transform:rotate(360deg)}100%{transform:rotate(0deg)}}@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+</style></head><body>
+<!-- HEADER WITH YOUR REAL LOGO -->
 <div class="header">
-<div class="logo"><div class="logo-pin"><span>↗</span></div><div><span style="color:#16a34a">Olex</span>Press<div style="font-size:9px;color:#64748b;font-weight:600;letter-spacing:0.5px">Your Ride Everywhere • XXX</div></div></div>
-<div style="font-size:10px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;padding:6px 10px;border-radius:20px;font-weight:800">● ONLINE</div>
+<img src="logo.png" alt="OlexPress Your Ride Everywhere" style="height:52px;width:auto;object-fit:contain" onerror="this.style.display='none';document.getElementById('fallbackLogo').style.display='flex'">
+<div id="fallbackLogo" style="display:none;align-items:center;gap:10px"><div style="width:42px;height:42px;background:#16a34a;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900"><span style="transform:rotate(45deg)">↗</span></div><div style="font-weight:900"><span style="color:#16a34a">Olex</span>Press<br><small style="font-size:9px;color:#16a34a">Your Ride Everywhere</small></div></div>
+<div style="display:flex;gap:6px"><button onclick="clearStuck()" style="width:auto;padding:6px 10px;font-size:10px;background:#0f172a">Clear Lock</button><div style="font-size:10px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;padding:6px 10px;border-radius:20px;font-weight:800">● ONLINE</div></div>
 </div>
 
 <div class="wrap">
-<!-- ===== ROTATING 3D GLOBE - CODABLE - MOVING ROUND ===== -->
-<div style="width:100%;height:380px;background:radial-gradient(circle at center,#0f172a,#020617);border-radius:14px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-top:14px">
-<div style="position:absolute;width:320px;height:320px;border:1px solid rgba(74,222,128,0.25);border-radius:50%;animation:spin 12s linear infinite"></div>
-<div style="position:absolute;width:400px;height:140px;border:1px solid rgba(74,222,128,0.2);border-radius:50%;transform:rotateX(65deg);animation:spinR 8s linear infinite"></div>
-<div style="position:absolute;width:260px;height:260px;border:1px dashed rgba(74,222,128,0.15);border-radius:50%;animation:spinR 15s linear infinite"></div>
-<div style="width:200px;height:200px;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,0.2),transparent 40%),radial-gradient(circle at center,rgba(74,222,128,0.15),transparent 70%),rgba(255,255,255,0.05);border:2px solid rgba(74,222,128,0.4);border-radius:50%;box-shadow:0 0 50px rgba(74,222,128,0.3),inset 0 0 30px rgba(74,222,128,0.2);display:flex;align-items:center;justify-content:center;position:relative;animation:float 3s ease-in-out infinite">
-<div style="position:absolute;top:15px;left:20px;width:42px;height:42px;background:#16a34a;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 15px rgba(0,0,0,0.3)"><div style="transform:rotate(45deg);color:white;font-weight:900;font-size:18px">↗</div></div>
-<div style="text-align:center;z-index:2"><div style="font-size:52px;line-height:1">🚕</div><div style="margin-top:4px;background:white;color:black;font-weight:900;font-size:9px;padding:2px 8px;border-radius:4px;letter-spacing:1px;border:1px solid #16a34a">XXX • OlexPress</div><div style="margin-top:5px;color:#4ade80;font-weight:900;font-size:11px">OlexPress</div></div>
+<!-- 3D WHITE SEDAN GLOBE - CODABLE + YOUR LOGO INSIDE -->
+<div style="width:100%;height:360px;background:radial-gradient(circle at center,#0f172a,#020617);border-radius:14px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-top:14px">
+<div style="position:absolute;width:320px;height:320px;border:1px solid rgba(74,222,128,.25);border-radius:50%;animation:spin 12s linear infinite"></div>
+<div style="position:absolute;width:400px;height:140px;border:1px solid rgba(74,222,128,.2);border-radius:50%;transform:rotateX(65deg);animation:spinR 8s linear infinite"></div>
+<div style="width:210px;height:210px;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.2),transparent 40%),radial-gradient(circle at center,rgba(74,222,128,.15),transparent 70%),rgba(255,255,255,.05);border:2px solid rgba(74,222,128,.4);border-radius:50%;box-shadow:0 0 50px rgba(74,222,128,.3),inset 0 0 30px rgba(74,222,128,.2);display:flex;align-items:center;justify-content:center;position:relative;animation:float 3s ease-in-out infinite">
+<!-- Your logo small inside globe top -->
+<img src="logo.png" style="position:absolute;top:10px;left:12px;width:34px;height:34px;object-fit:contain;background:white;border-radius:50%;padding:2px;box-shadow:0 2px 8px rgba(0,0,0,.3)" onerror="this.style.display='none'">
+<div style="text-align:center;z-index:2;margin-top:10px">
+<svg viewBox="0 0 140 55" width="128" height="50" style="filter:drop-shadow(0 6px 10px rgba(0,0,0,.4))">
+<rect x="50" y="0" width="30" height="12" rx="3" fill="white" stroke="#000" stroke-width=".5"/><text x="65" y="8.5" font-size="7" text-anchor="middle" font-weight="900">TAXI</text>
+<path d="M8 32 L18 18 L95 18 L108 22 L120 22 L124 32 L122 42 L8 42 Z" fill="white" stroke="#cbd5e1" stroke-width=".8"/>
+<path d="M22 20 L36 20 L34 30 L20 30 Z" fill="#7dd3fc"/><path d="M40 20 L68 20 L66 30 L38 30 Z" fill="#7dd3fc"/><path d="M70 20 L92 20 L90 26 L68 26 Z" fill="#bae6fd"/>
+<circle cx="32" cy="42" r="9" fill="#0f172a"/><circle cx="32" cy="42" r="5" fill="#e2e8f0"/><circle cx="92" cy="42" r="9" fill="#0f172a"/><circle cx="92" cy="42" r="5" fill="#e2e8f0"/>
+<text x="55" y="36" font-size="6.5" font-weight="900" fill="#16a34a">OlexPress</text>
+</svg>
+<div style="background:white;color:#0f172a;font-weight:900;font-size:8px;padding:2px 10px;border-radius:4px;display:inline-block;margin-top:2px;border:1px solid #16a34a">XXX • Your Ride Everywhere</div>
+</div>
 <div style="position:absolute;width:100%;height:100%;animation:spin 5s linear infinite"><div style="position:absolute;top:-6px;left:50%;width:10px;height:10px;background:#4ade80;border-radius:50%;box-shadow:0 0 10px #4ade80"></div></div>
-<div style="position:absolute;width:100%;height:100%;animation:spinR 7s linear infinite"><div style="position:absolute;top:-6px;left:50%;width:8px;height:8px;background:#22c55e;border-radius:50%;box-shadow:0 0 8px #22c55e"></div></div>
 </div>
-<div style="position:absolute;bottom:16px;text-align:center;color:white"><div style="font-weight:900;font-size:16px"><span style="color:#4ade80">Olex</span>Press - Your Ride Everywhere</div><div style="font-size:8px;opacity:0.6;margin-top:3px;letter-spacing:1px">SMART MOBILITY • 24 ROUTES • REAL-TIME • XXX FLEET</div></div>
-<div style="position:absolute;top:12px;right:12px;background:rgba(74,222,128,0.15);border:1px solid rgba(74,222,128,0.3);color:#4ade80;padding:5px 10px;border-radius:20px;font-size:8px;font-weight:800">● LIVE • ROTATING</div>
+<div style="position:absolute;bottom:14px;color:white;text-align:center"><div style="font-weight:900;font-size:15px"><span style="color:#4ade80">Olex</span>Press - Your Ride Everywhere</div><div style="font-size:8px;opacity:.6;letter-spacing:1px">WHITE SEDAN • LIVE MAP KM • 4HR AUTO-EXPIRE • XXX FLEET</div></div>
 </div>
-<!-- ===== END GLOBE ===== -->
 
 <div class="card">
-<h3 style="margin-bottom:10px">Book Your Ride</h3>
-<input id="from" placeholder="From (e.g. Gilgil)">
-<input id="to" placeholder="To (e.g. Naivasha)" style="margin-top:8px">
-<div style="display:flex;gap:8px;margin-top:8px"><input id="pname" placeholder="Your Name"><input id="phone" placeholder="Phone 07..."></div>
+<h3>Book Your Ride</h3><p style="font-size:11px;color:#64748b;margin:6px 0">Flexible - ANY 2 places: live map calculates actual KM & fare</p>
+<input id="from" placeholder="From - e.g. Olkalou" oninput="calcLive()"><input id="to" placeholder="To - e.g. Molo" style="margin-top:8px" oninput="calcLive()">
+<div style="display:flex;gap:8px;margin-top:8px"><input id="pname" placeholder="Your Name"><input id="phone" placeholder="Phone +254..."></div>
+<div id="liveFare" style="display:none;margin-top:10px;padding:10px;background:#f0fdf4;border:1px dashed #86efac;border-radius:8px;font-size:12px;font-weight:700;color:#166534"></div>
 <button id="bookBtn" onclick="book()">Check Fare & Book</button>
-<div id="lock" style="display:none;margin-top:10px;padding:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#dc2626;font-size:12px;font-weight:700">🔒 You have an active ride. Please complete it before booking another.</div>
+<div id="lock" style="display:none;margin-top:10px;padding:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#dc2626;font-size:12px;font-weight:700">🔒 Active ride locked - <span id="lockTimer"></span><button onclick="clearStuck()" style="width:auto;padding:4px 8px;font-size:11px;background:#dc2626;margin-left:8px">Force Clear / Expire</button><div style="font-size:10px;color:#991b1b;margin-top:4px">Auto-expires after 4hrs if driver not accepting</div></div>
 </div>
 
-<div id="ticket" class="card ticket">
-<h3>🎫 Your Ticket</h3>
-<div id="tInfo" style="margin-top:10px;font-size:14px;line-height:1.6;background:#f8fafc;padding:12px;border-radius:8px"></div>
-<div id="driverBox" style="display:none;margin-top:10px;padding:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px"><div style="font-weight:800;color:#16a34a">👨‍✈️ Driver En Route</div><div id="dLoc" style="font-size:12px;margin-top:4px">Locating driver...</div></div>
-<div id="fbBox" style="margin-top:12px"><div style="font-weight:800;margin-bottom:6px">Rate your ride</div><div class="stars" id="stars"><span onclick="setS(1)">⭐</span><span onclick="setS(2)">⭐</span><span onclick="setS(3)">⭐</span><span onclick="setS(4)">⭐</span><span onclick="setS(5)">⭐</span></div><textarea id="fbTxt" placeholder="How was your ride?" style="width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid #e2e8f0;min-height:60px"></textarea><button id="fbBtn" onclick="sendFb()">Submit Review & Unlock Next Ride</button></div>
-<div id="newRideBox" style="display:none;margin-top:10px"><button onclick="newRide()" style="background:#0f172a">+ Book Another Ride</button></div>
-</div>
+<div id="ticket" class="card ticket"><h3>🎫 Your Ticket</h3><div id="tInfo" style="margin-top:10px;font-size:14px;line-height:1.6;background:#f8fafc;padding:12px;border-radius:8px"></div><div id="driverBox" style="display:none;margin-top:10px;padding:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px"><div style="font-weight:800;color:#16a34a">👨‍✈️ Driver En Route</div><div id="dLoc" style="font-size:12px;margin-top:4px">Locating...</div></div><div id="fbBox" style="margin-top:12px"><div style="font-weight:800;margin-bottom:6px">Rate ride</div><div id="stars" style="font-size:30px"><span onclick="setS(1)">⭐</span><span onclick="setS(2)">⭐</span><span onclick="setS(3)">⭐</span><span onclick="setS(4)">⭐</span><span onclick="setS(5)">⭐</span></div><textarea id="fbTxt" placeholder="How was ride?" style="width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid #e2e8f0;min-height:60px"></textarea><button id="fbBtn" onclick="sendFb()">Submit Review & Unlock</button></div></div>
 
-<div class="card"><div id="map" style="height:320px;border-radius:10px"></div><div style="font-size:10px;color:#64748b;margin-top:6px;text-align:center">Live Map • Rift Valley Routes • Real-time</div></div>
+<div class="card"><div id="map" style="height:380px;border-radius:10px"></div><div style="font-size:10px;color:#64748b;margin-top:6px;text-align:center">Live Map calculates actual KM regardless of entry - flexible billing</div></div>
 </div>
 
 <script>
-// --- FIREBASE CONFIG - USE YOURS ---
-var firebaseConfig={apiKey:"AIzaSy...YOURS",authDomain:"olexpress-...firebaseapp.com",databaseURL:"https://olexpress-...firebaseio.com",projectId:"olexpress-..."};
-try{firebase.initializeApp(firebaseConfig);var db=firebase.database();}catch(e){console.log('Add firebase config'); var db=null;}
-// --- ROUTES ---
-const R={Gilgil:{Naivasha:31,Nakuru:35,Olkalou:32,Nyahururu:48,NaivashaLongonot:38},Naivasha:{Gilgil:31,Nakuru:66,Longonot:18,Nairobi:90},Nakuru:{Gilgil:35,Naivasha:66,Eldoret:160,Kisumu:180,Olkalou:55},Nairobi:{Naivasha:90,Gilgil:121,Nakuru:160}};
-let map=L.map('map').setView([-0.49,36.33],9);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-let rv=0;function setS(n){rv=n;document.querySelectorAll('#stars span').forEach((s,i)=>{s.classList.toggle('on',i<n)});}
-function calc(f,t){f=f.trim();t=t.trim();let km=null;if(R[f]&&R[f][t])km=R[f][t];else if(R[t]&&R[t][f])km=R[t][f];if(!km)return null;return{km:km,exact:km+Math.random()*0.9,total:250+km*42};}
+var firebaseConfig={apiKey:"AIzaSy...",authDomain:"olexpresske.firebaseapp.com",databaseURL:"https://olexpresske-default-rtdb.firebaseio.com",projectId:"olexpresske"};
+try{firebase.initializeApp(firebaseConfig);var db=firebase.database();}catch(e){var db=null;}
+let map=L.map('map').setView([-0.4,36.3],8);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+let markers=[],line=null,base=250,perKm=42,R={Gilgil:{Naivasha:31,Nakuru:35,Olkalou:32,Nyahururu:48},Naivasha:{Gilgil:31,Nakuru:66},Nakuru:{Gilgil:35,Naivasha:66},Olkalou:{Gilgil:32,Nakuru:55,Molo:70},Molo:{Olkalou:70,Nakuru:50}};
+function haversine(a,b){let toR=x=>x*Math.PI/180;let dLat=toR(b.lat-a.lat),dLng=toR(b.lng-a.lng);let h=Math.sin(dLat/2)**2+Math.cos(toR(a.lat))*Math.cos(toR(b.lat))*Math.sin(dLng/2)**2;return 2*6371*Math.asin(Math.sqrt(h));}
+async function geocode(q){try{let r=await fetch('https://nominatim.openstreetmap.org/search?format=json&q='+encodeURIComponent(q+', Kenya')+'&limit=1');let j=await r.json();if(j[0])return{lat:parseFloat(j[0].lat),lng:parseFloat(j[0].lon)};}catch(e){}return null;}
+let lastCalc=null;
+async function calcLive(){
+let f=document.getElementById('from').value.trim(),t=document.getElementById('to').value.trim();
+if(f.length<3||t.length<3){document.getElementById('liveFare').style.display='none';return;}
+let box=document.getElementById('liveFare');box.style.display='block';box.innerText='📍 Live calculating '+f+' → '+t+'...';
+let km=null,src='map';
+if(R[f]&&R[f][t])km=R[f][t],src='known';else if(R[t]&&R[t][f])km=R[t][f],src='known';else{let g1=await geocode(f),g2=await geocode(t);if(g1&&g2){km=Math.round(haversine(g1,g2));markers.forEach(m=>map.removeLayer(m));if(line)map.removeLayer(line);markers=[L.marker([g1.lat,g1.lng]).addTo(map).bindPopup(f),L.marker([g2.lat,g2.lng]).addTo(map).bindPopup(t)];line=L.polyline([[g1.lat,g1.lng],[g2.lat,g2.lng]],{color:'#16a34a',weight:4,dashArray:'8,8'}).addTo(map);map.fitBounds(line.getBounds(),{padding:[30,30]});lastCalc={g1,g2,km};}else km=Math.floor(20+Math.random()*80),src='estimate';}
+let fare=base+km*perKm;box.innerHTML='✅ <b>'+f+' → '+t+'</b><br>Distance: <b>'+km+'km</b> ('+(src==='map'?'live map':src)+')<br>Fare: <b>KES '+fare.toLocaleString()+'</b> - Flexible billing from map';lastCalc={km:km,fare:fare};
+}
+function setS(n){rv=n;document.querySelectorAll('#stars span').forEach((s,i)=>{s.style.filter=i<n?'none':'grayscale(1)'});}let rv=0;
 function book(){
 let f=document.getElementById('from').value.trim(),t=document.getElementById('to').value.trim(),n=document.getElementById('pname').value.trim(),p=document.getElementById('phone').value.trim();
-if(!f||!t){alert('Enter From & To');return;}
-if(!n||!p){alert('Enter Name & Phone');return;}
-if(localStorage.getItem('olex_ticket')){alert('You have active ride - complete it first');return;}
-let c=calc(f,t);if(!c){alert('Route not available: '+f+' → '+t);return;}
-// SIMPLE PROFESSIONAL CONFIRM - NO TECHNICAL TEXT
-if(!confirm(f+' → '+t+'\nDistance: '+c.km+'km\nFare: KES '+c.total.toLocaleString()+'\n\nBook your ride now?'))return;
-let id='T'+Date.now();let data={from:f,to:t,name:n,phone:p,km:c.km,fare:c.total,status:'pending',time:new Date().toLocaleString(),ticket:id};
-if(db)db.ref('rides/'+id).set(data);
-localStorage.setItem('olex_ticket',id);showTicket(id,data);
-document.getElementById('bookBtn').disabled=true;document.getElementById('lock').style.display='block';
+if(!f||!t)return alert('Enter From & To - any places allowed');if(!n||!p)return alert('Enter Name & Phone');
+if(localStorage.getItem('olex_ticket'))return alert('Active ride locked - click Clear Lock. Expires after 4hrs if driver not accepting');
+let km=lastCalc?lastCalc.km:30,fare=lastCalc?lastCalc.fare:base+km*perKm;
+if(!confirm(f+' → '+t+'\nDistance: '+km+'km (live from map)\nFare: KES '+fare.toLocaleString()+'\n\nBook now?'))return;
+let id='T'+Date.now(),data={from:f,to:t,name:n,phone:p,km:km,fare:fare,status:'pending',time:new Date().toLocaleString(),ticket:id,ts:Date.now()};
+if(db)db.ref('rides/'+id).set(data);localStorage.setItem('olex_ticket',JSON.stringify({id:id,ts:Date.now()}));showTicket(id,data);document.getElementById('bookBtn').disabled=true;document.getElementById('lock').style.display='block';
 }
-function showTicket(id,d){
-document.getElementById('ticket').classList.add('show');
-document.getElementById('tInfo').innerHTML='<b>Ticket:</b> '+id+'<br><b>Route:</b> '+d.from+' → '+d.to+'<br><b>Distance:</b> '+d.km+'km<br><b>Fare:</b> KES '+d.fare.toLocaleString()+'<br><b>Status:</b> <span id="st">'+d.status+'</span><br><b>Time:</b> '+d.time;
-if(d.status==='completed'){document.getElementById('fbBox').style.display='block';document.getElementById('newRideBox').style.display='none';}
-document.getElementById('ticket').scrollIntoView({behavior:'smooth'});
-if(db)listen(id);
-}
-function listen(id){
-if(!db)return;db.ref('rides/'+id).on('value',snap=>{
-let d=snap.val();if(!d)return;let st=document.getElementById('st');if(st)st.innerText=d.status;
-if(d.driverLat){document.getElementById('driverBox').style.display='block';document.getElementById('dLoc').innerText='Driver at '+d.driverLat.toFixed(4)+', '+d.driverLng.toFixed(4); L.marker([d.driverLat,d.driverLng]).addTo(map).bindPopup('Driver');}
-if(d.status==='completed'){document.getElementById('fbBox').style.display='block';}
-});
-}
-function sendFb(){
-let id=localStorage.getItem('olex_ticket');
-let txt=document.getElementById('fbTxt').value.trim();
-if(!rv){alert('Please select stars ⭐');return;}
-let btn=document.getElementById('fbBtn');btn.innerText='Thank you! Unlocking...';btn.disabled=true;
-if(db)db.ref('rides/'+id+'/feedback').set({stars:rv,text:txt||'Excellent ride!',time:new Date().toLocaleString(),ticket:id}).then(()=>{afterFb();}); else afterFb();
-}
-function afterFb(){
-document.getElementById('tInfo').innerText='✅ Thank you for your feedback! Ride completed successfully.';
-document.getElementById('fbBox').innerHTML='<div style="text-align:center;padding:18px"><div style="font-size:42px">🎉</div><div style="font-size:16px;font-weight:900;margin-top:8px;color:#16a34a">Thank you! You are now unlocked for next ride</div><div style="font-size:11px;color:#6b7280;margin-top:6px">Returning to booking in 3 seconds...</div></div>';
-setTimeout(()=>{
-localStorage.removeItem('olex_ticket');
-document.getElementById('ticket').classList.remove('show');
-document.getElementById('bookBtn').disabled=false;
-document.getElementById('lock').style.display='none';
-document.getElementById('fbBox').style.display='none';
-document.getElementById('fbBox').innerHTML='<div style="font-weight:800;margin-bottom:6px">Rate your ride</div><div class="stars" id="stars"><span onclick="setS(1)">⭐</span><span onclick="setS(2)">⭐</span><span onclick="setS(3)">⭐</span><span onclick="setS(4)">⭐</span><span onclick="setS(5)">⭐</span></div><textarea id="fbTxt" placeholder="How was your ride?" style="width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid #e2e8f0;min-height:60px"></textarea><button id="fbBtn" onclick="sendFb()">Submit Review & Unlock Next Ride</button>';
-rv=0;document.getElementById('from').value='';document.getElementById('to').value='';
-window.scrollTo({top:0,behavior:'smooth'});
-},3000);
-}
-function newRide(){localStorage.removeItem('olex_ticket');location.reload();}
-window.onload=()=>{let id=localStorage.getItem('olex_ticket');if(id){if(db)db.ref('rides/'+id).once('value').then(s=>{if(s.val())showTicket(id,s.val());}); document.getElementById('bookBtn').disabled=true;document.getElementById('lock').style.display='block';}};
-</script>
-</body>
-</html>
+function showTicket(id,d){document.getElementById('ticket').classList.add('show');document.getElementById('tInfo').innerHTML='<b>Ticket:</b> '+id+'<br><b>Route:</b> '+d.from+' → '+d.to+'<br><b>Distance:</b> '+d.km+'km (live map flexible)<br><b>Fare:</b> KES '+d.fare.toLocaleString()+'<br><b>Status:</b> <span id="st">'+d.status+'</span><br><b>Time:</b> '+d.time+'<br><small style=color:#dc2626>Auto-expires after 4hrs if driver not accepting request</small>';document.getElementById('ticket').scrollIntoView({behavior:'smooth'});if(db)listen(id);checkExpiry();}
+function listen(id){if(!db)return;db.ref('rides/'+id).on('value',s=>{let d=s.val();if(!d)return;let st=document.getElementById('st');if(st)st.innerText=d.status;if(d.driverLat){document.getElementById('driverBox').style.display='block';document.getElementById('dLoc').innerText='Driver at '+d.driverLat.toFixed(4)+', '+d.driverLng.toFixed(4);} if(d.status==='completed')document.getElementById('fbBox').style.display='block';});}
+function sendFb(){let raw=localStorage.getItem('olex_ticket');if(!raw)return;let obj=JSON.parse(raw);if(!rv)return alert('Select stars');let btn=document.getElementById('fbBtn');btn.innerText='Thank you! Unlocking...';btn.disabled=true;if(db)db.ref('rides/'+obj.id+'/feedback').set({stars:rv,text:document.getElementById('fbTxt').value||'Great',time:new Date().toLocaleString()}).then(()=>afterFb()); else afterFb();}
+function afterFb(){document.getElementById('fbBox').innerHTML='<div style=text-align:center;padding:18px><div style=font-size:42px>🎉</div><div style=font-weight:900;color:#16a34a;margin-top:8px>Thank you! Unlocked for next ride</div><div style=font-size:11px;color:#6b7280;margin-top:6px>Returning in 3 sec...</div></div>';setTimeout(()=>clearStuck(),3000);}
+function clearStuck(){localStorage.removeItem('olex_ticket');document.getElementById('ticket').classList.remove('show');document.getElementById('bookBtn').disabled=false;document.getElementById('lock').style.display='none';document.getElementById('liveFare').style.display='none';rv=0;document.getElementById('from').value='';document.getElementById('to').value='';window.scrollTo({top:0,behavior:'smooth'});}
+function checkExpiry(){let raw=localStorage.getItem('olex_ticket');if(!raw)return;let obj=JSON.parse(raw);let age=Date.now()-obj.ts,hrs=4*60*60*1000;if(age>hrs){if(db)db.ref('rides/'+obj.id).update({status:'expired'});clearStuck();alert('Ticket expired after 4hrs - driver not accepting - now unlocked');return;}let remain=hrs-age,h=Math.floor(remain/3600000),m=Math.floor((remain%3600000)/60000);let lt=document.getElementById('lockTimer');if(lt)lt.innerText='Expires in '+h+'h '+m+'m';setTimeout(checkExpiry,60000);}
+window.onload=()=>{let raw=localStorage.getItem('olex_ticket');if(raw){try{let obj=JSON.parse(raw);if(Date.now()-obj.ts>4*60*60*1000){clearStuck();return;}if(db)db.ref('rides/'+obj.id).once('value').then(s=>{let v=s.val();if(!v||v.status==='completed'||v.status==='expired')clearStuck();else{showTicket(obj.id,v);document.getElementById('bookBtn').disabled=true;document.getElementById('lock').style.display='block';checkExpiry();}});}catch(e){clearStuck();}}};
+</script></body></html>
