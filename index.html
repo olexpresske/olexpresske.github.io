@@ -1,152 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>OlexPress - Your Ride Everywhere</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <style>
-:root{--gold:#D4AF37;--green:#00D084;--dark:#0A0E14}
-body{margin:0;background:var(--dark);color:white;font-family:Inter,sans-serif}
-.hero{height:70vh;position:relative;overflow:hidden;background:radial-gradient(circle at 50% 50%,#1a2332 0%,#0A0E14 100%);display:flex;flex-direction:column;align-items:center;justify-content:center}
-.sphere{width:320px;height:320px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#2a3548,#0A0E14);box-shadow:inset -20px -20px 50px rgba(0,0,0,0.8),0 0 80px rgba(212,175,55,0.3);position:relative;animation:rotate 20s linear infinite}
-.sphere::before{content:'';position:absolute;width:130%;height:130%;top:-15%;left:-15%;border:1px solid rgba(212,175,55,0.3);border-radius:50%;animation:orbit1 8s linear infinite}
-.sphere::after{content:'';position:absolute;width:150%;height:60%;top:20%;left:-25%;border:1px solid rgba(0,208,132,0.3);border-radius:50%;transform:rotateX(75deg);animation:orbit2 12s linear infinite}
-@keyframes rotate{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-@keyframes orbit1{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-@keyframes orbit2{0%{transform:rotateX(75deg) rotateZ(0deg)}100%{transform:rotateX(75deg) rotateZ(360deg)}}
-.logo-gold{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:140px;filter:drop-shadow(0 0 20px var(--gold))}
-.hero h1{font-size:3rem;color:var(--gold);margin:20px 0 0;letter-spacing:2px}
-.hero p{color:#7dd3b0;font-size:1.3rem;margin:5px}
-.hero span{font-size:0.9rem;opacity:0.6;letter-spacing:3px}
-.booking{max-width:500px;margin:-50px auto 40px;background:rgba(20,30,45,0.9);backdrop-filter:blur(20px);border:1px solid rgba(212,175,55,0.3);border-radius:24px;padding:24px;position:relative;z-index:10}
-.input-group{margin:12px 0}
-.input-group input{width:100%;padding:16px;background:#0f1a28;border:1px solid #243447;border-radius:12px;color:white;font-size:16px}
-#map{height:220px;border-radius:16px;margin:16px 0;border:1px solid rgba(212,175,55,0.2)}
-.fare-box{background:linear-gradient(135deg,rgba(212,175,55,0.15),rgba(0,208,132,0.1));border:1px solid var(--gold);border-radius:12px;padding:14px;margin:12px 0}
-.driver-card{display:none;background:rgba(0,208,132,0.1);border:1px solid var(--green);border-radius:16px;padding:16px;margin:16px 0}
-.driver-card.active{display:block}
-.btn{width:100%;padding:18px;background:linear-gradient(135deg,var(--gold),#B8941F);border:none;border-radius:12px;font-weight:bold;font-size:16px;cursor:pointer;color:#0A0E14}
-.btn:disabled{opacity:0.5}
-.ticket{display:none;background:white;color:black;border-radius:16px;padding:20px;margin:20px 0}
-</style>
-</head>
-<body>
-
-<div class="hero">
-  <div class="sphere">
-    <img src="assets/logo.png" class="logo-gold" style="object-fit:contain" onerror="this.src='https://i.ibb.co/placeholder'">
-    <canvas id="points" style="position:absolute;width:100%;height:100%;border-radius:50%"></canvas>
-  </div>
-  <h1>OLEXPress</h1>
-  <p>Your Ride Everywhere</p>
-  <span>FAST • RELIABLE • REAL-TIME • SECURE</span>
+*{margin:0;box-sizing:border-box}body{background:#080E16;color:#fff;font-family:system-ui}
+.top{padding:12px;text-align:center;background:radial-gradient(circle at 50% 30%,#162233,#080E16)}
+.logo-wrap{position:relative;width:100%;height:140px;display:flex;align-items:center;justify-content:center}
+.logo-wrap img{width:110px;filter:drop-shadow(0 0 20px #D4AF37);z-index:2}
+canvas#orbit{position:absolute;top:0;left:0;width:100%;height:100%}
+.title{font-size:2.8rem;color:#D4AF37;font-weight:900;letter-spacing:1px;text-shadow:0 0 20px rgba(212,175,55,.6)}
+.sub{color:#A3E8C5;font-size:1.2rem;margin-bottom:8px}
+.live{margin:10px;background:#0F1C2B;border:1px solid #1E3A4A;border-radius:18px;overflow:hidden}
+.map-h{padding:10px 14px;display:flex;justify-content:space-between;color:#D4AF37;font-size:.8rem;font-weight:700;letter-spacing:1px}
+#map{height:140px;background:#0A1620}
+.badge{position:absolute;left:50%;transform:translateX(-50%);margin-top:-12px;background:#1A2E23;border:1px solid #D4AF37;border-radius:20px;padding:4px 12px;font-size:.75rem;z-index:5}
+.card{margin:10px;background:linear-gradient(180deg,#112233,#0D1B2A);border:1px solid rgba(212,175,55,.4);border-radius:18px;padding:12px}
+.row{display:flex;justify-content:space-between;align-items:center}
+.btn{border-radius:20px;padding:10px;border:1px solid #D4AF37;background:transparent;color:#D4AF37;width:48%;text-align:center;font-weight:700}
+.btn.gold{background:#D4AF37;color:#000}
+.fare{display:flex;justify-content:space-between}
+</style></head><body>
+<div class="top">
+<div class="logo-wrap"><img src="assets/logo.png" onerror="this.src='https://i.ibb.co/placeholder'"><canvas id="orbit"></canvas></div>
+<div class="title">OlexPress</div><div class="sub">Your Ride Everywhere</div>
 </div>
-
-<div class="booking">
-  <h3>Book Your Ride</h3>
-  <div class="input-group"><input id="pickup" placeholder="Pickup: Ol Kalou"><div id="pickup-suggest"></div></div>
-  <div class="input-group"><input id="dest" placeholder="Destination: Nakuru"><div id="dest-suggest"></div></div>
-  <div id="map"></div>
-  <div id="kmBox" class="fare-box" style="display:none">Road Distance: <b id="kmVal">0 KM</b> <small id="roadLabel">• Road Distance</small></div>
-  <div id="fareBox" class="fare-box" style="display:none">Fare: 250 + (<span id="kmCalc">0</span> × 42) = <b>KSH <span id="fareVal">0</span></b><br><small>Base 250 + Distance • Cash/M-Pesa</small></div>
-  
-  <div id="driverCard" class="driver-card">
-    <div style="display:flex;justify-content:space-between"><b id="dName">James K.</b><span>⭐4.8 • <span id="dPlate">KDA 123X</span></span></div>
-    <p style="color:var(--green);margin:8px 0">📍 <span id="dDist">2.3 KM away • 4 min drive</span><br>✅ Has confirmed your request</p>
-    <div style="display:flex;gap:10px"><button class="btn" style="background:var(--green)" onclick="trackDriver()">Track Driver</button><button class="btn" style="background:#1a2f3f;color:white" onclick="callDriver()">Call</button></div>
-  </div>
-
-  <button id="requestBtn" class="btn" disabled onclick="requestRide()">CONFIRM & REQUEST RIDE</button>
-  
-  <div id="ticket" class="ticket">
-    <h4>🎫 Ride Ticket</h4><p>Ol Kalou → Nakuru • <span id="tKm">48.3</span> KM</p>
-    <p><b id="tFormula">250 + (48.3 × 42) = KSH 2,279</b></p>
-    <div id="qrcode" style="width:100px;height:100px;background:black;color:white;display:flex;align-items:center;justify-content:center">QR</div>
-    <small>Valid 30 min • No cancel after driver confirmed</small>
-  </div>
-</div>
-
+<div class="live"><div class="map-h"><span>📍 LIVE MAP • ROUTE</span><span>◫ +</span></div><div id="map"></div><div class="badge">⚠ 48.3 KM • Road Distance</div><div style="padding:18px 14px 8px;display:flex;justify-content:space-between"><b>Ol Kalou 📍</b><b>📍 Nakuru</b></div></div>
+<div class="card"><div class="row"><div><span style="color:#D4AF37;font-size:.7rem;letter-spacing:1px">✅ DRIVER ASSIGNED • CONFIRMED</span><div style="display:flex;gap:8px;margin-top:4px"><img src="https://i.pravatar.cc/60" style="width:44px;height:44px;border-radius:10px"><div><b>James K.</b><div style="font-size:.75rem;opacity:.7">Plate • KDA 123X</div></div></div></div><div style="text-align:right"><b style="font-size:1.6rem">4.8 ⭐</b><div style="font-size:.7rem">2.3 KM away • 4 min drive</div><div style="background:#1A3A28;color:#6EE7A8;border-radius:12px;padding:2px 8px;font-size:.7rem;margin:4px 0">✅ Has confirmed your request</div></div></div><div class="row" style="margin-top:10px"><div class="btn">📍 Track Driver</div><div class="btn gold">📞 Call Driver</div></div></div>
+<div class="card"><div class="row" style="font-size:.7rem;color:#D4AF37;letter-spacing:1px">🎟 FARE ESTIMATE<span>RIDE TICKET</span><b style="font-size:1.4rem;color:#FDE68A">KSH 2,279</b></div><div style="font-size:.7rem;text-align:right;opacity:.6">250 + (48.3 × 42) = KSH 2,279</div><div class="fare" style="margin-top:8px"><div style="width:70px;height:70px;background:#000;display:grid;place-items:center">QR</div><div style="font-size:.8rem;line-height:1.6"><b>Base Fare</b> <span style="float:right">KSH 250</span><br>Distance • 48.3km × KSH 42 <span style="float:right">KSH 2,029</span><br><b style="color:#D4AF37">SCAN TO VIEW RIDE DETAILS</b><br><span style="font-size:.65rem">Valid for 30 minutes • Cash / M-Pesa</span></div></div></div>
 <script>
-// Firebase Config - REPLACE WITH YOURS
-const firebaseConfig = {databaseURL:"https://olexpress-xxx-default-rtdb.firebaseio.com/"};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-let pickupCoords=null,destCoords=null,currentKm=0,rideId=null;
-const map = L.map('map',{zoomControl:false}).setView([-0.28,36.07],8);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-let routeLine=null,driverMarker=null;
-
-async function searchPlace(q){
-  const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&countrycodes=ke&limit=3`);
-  return r.json();
-}
-async function getRoadKm(a,b){
-  const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${a[1]},${a[0]};${b[1]},${b[0]}?overview=full&geometries=geojson`);
-  const j=await r.json(); if(!j.routes[0])return 0;
-  const km=j.routes[0].distance/1000;
-  if(routeLine)map.removeLayer(routeLine);
-  routeLine=L.geoJSON(j.routes[0].geometry,{style:{color:'#D4AF37',weight:4}}).addTo(map);
-  map.fitBounds(routeLine.getBounds(),{padding:[20,20]});
-  return km;
-}
-
-document.getElementById('pickup').addEventListener('change', async(e)=>{
-  const places=await searchPlace(e.target.value); if(!places[0])return;
-  pickupCoords=[parseFloat(places[0].lat),parseFloat(places[0].lon)];
-  if(destCoords)calc();
-});
-document.getElementById('dest').addEventListener('change', async(e)=>{
-  const places=await searchPlace(e.target.value); if(!places[0])return;
-  destCoords=[parseFloat(places[0].lat),parseFloat(places[0].lon)];
-  if(pickupCoords)calc();
-});
-async function calc(){
-  currentKm=await getRoadKm(pickupCoords,destCoords);
-  document.getElementById('kmBox').style.display='block';
-  document.getElementById('fareBox').style.display='block';
-  document.getElementById('kmVal').innerText=currentKm.toFixed(1)+' KM';
-  document.getElementById('kmCalc').innerText=currentKm.toFixed(1);
-  document.getElementById('fareVal').innerText=Math.round(250+currentKm*42).toLocaleString();
-  document.getElementById('requestBtn').disabled=false;
-}
-function requestRide(){
-  rideId='OLX-'+Date.now().toString().slice(-6);
-  const fare=Math.round(250+currentKm*42);
-  db.ref('rides/'+rideId).set({
-    pickup:{name:document.getElementById('pickup').value,lat:pickupCoords[0],lng:pickupCoords[1]},
-    dest:{name:document.getElementById('dest').value,lat:destCoords[0],lng:destCoords[1]},
-    km:currentKm.toFixed(1),price:fare,status:'Booking Confirmed',time:Date.now()
-  });
-  document.getElementById('requestBtn').innerText='Booking Confirmed • Waiting Driver...';
-  document.getElementById('ticket').style.display='block';
-  document.getElementById('tKm').innerText=currentKm.toFixed(1);
-  document.getElementById('tFormula').innerText=`250 + (${currentKm.toFixed(1)} × 42) = KSH ${fare.toLocaleString()}`;
-  // Listen for driver confirm
-  db.ref('rides/'+rideId).on('value',snap=>{
-    const v=snap.val(); if(!v)return;
-    if(v.status==='Driver Confirming'){
-      document.getElementById('driverCard').classList.add('active');
-      document.getElementById('dName').innerText=v.driver.name;
-      document.getElementById('dPlate').innerText=v.driver.plate;
-      document.getElementById('dDist').innerText=`${v.driver.dist} KM away • ${v.driver.eta} min drive`;
-      // driver live location
-      if(v.driver.lat){ if(driverMarker)map.removeLayer(driverMarker); driverMarker=L.marker([v.driver.lat,v.driver.lng]).addTo(map).bindPopup('Driver here'); }
-    }
-  });
-}
-function trackDriver(){ map.setView(driverMarker.getLatLng(),14); }
-function callDriver(){ alert('Calling James K.'); }
-
-// 3D points effect
-const canvas=document.getElementById('points'); const ctx=canvas.getContext('2d');
-canvas.width=320; canvas.height=320;
-let pts=[]; for(let i=0;i<80;i++)pts.push({a:Math.random()*Math.PI*2,r:140+Math.random()*30,c:Math.random()>0.5?'#D4AF37':'#00D084'});
-function draw(){ ctx.clearRect(0,0,320,320); pts.forEach(p=>{p.a+=0.005+Math.random()*0.01; const x=160+Math.cos(p.a)*p.r*0.8; const y=160+Math.sin(p.a)*p.r*0.3; ctx.fillStyle=p.c; ctx.beginPath(); ctx.arc(x,y,1.5,0,Math.PI*2); ctx.fill(); }); requestAnimationFrame(draw);} draw();
-</script>
-</body>
-</html>
+let m=L.map('map',{zoomControl:false,attributionControl:false}).setView([-0.28,36.07],7);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png').addTo(m);
+L.polyline([[-0.28,36.07],[0.3,36.07]],{color:'#D4AF37',weight:3}).addTo(m);
+L.marker([-0.28,36.07]).addTo(m); L.marker([0.3,36.07]).addTo(m);
+let cv=document.getElementById('orbit'),cx=cv.getContext('2d'); cv.width=400; cv.height=140;
+let pts=[]; for(let i=0;i<60;i++)pts.push({a:Math.random()*6,r:80+Math.random()*80,c:['#D4AF37','#00D084','#60A5FA'][i%3]});
+(function anim(){ cx.clearRect(0,0,400,140); pts.forEach(p=>{p.a+=0.02; let x=200+Math.cos(p.a)*p.r, y=70+Math.sin(p.a)*p.r*0.3; cx.fillStyle=p.c; cx.beginPath(); cx.arc(x,y,2,0,6.28); cx.fill();}); requestAnimationFrame(anim);})();
+</script></body></html>
