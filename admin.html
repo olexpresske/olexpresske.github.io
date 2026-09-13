@@ -1,1 +1,254 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OlexPress Admin - Liberty Map Control</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#0f172a">
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#f8fafc;color:#0f172a;padding:10px}
+.card{background:white;border:1px solid #e2e8f0;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 4px 12px rgba(0,0,0,.05)}
+input,select{width:100%;padding:10px;border-radius:8px;border:1px solid #cbd5e1;background:white;margin:4px 0}
+button{padding:10px 14px;border-radius:8px;border:0;font-weight:800;cursor:pointer;margin:3px}
+#map{height:320px;border-radius:12px;border:2px solid #0f172a;margin:10px 0}
+.stat{flex:1;background:#0f172a;color:white;padding:10px;border-radius:10px;text-align:center}
+.ride{border-left:4px solid #0f172a;background:#f8fafc;padding:12px;border-radius:10px;margin:8px 0;border:1px solid #e2e8f0}
+</style>
+</head>
+<body>
 
+<div style="background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:16px;padding:14px;display:flex;justify-content:space-between;align-items:center;color:white">
+<div><div style="font-weight:900">🛡️ OlexPress ADMIN - Liberty Control</div><div style="font-size:11px;color:#4ade80">Customer liberty picks/destination - Live coords - Base 250+KM×42 - 1 Ticket Only - XXX Fleet</div></div>
+<div style="background:#22c55e;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:800">ADMIN</div>
+</div>
+
+<div style="display:flex;gap:8px;margin:10px 0">
+<div class="stat"><div style="font-size:20px;font-weight:900" id="totalRides">0</div><div style="font-size:10px">Total Rides</div></div>
+<div class="stat"><div style="font-size:20px;font-weight:900;color:#4ade80" id="pendingRides">0</div><div style="font-size:10px">Pending Liberty</div></div>
+<div class="stat"><div style="font-size:20px;font-weight:900;color:#f59e0b" id="activeRides">0</div><div style="font-size:10px">Active (1 Only)</div></div>
+<div class="stat"><div style="font-size:20px;font-weight:900;color:#22c55e" id="revenue">0</div><div style="font-size:10px">Revenue Base250</div></div>
+</div>
+
+<div class="card">
+<h3 style="font-size:13px">🗺️ Liberty Live Map - All Rides Coords - Base 250+KM×42</h3>
+<div id="map"></div>
+<div style="display:flex;gap:6px">
+<button onclick="showAllPins()" style="background:#0f172a;color:white;flex:1;padding:8px;font-size:11px">📍 Show All Liberty Pins</button>
+<button onclick="clearMap()" style="background:#334155;color:white;flex:1;padding:8px;font-size:11px">🗺️ Clear Map</button>
+<button onclick="loadRides()" style="background:#16a34a;color:white;flex:1;padding:8px;font-size:11px">🔄 Reload Rides</button>
+</div>
+<div id="mapInfo" style="font-size:10px;color:#64748b;background:#f8fafc;padding:6px;border-radius:6px;margin-top:6px">Liberty map: Shows customer typed pickup/destination anywhere - Coords from live map - Tap pin for ticket details</div>
+</div>
+
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+<h3 style="font-size:13px">📋 All Rides - Liberty Input + 1 Ticket Block</h3>
+<div style="display:flex;gap:4px">
+<select id="filterStatus" onchange="loadRides()" style="width:auto;padding:6px;font-size:11px"><option value="all">All Status</option><option value="pending">Pending</option><option value="accepted">Accepted</option><option value="arrived">Arrived</option><option value="boarding_requested">Boarding Req</option><option value="boarded">Boarded</option><option value="pay_initiated">Pay Initiated</option><option value="paid">Paid</option><option value="completed">Completed</option></select>
+<input id="searchPhone" placeholder="Search phone/ticket" oninput="loadRides()" style="width:130px;padding:6px;font-size:11px">
+</div>
+</div>
+<div id="ridesList"><div style="text-align:center;padding:20px;color:#94a3b8;font-size:11px">Loading liberty rides - Base 250 + KM×42 - 1 ticket only...</div></div>
+</div>
+
+<div id="rideDetail" style="display:none" class="card"></div>
+
+<script>
+var firebaseConfig={apiKey:"AIzaSyD4...",authDomain:"olexpresske.firebaseapp.com",databaseURL:"https://olexpresske-default-rtdb.firebaseio.com",projectId:"olexpresske"};
+firebase.initializeApp(firebaseConfig);var db=firebase.database();
+const BASE_RATE=250; const PER_KM=42;
+let map, markers=[];
+
+function initMap(){
+map=L.map('map').setView([-0.3,36.3],8);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OlexPress Admin Map'}).addTo(map);
+}
+initMap();
+
+function clearMap(){markers.forEach(m=>map.removeLayer(m)); markers=[];}
+
+function showAllPins(){
+clearMap();
+db.ref('rides').once('value',snap=>{
+let bounds=[];
+snap.forEach(ch=>{
+let v=ch.val();
+if(v.fromCoords){
+let m=L.marker([v.fromCoords.lat,v.fromCoords.lng],{icon:L.divIcon({html:'📍',className:'',iconSize:[20,20]})}).addTo(map).bindPopup(`<b>Pickup Liberty:</b><br>${v.from}<br>🎫 ${ch.key}<br>👤 ${v.name}<br>💰 KES ${v.fare}<br>Base ${v.baseRate}+${v.km}×${v.yFactor}`);
+markers.push(m); bounds.push([v.fromCoords.lat,v.fromCoords.lng]);
+}
+if(v.toCoords){
+let m=L.marker([v.toCoords.lat,v.toCoords.lng],{icon:L.divIcon({html:'🏁',className:'',iconSize:[20,20]})}).addTo(map).bindPopup(`<b>Destination Liberty:</b><br>${v.to}<br>🎫 ${ch.key}<br>👤 ${v.name}`);
+markers.push(m); bounds.push([v.toCoords.lat,v.toCoords.lng]);
+}
+});
+if(bounds.length) map.fitBounds(bounds,{padding:[30,30]});
+document.getElementById('mapInfo').innerHTML=`🗺️ Showing ${snap.numChildren()} rides liberty pins - Base 250+KM×42 - 1 ticket block active`;
+});
+}
+
+function loadRides(){
+let filter=document.getElementById('filterStatus').value;
+let search=document.getElementById('searchPhone').value.trim().toLowerCase();
+
+db.ref('rides').once('value',snap=>{
+let total=0, pending=0, active=0, revenue=0;
+let html='';
+let rides=[];
+
+snap.forEach(ch=>{
+let v=ch.val();
+rides.push({id:ch.key,data:v});
+total++;
+if(v.status==='pending') pending++;
+if(v.status!=='completed' && v.status!=='pending') active++;
+if(v.status==='completed' || v.status==='paid') revenue+=parseInt(v.fare||0);
+});
+
+rides.sort((a,b)=> (b.data.ts||0)-(a.data.ts||0));
+
+rides.forEach(r=>{
+let v=r.data;
+if(filter!=='all' && v.status!==filter) return;
+if(search && !v.phone?.toLowerCase().includes(search) && !r.id.toLowerCase().includes(search) && !v.name?.toLowerCase().includes(search)) return;
+
+let fromCoordsTxt=v.fromCoords?`${v.fromCoords.lat.toFixed(4)},${v.fromCoords.lng.toFixed(4)}`:'Liberty typed - No coords';
+let toCoordsTxt=v.toCoords?`${v.toCoords.lat.toFixed(4)},${v.toCoords.lng.toFixed(4)}`:'Liberty typed';
+
+let statusColor={pending:'#f59e0b',accepted:'#3b82f6',arrived:'#8b5cf6',boarding_requested:'#ec4899',boarded:'#06b6d4',pay_initiated:'#f97316',paid:'#22c55e',completed:'#16a34a'}[v.status]||'#64748b';
+
+html+=`
+<div class="ride" style="border-left-color:${statusColor}">
+<div style="display:flex;justify-content:space-between;flex-wrap:wrap"><b style="color:${statusColor}">🎫 ${r.id}</b><span style="background:${statusColor};color:white;padding:2px 8px;border-radius:10px;font-size:9px">${(v.status||'').toUpperCase()} • ${v.date||''} ${v.clock||''}</span></div>
+<div style="font-size:12px;margin-top:6px"><b>Pickup (Liberty):</b> ${v.from}<br><span style="font-size:10px;color:#64748b">🌍 ${fromCoordsTxt} ${v.fromCoords?`<a href="#" onclick="focusPin(${v.fromCoords.lat},${v.fromCoords.lng},'${r.id}')" style="color:#3b82f6">📍 View Pin</a>`:''}</span></div>
+<div style="font-size:12px;margin-top:4px"><b>Destination (Liberty):</b> ${v.to}<br><span style="font-size:10px;color:#64748b">🌍 ${toCoordsTxt} ${v.toCoords?`<a href="#" onclick="focusPin(${v.toCoords.lat},${v.toCoords.lng},'${r.id}')" style="color:#22c55e">🏁 View Pin</a>`:''}</span></div>
+<div style="display:flex;gap:6px;margin-top:6px">
+<div style="flex:1;background:#0f172a;color:white;padding:6px;border-radius:6px"><div style="font-size:9px;color:#94a3b8">KM Live Map</div><div style="font-weight:800;color:#4ade80">${v.km}km</div><div style="font-size:8px">Base ${v.baseRate||250} + ${v.km}×${v.yFactor||42}</div></div>
+<div style="flex:1;background:${statusColor};color:white;padding:6px;border-radius:6px;text-align:center"><div style="font-size:9px">FARE</div><div style="font-weight:900">KES ${v.fare}</div><div style="font-size:8px">${v.formula||''}</div></div>
+</div>
+<div style="font-size:11px;margin-top:6px">👤 ${v.name} - ${v.phone} | 🚕 ${v.driverName||'No driver'} ${v.vehicle||''} ${v.driverPhone||''}</div>
+<div style="font-size:9px;color:#64748b;margin-top:4px">🎫 ${v.ticket} | 📅 ${v.time||''} | Liberty: ${v.libertyInput?'YES - Customer typed ANY location':''} | 1 Ticket Only: ${v.phone}</div>
+<div style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap">
+<button onclick="viewRide('${r.id}')" style="background:#0f172a;color:white;padding:6px 10px;font-size:10px">👁️ View Details + Map</button>
+<button onclick="showOnMap('${r.id}')" style="background:#3b82f6;color:white;padding:6px 10px;font-size:10px">🗺️ Show on Map</button>
+${v.status!=='completed'?`<button onclick="forceComplete('${r.id}')" style="background:#22c55e;color:white;padding:6px 10px;font-size:10px">✅ Force Complete</button>`:''}
+<button onclick="deleteRide('${r.id}')" style="background:#ef4444;color:white;padding:6px 10px;font-size:10px">🗑️ Delete</button>
+<button onclick="makeLiable('${r.id}')" style="background:#f59e0b;color:white;padding:6px 10px;font-size:10px">⚖️ Driver Liable</button>
+</div>
+${v.feedback?`<div style="margin-top:6px;background:#f0fdf4;border:1px solid #bbf7d0;padding:6px;border-radius:6px;font-size:10px">⭐ ${v.feedback.stars} stars: ${v.feedback.text} - ${v.feedback.date} ${v.feedback.time}</div>`:''}
+</div>
+`;
+});
+
+document.getElementById('totalRides').innerText=total;
+document.getElementById('pendingRides').innerText=pending;
+document.getElementById('activeRides').innerText=active;
+document.getElementById('revenue').innerText='KES '+revenue;
+
+if(!html) html='<div style="text-align:center;padding:20px;color:#94a3b8">No rides match filter - Liberty input: Customer can type ANY pickup/destination</div>';
+document.getElementById('ridesList').innerHTML=html;
+});
+}
+
+function focusPin(lat,lng,id){
+map.setView([lat,lng],14);
+L.popup().setLatLng([lat,lng]).setContent(`🎫 ${id}<br>Liberty pin`).openOn(map);
+}
+
+function showOnMap(rideId){
+db.ref('rides/'+rideId).once('value',snap=>{
+let v=snap.val(); if(!v) return;
+clearMap();
+if(v.fromCoords){
+let m=L.marker([v.fromCoords.lat,v.fromCoords.lng]).addTo(map).bindPopup(`<b>Pickup Liberty:</b><br>${v.from}<br>🎫 ${rideId}<br>👤 ${v.name} ${v.phone}<br>💰 KES ${v.fare}`).openPopup();
+markers.push(m);
+}
+if(v.toCoords){
+let m=L.marker([v.toCoords.lat,v.toCoords.lng]).addTo(map).bindPopup(`<b>Destination Liberty:</b><br>${v.to}<br>🎫 ${rideId}`).openPopup();
+markers.push(m);
+}
+if(v.fromCoords && v.toCoords){
+let line=L.polyline([[v.fromCoords.lat,v.fromCoords.lng],[v.toCoords.lat,v.toCoords.lng]],{color:'#0f172a',weight:3,dashArray:'10,10'}).addTo(map);
+markers.push(line);
+map.fitBounds([[v.fromCoords.lat,v.fromCoords.lng],[v.toCoords.lat,v.toCoords.lng]],{padding:[50,50]});
+} else if(v.fromCoords){
+map.setView([v.fromCoords.lat,v.fromCoords.lng],13);
+}
+document.getElementById('mapInfo').innerHTML=`🗺️ Focus: ${rideId}<br><b>Pickup:</b> ${v.from}<br><b>Dest:</b> ${v.to}<br>🌍 ${v.fromCoords?v.fromCoords.lat+','+v.fromCoords.lng:'typed'} → ${v.toCoords?v.toCoords.lat+','+v.toCoords.lng:'typed'}<br>💰 Base ${v.baseRate||250}+${v.km}×${v.yFactor||42}=KES ${v.fare} | 1 Ticket Only Check: ${v.phone}`;
+});
+}
+
+function viewRide(rideId){
+db.ref('rides/'+rideId).once('value',snap=>{
+let v=snap.val(); if(!v) return;
+document.getElementById('rideDetail').style.display='block';
+document.getElementById('rideDetail').innerHTML=`
+<div style="display:flex;justify-content:space-between"><b>🎫 ${rideId} - Liberty Detail</b><button onclick="document.getElementById('rideDetail').style.display='none'" style="background:#334155;color:white;padding:4px 8px;font-size:10px">Close</button></div>
+<div style="background:#f8fafc;padding:10px;border-radius:8px;margin-top:8px">
+<div style="font-size:12px"><b>Pickup (Liberty Typed):</b> ${v.from}</div><div style="font-size:11px;color:#64748b">🌍 Coords: ${v.fromCoords?`Lat ${v.fromCoords.lat}, Lng ${v.fromCoords.lng}`:'No coords - Customer typed liberty - No map pin'}</div>
+<div style="font-size:12px;margin-top:6px"><b>Destination (Liberty Typed):</b> ${v.to}</div><div style="font-size:11px;color:#64748b">🌍 Coords: ${v.toCoords?`Lat ${v.toCoords.lat}, Lng ${v.toCoords.lng}`:'No coords - Customer typed liberty'}</div>
+<div style="display:flex;gap:6px;margin-top:8px"><div style="flex:1;background:#0f172a;color:white;padding:8px;border-radius:6px"><div style="font-size:10px">Distance Live Map</div><div style="font-weight:800;color:#4ade80">${v.km}km</div><div style="font-size:10px">Straight +1.3 road factor</div></div><div style="flex:1;background:#16a34a;color:white;padding:8px;border-radius:6px;text-align:center"><div style="font-size:10px">FARE Base 250+KM×42</div><div style="font-weight:900;font-size:18px">KES ${v.fare}</div><div style="font-size:10px">${v.formula}</div></div></div>
+<div style="font-size:11px;margin-top:8px">👤 Client: ${v.name} - ${v.phone}<br>🚕 Driver: ${v.driverName||'None'} - ${v.driverPhone||''} - ${v.vehicle||''}<br>📅 Date Logged: ${v.date} | ⏰ Time Logged: ${v.clock}<br>🎫 Full: ${v.time}<br>🌐 ISO: ${v.iso||''}<br>🔢 Ticket: ${v.ticket} | Status: ${v.status}<br>⚠️ 1 Ticket Only: Phone ${v.phone} blocked from multiple tickets until completed<br>🗺️ Liberty Input: ${v.libertyInput?'YES - Customer typed ANY location, coords captured from map':''}</div>
+${v.driverLocation?`<div style="font-size:10px;margin-top:6px;background:#f0fdf4;padding:6px;border-radius:6px">🚕 Driver Live Location: ${v.driverLocation.lat}, ${v.driverLocation.lng} - ${new Date(v.driverLocation.ts).toLocaleString()}</div>`:''}
+${v.feedback?`<div style="margin-top:8px;background:#f0fdf4;border:1px solid #22c55e;padding:8px;border-radius:8px"><b>⭐ Client Review:</b> ${v.feedback.stars} stars<br>${v.feedback.text}<br><span style="font-size:10px">${v.feedback.date} ${v.feedback.time} - ${v.feedback.full}</span></div>`:''}
+<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+<button onclick="showOnMap('${rideId}')" style="background:#3b82f6;color:white">🗺️ Show Route on Map</button>
+<button onclick="forceComplete('${rideId}')" style="background:#22c55e;color:white">✅ Complete - Allow New Ticket</button>
+<button onclick="makeLiable('${rideId}')" style="background:#f59e0b;color:white">⚖️ Driver Liable Case</button>
+<button onclick="deleteRide('${rideId}')" style="background:#ef4444;color:white">🗑️ Delete Ride</button>
+</div>
+</div>
+`;
+showOnMap(rideId);
+window.scrollTo(0,document.getElementById('rideDetail').offsetTop);
+});
+}
+
+function forceComplete(id){
+if(!confirm(`Force complete ${id}?\nThis will allow client phone to book new ticket - Clears 1 ticket block`)) return;
+db.ref('rides/'+id).update({status:'completed',completedAt:Date.now(),completedTime:new Date().toLocaleString('en-KE'),adminForced:true}).then(()=>{loadRides(); alert(`✅ ${id} completed - Client can now book new - 1 ticket block cleared`);});
+}
+function deleteRide(id){
+if(!confirm(`DELETE ${id} permanently?\nLiberty input: ${id} will be removed - Client can book new`)) return;
+db.ref('rides/'+id).remove().then(()=>{loadRides(); document.getElementById('rideDetail').style.display='none'; alert(`🗑️ ${id} deleted - Block cleared`);});
+}
+function makeLiable(id){
+let reason=prompt(`Driver liable reason for ${id}?\nExample: Driver cancelled after accepting, Driver no-show, Overcharging base 250+KM×42, etc.`);
+if(!reason) return;
+db.ref('rides/'+id).once('value',snap=>{
+let v=snap.val();
+db.ref('driverCases/'+id).set({
+rideId:id,
+client:v.name,clientPhone:v.phone,
+driver:v.driverName||'Unknown',driverPhone:v.driverPhone||'',
+vehicle:v.vehicle||'',
+from:v.from,to:v.to,
+fromCoords:v.fromCoords||null,toCoords:v.toCoords||null,
+km:v.km,fare:v.fare,formula:v.formula,
+baseRate:v.baseRate||250,yFactor:v.yFactor||42,
+reason:reason,
+date:new Date().toLocaleDateString('en-KE'),
+time:new Date().toLocaleTimeString('en-KE'),
+full:new Date().toLocaleString('en-KE'),
+status:'liable_pending',
+libertyInput:v.libertyInput||true
+}).then(()=>{
+db.ref('rides/'+id).update({liable:true,liableReason:reason});
+alert(`⚖️ Driver liable case created for ${id}\nReason: ${reason}\nLiberty coords: ${v.fromCoords?v.fromCoords.lat+','+v.fromCoords.lng:'typed'} → ${v.toCoords?v.toCoords.lat+','+v.toCoords.lng:'typed'}\nBase 250+KM×42 checked`);
+loadRides();
+});
+});
+}
+
+// Auto load
+loadRides();
+db.ref('rides').on('value',()=>{loadRides();});
+
+setTimeout(showAllPins,2000);
+</script>
+</body>
+</html>
