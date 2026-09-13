@@ -1,31 +1,33 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>OlexPress Driver - XXX Fleet</title>
+<title>OlexPress Driver - XXX Fleet - Case Response</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Inter}body{background:#0f172a;color:#fff}
-.header{background:#fff;padding:10px 18px;display:flex;justify-content:space-between;align-items:center}
+.header{background:#fff;padding:10px 18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
 .header img{height:40px}
-.hero{max-width:1100px;margin:12px auto;padding:0 12px}
-.heroImg{width:100%;height:200px;object-fit:cover;border-radius:16px;border:1px solid #1e293b}
+.wrap{max-width:1100px;margin:10px auto;padding:0 12px}
+.heroImg{width:100%;height:190px;object-fit:cover;border-radius:16px;border:1px solid #1e293b}
 .card{background:#1e293b;border-radius:16px;padding:16px;margin-top:12px;border:1px solid #334155}
-.ride{background:#fff;color:#111;border-radius:16px;padding:14px;margin-top:10px;border:1px solid #e5e7eb}
-.btn{padding:10px 14px;border-radius:10px;border:none;font-weight:800;cursor:pointer;margin-top:8px;width:100%}
-.btn-green{background:#16a34a;color:#fff}.btn-dark{background:#111;color:#fff}.btn-white{background:#fff;color:#111;border:1px solid #e5e7eb}
+.ride{background:#fff;color:#111;border-radius:16px;padding:14px;margin-top:12px;border:1px solid #e5e7eb}
+.btn{padding:10px 14px;border-radius:10px;border:none;font-weight:800;cursor:pointer;margin-top:6px;width:100%;font-size:13px}
+.btn-green{background:#16a34a;color:#fff}.btn-dark{background:#111;color:#fff}.btn-white{background:#fff;color:#111;border:1px solid #e5e7eb}.btn-red{background:#dc2626;color:#fff}.btn-yellow{background:#f59e0b;color:#fff}
+.in{width:100%;padding:10px;border-radius:10px;border:1px solid #e5e7eb;margin-top:6px;font-weight:600}
+.badge{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:800;display:inline-block}
 </style></head><body>
 <div class="header">
 <div style="display:flex;align-items:center;gap:10px"><img src="logo.png"><div style="color:#111"><b>OlexPress Driver</b><div style="font-size:11px;color:#16a34a;font-weight:800">XXX Fleet • Your Ride Everywhere</div></div></div>
-<div style="background:#16a34a;color:#fff;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:800">Driver: XXX</div>
+<div style="background:#16a34a;color:#fff;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:800">Driver: XXX • Online</div>
 </div>
 
-<div class="hero">
-<img src="taxi.jpg" class="heroImg" alt="OlexPress XXX spiral mountain">
+<div class="wrap">
+<img src="taxi.jpg" class="heroImg" alt="OlexPress XXX spiral mountain green topography">
 
 <div class="card">
-<div style="display:flex;justify-content:space-between"><b>Live Bookings</b><span id="cnt" style="background:#16a34a;padding:4px 10px;border-radius:20px;font-size:11px">0 active</span></div>
-<div style="font-size:11px;color:#94a3b8;margin-top:4px">True road km • Transparent fare Base 250 + Y×42 • Time/date logged</div>
-<div id="rides"><div style="padding:30px;text-align:center;color:#64748b">Waiting for bookings from customer app...</div></div>
+<div style="display:flex;justify-content:space-between"><b>Live Bookings + Admin Messages</b><span id="cnt" style="background:#16a34a;padding:4px 10px;border-radius:20px;font-size:11px">0 active</span></div>
+<div style="font-size:11px;color:#94a3b8;margin-top:4px">Base 250+Y×42 • True road km • Time/date logged • Case response if negative review</div>
+<div id="rides"><div style="padding:30px;text-align:center;color:#64748b">Waiting for bookings...</div></div>
 </div>
 </div>
 
@@ -36,27 +38,46 @@ firebase.initializeApp(cfg);const db=firebase.database();
 db.ref('rides').on('value',s=>{
 let html='';let c=0;
 s.forEach(ch=>{
-let r=ch.val();if(['completed','cancelled'].includes(r.status))return;
+let r=ch.val();
+let isActive = !['completed','cancelled','resolved'].includes(r.status) || r.caseStatus=='awaiting_driver' || (r.driverMessage && !r.driverResponse && r.caseStatus!='resolved');
+if(!isActive && !r.driverMessage) return;
+if(['completed','cancelled'].includes(r.status) && !r.driverMessage && !r.feedback) return;
 c++;
+let isNeg = r.feedback && r.feedback.stars<=3;
+let isPos = r.feedback && r.feedback.stars>=4;
 html+=`
-<div class="ride">
-<div style="display:flex;justify-content:space-between"><b>${r.ticket}</b><span style="background:#111;color:#fff;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:800">${r.status.toUpperCase()}</span></div>
-<div style="margin-top:8px;font-size:14px;font-weight:700">${r.pickup} → ${r.dropoff}</div>
-<div style="font-size:12px;color:#6b7280;margin-top:4px">📏 ${r.distance} • ${r.formula||'Base 250 + '+r.distance+'×42'} • Total: KES ${r.total?.toLocaleString()} • Commission 20% = KES ${r.commission}</div>
-<div style="font-size:11px;color:#6b7280;margin-top:4px">📅 Logged: ${r.date} • ${new Date(r.created).toLocaleString()} • Phone: ${r.phone} • Driver: XXX</div>
-${r.feedback?`<div style="margin-top:8px;background:#fef3c7;padding:8px;border-radius:8px;font-size:11px;border:1px solid #fde68a"><b>Review (admin only view):</b> ${'★'.repeat(r.feedback.stars)} ${r.feedback.text} • ${r.feedback.time}</div>`:''}
+<div class="ride" style="${r.driverMessage?'border:2px solid #3b82f6':''} ${isNeg?'border:2px solid #fca5a5;background:#fef2f2':''} ${isPos?'border:2px solid #86efac':''}">
+<div style="display:flex;justify-content:space-between;flex-wrap:wrap">
+<div><b>${r.ticket}</b> • ${r.pickup} → ${r.dropoff} <span class="badge" style="background:#111;color:#fff">${r.status?.toUpperCase()}</span> ${r.feedback?`<span class="badge" style="background:${isPos?'#16a34a':'#dc2626'};color:#fff">${'★'.repeat(r.feedback.stars)} ${r.feedback.stars}/5</span>`:''} ${r.caseStatus?`<span class="badge" style="background:#f59e0b;color:#fff">CASE: ${r.caseStatus.toUpperCase()}</span>`:''}</div>
+<div style="font-size:11px;color:#6b7280">KES ${r.total?.toLocaleString()} • ${r.distance} • ${r.date} • ${r.phone}</div>
+</div>
+
+${r.feedback?`<div style="margin-top:8px;background:${isPos?'#dcfce7':'#fee2e2'};padding:8px;border-radius:8px;font-size:12px"><b>Customer Review:</b> ${'★'.repeat(r.feedback.stars)} "${r.feedback.text}" • ${r.feedback.time}</div>`:''}
+
+${r.driverMessage?`<div style="margin-top:10px;background:#dbeafe;border:1px solid #bfdbfe;padding:10px;border-radius:10px"><div style="font-size:11px;font-weight:800;color:#1d4ed8">📩 ADMIN → DRIVER XXX:</div><div style="font-size:13px;margin-top:4px;font-weight:700">${r.driverMessage}</div><div style="font-size:10px;color:#6b7280;margin-top:4px">${r.messageTime||r.caseTime||''}</div></div>`:''}
+
+${r.driverResponse?`<div style="margin-top:8px;background:#fef3c7;padding:8px;border-radius:8px;font-size:11px"><b>Your Response:</b> ${r.driverResponse} • ${r.driverResponseTime||''}</div>`:''}
+
+${r.caseStatus=='awaiting_driver' && !r.driverResponse?`
+<div style="margin-top:10px;background:#fff3cd;border:1px solid #fde68a;padding:10px;border-radius:10px">
+<div style="font-size:12px;font-weight:800;color:#92400e">⚠️ ACTION REQUIRED - Admin requested your response for ticket ${r.ticket}</div>
+<input id="resp-${r.ticket}" class="in" placeholder="Type your response to admin investigation...">
+<button class="btn btn-dark" onclick="sendResp('${r.ticket}')">📤 Send Response to Admin</button>
+</div>`:''}
+
 <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
 ${r.status=='searching'?`<button class="btn btn-green" onclick="up('${r.ticket}','enroute')">✓ Accept - Enroute</button><button class="btn btn-white" onclick="up('${r.ticket}','cancelled')">Cancel</button>`:''}
-${r.status=='enroute'?`<button class="btn btn-green" onclick="up('${r.ticket}','arrived')">📍 Arrived ${r.pickup}</button><button class="btn btn-white" onclick="up('${r.ticket}','searching')">Back</button>`:''}
-${r.status=='arrived'?`<button class="btn btn-dark" onclick="up('${r.ticket}','boarding_pending')">👤 Confirm Customer - Request Boarding</button>`:''}
-${r.status=='boarding_pending'?`<div style="grid-column:1/-1;background:#fef3c7;padding:8px;border-radius:8px;text-align:center;font-size:11px;font-weight:800;color:#92400e">Waiting customer to Accept Boarding</div>`:''}
-${r.status=='boarded'?`<button class="btn btn-green" onclick="up('${r.ticket}','payment_pending')">🏁 Arrived ${r.dropoff} - Request Payment</button>`:''}
-${r.status=='payment_pending'?`<div style="grid-column:1/-1;background:#dcfce7;padding:8px;border-radius:8px;text-align:center;font-size:11px;font-weight:800;color:#166534">Waiting customer to Pay KES ${r.total}</div>`:''}
+${r.status=='enroute'?`<button class="btn btn-green" onclick="up('${r.ticket}','arrived')">📍 Arrived</button><button class="btn btn-white" onclick="up('${r.ticket}','searching')">Back</button>`:''}
+${r.status=='arrived'?`<button class="btn btn-dark" onclick="up('${r.ticket}','boarding_pending')">👤 Request Boarding</button>`:''}
+${r.status=='boarded'?`<button class="btn btn-green" onclick="up('${r.ticket}','payment_pending')">🏁 Arrived ${r.dropoff} - Request Pay</button>`:''}
+${r.driverMessage && r.caseStatus=='resolved'?`<button class="btn btn-green" onclick="ackMsg('${r.ticket}')">✅ Acknowledge & Close</button>`:''}
 </div>
 </div>`;
 });
-document.getElementById('rides').innerHTML=html||'<div style="padding:30px;text-align:center;color:#64748b">No active bookings</div>';
+document.getElementById('rides').innerHTML=html||'<div style="padding:30px;text-align:center;color:#64748b">No active bookings or admin messages</div>';
 document.getElementById('cnt').innerText=c+' active';
 });
 function up(id,st){if(st=='cancelled'){if(!confirm('Cancel '+id+'?'))return;firebase.database().ref('rides/'+id).remove();return;}firebase.database().ref('rides/'+id).update({status:st});}
+function sendResp(id){let txt=document.getElementById('resp-'+id).value.trim();if(!txt){alert('Type response');return;}firebase.database().ref('rides/'+id).update({driverResponse:txt,driverResponseTime:new Date().toLocaleString(),caseStatus:'responded'}).then(()=>alert('Response sent to admin for '+id));}
+function ackMsg(id){firebase.database().ref('rides/'+id).update({driverMessage:null,driverResponse:null,caseStatus:'resolved',status:'completed'}).then(()=>alert('Closed '+id));}
 </script></body></html>
