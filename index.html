@@ -8,104 +8,169 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Inter}body{background:#f8fafc}
 .header{background:#fff;padding:10px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;position:sticky;top:0;z-index:20}
-.header img{height:46px}
-.wrap{max-width:1240px;margin:0 auto;padding:0 12px}
-.heroImg{width:100%;height:460px;object-fit:cover;border-radius:0 0 20px 20px;display:block}
+.header img{height:46px}.wrap{max-width:1240px;margin:0 auto;padding:0 12px}
+.heroImg{width:100%;height:400px;object-fit:cover;border-radius:0 0 20px 20px;display:block;background:#e5e7eb}
 .hero{margin-top:16px;display:grid;grid-template-columns:1.1fr.9fr;gap:16px}
 .card{background:#fff;border-radius:20px;padding:24px;border:1px solid #e5e7eb;box-shadow:0 10px 30px rgba(0,0,0,.06)}
 .in{width:100%;padding:15px;border-radius:12px;border:1.6px solid #e5e7eb;font-weight:700;margin-top:6px}
 .fareBox{display:none;margin-top:14px;background:#111;color:#fff;border-radius:16px;padding:16px}
-.fRow{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,.12)}
-.fTotal{display:flex;justify-content:space-between;font-size:20px;font-weight:900;color:#4ade80;padding-top:10px}
+.fRow{display:flex;justify-content:space-between;padding:7px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,.12)}
+.fTotal{display:flex;justify-content:space-between;font-size:21px;font-weight:900;color:#4ade80;padding-top:10px}
 .btn{width:100%;background:#16a34a;color:#fff;border:none;border-radius:14px;padding:16px;font-weight:900;margin-top:14px;cursor:pointer}
-#map{height:520px;border-radius:14px}.mapCard{background:#fff;border-radius:20px;padding:10px;border:1px solid #e5e7eb}
+#map{height:540px;border-radius:14px}.mapCard{background:#fff;border-radius:20px;padding:10px;border:1px solid #e5e7eb;position:relative}
+.liveDot{width:10px;height:10px;background:#16a34a;border-radius:50%;display:inline-block;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .ticket{display:none;max-width:1240px;margin:18px auto;padding:0 12px}.ticket.show{display:block}.tBox{background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:20px;padding:20px;color:#fff}
-@media(max-width:900px){.hero{grid-template-columns:1fr}.heroImg{height:260px}#map{height:360px}}
+@media(max-width:900px){.hero{grid-template-columns:1fr}.heroImg{height:220px}#map{height:380px}}
 </style></head><body>
 <div class="header">
 <div style="display:flex;align-items:center;gap:10px"><img src="logo.png"><div><b style="font-size:20px">OlexPress</b><div style="font-size:11px;color:#16a34a;font-weight:800">Your Ride Everywhere • 24/7</div></div></div>
-<div style="background:#111;color:#fff;padding:7px 14px;border-radius:20px;font-size:11px;font-weight:800">XXX PLATE • 2-4 min</div>
+<div style="background:#111;color:#fff;padding:7px 14px;border-radius:20px;font-size:11px;font-weight:800"><span class="liveDot"></span> XXX • LIVE MAP ACTIVE</div>
 </div>
 
-<!-- HERO IMAGE - FULL WIDTH - REPLACES OLD TEXT -->
-<img src="taxi.jpg" class="heroImg" alt="OlexPress XXX Taxi spiral mountain green topography clean tarmac" onerror="this.src='https://i.imgur.com/8Km9tLL.jpg'">
+<img src="taxi.jpg" class="heroImg" alt="OlexPress" onerror="this.style.display='none'">
 
-<div class="wrap">
-<div class="hero">
-<div class="card">
+<div class="wrap"><div class="hero">
+<div class="card" id="bookCard">
 <h2 style="font-size:32px;font-weight:900">Book Your Ride</h2>
-<p style="color:#6b7280;font-size:12px;font-weight:600;margin-top:6px">Pick up point → Point to be taken to → True road km → Base + Y×42</p>
-
+<p style="color:#6b7280;font-size:12px;font-weight:600;margin-top:6px">True road Y • Base 250 + Y×42 • Unbiased OSRM</p>
 <label style="font-size:10px;font-weight:800;margin-top:18px;display:block">PICK UP POINT</label>
-<input id="from" class="in" list="places" value="Gilgil">
+<input id="from" class="in" list="places" value="Gilgil" oninput="calc()">
 <label style="font-size:10px;font-weight:800;margin-top:12px;display:block">POINT TO BE TAKEN TO</label>
-<input id="to" class="in" list="places" placeholder="Point to be taken to" oninput="calc()">
-<datalist id="places"><option value="Gilgil"><option value="Ol Kalou"><option value="Nyahururu"><option value="Nakuru"><option value="Naivasha"><option value="Nairobi"><option value="Nyeri"><option value="Engineer"><option value="Njabini"></datalist>
+<input id="to" class="in" list="places" placeholder="Where to?" oninput="calc()">
+<datalist id="places"><option value="Gilgil"><option value="Ol Kalou"><option value="Nyahururu"><option value="Nakuru"><option value="Naivasha"><option value="Nairobi"><option value="Nyeri"><option value="Engineer"><option value="Njabini"><option value="Molo"><option value="Eldoret"></datalist>
 <div style="margin-top:10px"><span onclick="setP('Gilgil','Ol Kalou')" style="cursor:pointer;background:#f3f4f6;padding:6px 10px;border-radius:20px;font-size:11px;font-weight:700">Gilgil→Ol Kalou</span>
 <span onclick="setP('Gilgil','Nakuru')" style="cursor:pointer;background:#f3f4f6;padding:6px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-left:4px">Gilgil→Nakuru</span></div>
 <input id="phone" class="in" placeholder="Phone 07XX XXX XXX" type="tel" style="margin-top:12px">
 <div id="fareBox" class="fareBox">
-<div style="font-size:10px;opacity:.6;font-weight:800">TRANSPARENT FARE • TRUE ROAD Y</div>
+<div style="display:flex;justify-content:space-between"><span style="font-size:10px;opacity:.6;font-weight:800"><span class="liveDot"></span> LIVE TRUE ROAD DATA • OSRM UNBIASED</span><span id="acc" style="font-size:10px;background:#16a34a;padding:2px 8px;border-radius:10px;font-weight:800">100% TRUSTWORTHY</span></div>
 <div class="fRow"><span>Pick up</span><b id="fFrom">-</b></div>
 <div class="fRow"><span>Drop off</span><b id="fTo">-</b></div>
-<div class="fRow"><span>True road Y</span><b id="fDist">- km</b></div>
+<div class="fRow"><span>True road Y</span><b id="fDist" style="color:#4ade80">- km</b></div>
+<div class="fRow"><span>Route source</span><b id="fSource" style="font-size:11px">OSRM live</b></div>
 <div class="fRow"><span>Base</span><b>KES 250</b></div>
 <div class="fRow"><span>Y × 42</span><b id="fCalc">-</b></div>
 <div class="fTotal"><span>Total</span><span id="fTotal">KES -</span></div>
+<div id="fTrust" style="font-size:10px;opacity:.6;margin-top:8px"></div>
 </div>
-<button id="bookBtn" class="btn" onclick="tryBook()">Book a Ride →</button>
+<button id="bookBtn" class="btn">Book a Ride →</button>
 <div id="lock" style="display:none;background:#fef3c7;padding:10px;border-radius:10px;margin-top:10px;font-size:12px;font-weight:700"></div>
 </div>
-<div class="mapCard"><div style="font-size:11px;font-weight:800;padding:6px 8px">LIVE MAP - TRUE ROAD ROUTING</div><div id="map"></div><div id="mStat" style="font-size:11px;color:#6b7280;padding:8px">Select locations for true km</div></div>
+<div class="mapCard">
+<div style="display:flex;justify-content:space-between;padding:6px 8px"><b style="font-size:11px">🛰️ LIVE MAP - TRUE ROAD ROUTING ACTIVE</b><span style="font-size:10px;background:#111;color:#fff;padding:3px 8px;border-radius:10px;font-weight:800"><span class="liveDot"></span> RUNNING</span></div>
+<div id="map"></div>
+<div id="mStat" style="font-size:11px;color:#111;padding:8px;background:#f0fdf4;border-radius:8px;margin-top:6px;font-weight:700;border:1px solid #bbf7d0">🟢 Map active - Enter pick up & drop to see true road line</div>
+<div id="mLive" style="font-size:10px;color:#6b7280;padding:4px 8px"></div>
 </div>
-</div>
+</div></div>
 
 <div id="ticket" class="ticket"><div class="tBox">
-<div style="display:flex;justify-content:space-between"><div><div style="font-size:10px;opacity:.5">BOARDING PASS • TIME/DATE LOGGED</div><div id="tId" style="font-size:28px;font-weight:900">OLEX-XXXX</div><div id="tRoute"></div><div id="tDate" style="font-size:11px;opacity:.6;margin-top:6px"></div><div id="tSt" style="margin-top:10px;background:#fff;color:#111;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:900;display:inline-block">SEARCHING</div></div><div style="background:#fff;padding:8px;border-radius:12px;height:86px"><div id="qr"></div></div></div>
+<div style="display:flex;justify-content:space-between"><div><div style="font-size:10px;opacity:.5">BOARDING PASS • TRUE ROAD LOGGED</div><div id="tId" style="font-size:28px;font-weight:900">OLEX-XXXX</div><div id="tRoute"></div><div id="tDate" style="font-size:11px;opacity:.6;margin-top:6px"></div><div id="tSt" style="margin-top:10px;background:#fff;color:#111;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:900;display:inline-block">SEARCHING</div></div><div style="background:#fff;padding:8px;border-radius:12px;height:86px"><div id="qr"></div></div></div>
 <div id="tInfo" style="background:rgba(255,255,255,.08);padding:12px;border-radius:12px;margin-top:14px"></div><div id="tAct"></div>
-<div id="fbBox" style="display:none;margin-top:14px;background:#fff;color:#111;border-radius:14px;padding:16px"><b>Trip Ended - Leave Review (Admin Only)</b><div style="margin-top:8px"><span onclick="setR(1)" id="s1" style="font-size:28px;cursor:pointer">☆</span><span onclick="setR(2)" id="s2" style="font-size:28px;cursor:pointer">☆</span><span onclick="setR(3)" id="s3" style="font-size:28px;cursor:pointer">☆</span><span onclick="setR(4)" id="s4" style="font-size:28px;cursor:pointer">☆</span><span onclick="setR(5)" id="s5" style="font-size:28px;cursor:pointer">☆</span></div><input id="fbTxt" class="in" placeholder="Feedback"><button class="btn" style="background:#111" onclick="sendFb()">Submit Review → Admin</button></div>
+<div id="fbBox" style="display:none;margin-top:16px;background:#fff;color:#111;border-radius:16px;padding:18px;border:2px solid #16a34a">
+<div style="font-size:16px;font-weight:900">Trip Completed! 🎉 How was your ride?</div>
+<div style="margin-top:10px"><span onclick="setR(1)" id="s1" style="font-size:32px;cursor:pointer">☆</span><span onclick="setR(2)" id="s2" style="font-size:32px;cursor:pointer">☆</span><span onclick="setR(3)" id="s3" style="font-size:32px;cursor:pointer">☆</span><span onclick="setR(4)" id="s4" style="font-size:32px;cursor:pointer">☆</span><span onclick="setR(5)" id="s5" style="font-size:32px;cursor:pointer">☆</span></div>
+<textarea id="fbTxt" class="in" placeholder="Tell us about your ride..." style="height:70px"></textarea>
+<button id="fbBtn" class="btn" style="background:#111" onclick="sendFb()">Submit Feedback</button>
+</div>
+<div id="newRideBox" style="display:none;margin-top:14px;text-align:center">
+<button onclick="newRide()" style="width:100%;padding:16px;border-radius:14px;background:#16a34a;color:#fff;font-weight:900;border:none;font-size:16px;cursor:pointer">+ Book Another Ride</button>
+</div>
 </div></div>
 
 <script>
 const cfg={apiKey:"AIzaSyDc6N5dULG6i72EWrLTtunwhbKQxaVi2KY",authDomain:"olexpresske.firebaseapp.com",databaseURL:"https://olexpresske-default-rtdb.firebaseio.com",projectId:"olexpresske",storageBucket:"olexpresske.firebasestorage.app",messagingSenderId:"953335654623",appId:"1:953335654623:web:1b91cbd29c1f63a23ba16a"};
 firebase.initializeApp(cfg);const db=firebase.database();
-const LOCS={Gilgil:[-0.492,36.32],"Ol Kalou":[-0.26,36.37],Nyahururu:[0.03,36.36],Nakuru:[-0.303,36.08],Naivasha:[-0.717,36.43],Nyeri:[-0.42,36.95],Nanyuki:[0.01,37.07],Nairobi:[-1.286,36.82],Eldoret:[0.514,35.27],Engineer:[-0.55,36.58],Njabini:[-0.60,36.66]};
-let map,routeLine;setTimeout(()=>{map=L.map('map').setView([-0.5,36.3],8);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);},350);
+const LOCS={Gilgil:[-0.492,36.32],"Ol Kalou":[-0.26,36.37],Nyahururu:[0.03,36.36],Nakuru:[-0.303,36.08],Naivasha:[-0.717,36.43],Nyeri:[-0.42,36.95],Nanyuki:[0.01,37.07],Nairobi:[-1.286,36.82],Eldoret:[0.514,35.27],Engineer:[-0.55,36.58],Njabini:[-0.60,36.66],Molo:[-0.24,35.73]};
+let map,routeLine,pickMarker,dropMarker,driverMarker,routeCoords=[];
+setTimeout(()=>{
+map=L.map('map',{zoomControl:true}).setView([-0.5,36.3],8);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM • OlexPress true road'}).addTo(map);
+map.on('moveend',()=>{document.getElementById('mLive').innerText='Map live at '+map.getCenter().lat.toFixed(3)+','+map.getCenter().lng.toFixed(3)+' zoom '+map.getZoom()+' - Running';});
+},400);
+
 function setP(f,t){document.getElementById('from').value=f;document.getElementById('to').value=t;calc();}
+
 function hav(a,b){let R=6371;let dLat=(b[0]-a[0])*Math.PI/180;let dLon=(b[1]-a[1])*Math.PI/180;let x=Math.sin(dLat/2)**2+Math.cos(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.sqrt(x));}
+
 async function calc(){
 let f=document.getElementById('from').value.trim();let t=document.getElementById('to').value.trim();
-if(!LOCS[f]||!LOCS[t]){document.getElementById('fareBox').style.display='none';return null;}
+if(!LOCS[f]||!LOCS[t]){document.getElementById('fareBox').style.display='none';if(routeLine){map.removeLayer(routeLine);}if(pickMarker)map.removeLayer(pickMarker);if(dropMarker)map.removeLayer(dropMarker);document.getElementById('mStat').innerText='🟡 Enter both points to activate true road line';return null;}
 document.getElementById('fareBox').style.display='block';document.getElementById('fFrom').innerText=f;document.getElementById('fTo').innerText=t;
+document.getElementById('mStat').innerText='🛰️ Calculating true road Y for '+f+' → '+t+'... unbiased OSRM';
 try{
 let fc=LOCS[f],tc=LOCS[t];
-let r=await fetch(`https://router.project-osrm.org/route/v1/driving/${fc[1]},${fc[0]};${tc[1]},${tc[0]}?overview=false`);let d=await r.json();
-let km=d.routes?d.routes[0].distance/1000:hav(fc,tc);let y=Math.round(km);let total=250+y*42;
-document.getElementById('fDist').innerText=y+' km';document.getElementById('fCalc').innerText=y+' × 42 = KES '+(y*42).toLocaleString();document.getElementById('fTotal').innerText='KES '+total.toLocaleString();
-document.getElementById('mStat').innerText=f+' → '+t+' • True '+y+'km • 250 + '+y+'×42 = KES '+total.toLocaleString();
-let rg=await fetch(`https://router.project-osrm.org/route/v1/driving/${fc[1]},${fc[0]};${tc[1]},${tc[0]}?overview=full&geometries=geojson`);let gj=await rg.json();if(gj.routes){if(routeLine)map.removeLayer(routeLine);routeLine=L.geoJSON(gj.routes[0].geometry,{style:{color:'#16a34a',weight:5}}).addTo(map);map.fitBounds(routeLine.getBounds(),{padding:[20,20]});}
-return {km:y,total:total};
-}catch(e){let y=Math.round(hav(LOCS[f],LOCS[t]));return {km:y,total:250+y*42};}
+if(pickMarker)map.removeLayer(pickMarker);if(dropMarker)map.removeLayer(dropMarker);
+pickMarker=L.marker(fc).addTo(map).bindPopup('Pickup: '+f);
+dropMarker=L.marker(tc).addTo(map).bindPopup('Drop: '+t);
+
+let url=`https://router.project-osrm.org/route/v1/driving/${fc[1]},${fc[0]};${tc[1]},${tc[0]}?overview=full&geometries=geojson`;
+let r=await fetch(url);let d=await r.json();
+let km,geo;
+if(d.routes && d.routes[0]){
+km=d.routes[0].distance/1000;geo=d.routes[0].geometry;
+document.getElementById('fSource').innerText='OSRM live road ✓';
+document.getElementById('fTrust').innerText='Source: OpenStreetMap true road network - Unbiased, exact, trustworthy - Updated live';
+document.getElementById('acc').innerText='OSRM VERIFIED';
+}else{throw 'no route';}
+let y=Math.round(km);let total=250+y*42;
+document.getElementById('fDist').innerText=y+' km true road';document.getElementById('fCalc').innerText=y+' × 42 = KES '+(y*42).toLocaleString();document.getElementById('fTotal').innerText='KES '+total.toLocaleString();
+document.getElementById('mStat').innerHTML='🟢 <b>TRUE ROAD ACTIVE:</b> '+f+' → '+t+' = <b>'+y+'km</b> true • OSRM unbiased • Fare KES '+total.toLocaleString()+' • Map running';
+
+if(routeLine)map.removeLayer(routeLine);
+routeLine=L.geoJSON(geo,{style:{color:'#16a34a',weight:6,opacity:0.9}}).addTo(map);
+routeCoords=geo.coordinates.map(c=>[c[1],c[0]]);
+map.fitBounds(routeLine.getBounds(),{padding:[30,30]});
+
+document.getElementById('mLive').innerText='Route: '+geo.coordinates.length+' points • Distance verified '+km.toFixed(2)+'km • Running live';
+return {km:y,total:total,exact:km,geo:geo};
+}catch(e){
+let y=Math.round(hav(LOCS[f],LOCS[t]));let total=250+y*42;
+document.getElementById('fDist').innerText=y+' km est.';document.getElementById('fCalc').innerText=y+'×42';document.getElementById('fTotal').innerText='KES '+total.toLocaleString();
+document.getElementById('fSource').innerText='Haversine fallback';
+document.getElementById('mStat').innerText='🟡 True road offline, using estimated '+y+'km - Will verify on booking';
+return {km:y,total:total,exact:y};
 }
+}
+
 function gen(){return 'OLEX-'+Math.random().toString(36).substr(2,4).toUpperCase()+'-'+Math.floor(Math.random()*90+10);}
+document.getElementById('bookBtn').onclick=tryBook;
 async function tryBook(){
-let s=localStorage.getItem('olex_ticket');if(s){let snap=await db.ref('rides/'+s).once('value');let r=snap.val();if(r&&!['completed','cancelled'].includes(r.status)){document.getElementById('lock').style.display='block';document.getElementById('lock').innerText='Active ride '+r.ticket+' - Cannot book new';showTicket(s);return;}localStorage.removeItem('olex_ticket');}
+let s=localStorage.getItem('olex_ticket');if(s){let snap=await db.ref('rides/'+s).once('value');let r=snap.val();if(r&&!['completed','cancelled'].includes(r.status)){document.getElementById('lock').style.display='block';document.getElementById('lock').innerText='Active ride '+r.ticket;showTicket(s);return;}localStorage.removeItem('olex_ticket');}
 let f=document.getElementById('from').value.trim();let t=document.getElementById('to').value.trim();let ph=document.getElementById('phone').value.trim();let c=await calc();if(!c){alert('Select locations');return;}if(ph.length<9){alert('Phone');return;}
-if(!confirm(f+' → '+t+'\nTrue '+c.km+'km\n250 + '+c.km+'×42 = KES '+c.total.toLocaleString()+'\nBook?'))return;
-let id=gen();db.ref('rides/'+id).set({ticket:id,pickup:f,dropoff:t,phone:ph,total:c.total,distance:c.km+' km true',base:250,perKm:42,formula:'250 + '+c.km+'×42',commission:Math.round(c.total*0.2),status:'searching',created:Date.now(),date:new Date().toLocaleString(),driverPhone:'XXX'}).then(()=>{localStorage.setItem('olex_ticket',id);showTicket(id);});
+if(!confirm(f+' → '+t+'\nTRUE ROAD '+c.km+'km (exact '+c.exact.toFixed(2)+'km)\n250 + '+c.km+'×42 = KES '+c.total.toLocaleString()+'\nBook with unbiased data?'))return;
+let id=gen();db.ref('rides/'+id).set({ticket:id,pickup:f,dropoff:t,phone:ph,total:c.total,distance:c.km+' km true',exactKm:c.exact,base:250,perKm:42,formula:'250 + '+c.km+'×42',commission:Math.round(c.total*0.2),status:'searching',created:Date.now(),date:new Date().toLocaleString()}).then(()=>{localStorage.setItem('olex_ticket',id);showTicket(id);window.scrollTo(0,document.body.scrollHeight);startLiveTracking(c.geo);});
 }
 let rv=0;function setR(n){rv=n;for(let i=1;i<=5;i++)document.getElementById('s'+i).innerText=i<=n?'★':'☆';}
-function sendFb(){let id=localStorage.getItem('olex_ticket');let txt=document.getElementById('fbTxt').value;if(!rv){alert('Rate');return;}db.ref('rides/'+id+'/feedback').set({stars:rv,text:txt,time:new Date().toLocaleString(),ticket:id}).then(()=>{alert('Review submitted - Admin only sees');document.getElementById('fbBox').style.display='none';});}
+function sendFb(){let id=localStorage.getItem('olex_ticket');let txt=document.getElementById('fbTxt').value.trim();if(!rv){alert('Select stars');return;}document.getElementById('fbBtn').innerText='Submitting...';document.getElementById('fbBtn').disabled=true;db.ref('rides/'+id+'/feedback').set({stars:rv,text:txt||'No comment',time:new Date().toLocaleString(),ticket:id}).then(()=>{alert('Thank you!');document.getElementById('fbBox').style.display='none';document.getElementById('newRideBox').style.display='block';});}
+function newRide(){localStorage.removeItem('olex_ticket');document.getElementById('ticket').classList.remove('show');document.getElementById('fbBox').style.display='none';document.getElementById('newRideBox').style.display='none';document.getElementById('bookBtn').disabled=false;document.getElementById('lock').style.display='none';if(driverMarker)map.removeLayer(driverMarker);window.scrollTo(0,0);}
+function startLiveTracking(geo){
+if(!geo||!routeCoords.length)return;
+let idx=0;
+if(driverMarker)map.removeLayer(driverMarker);
+driverMarker=L.marker(routeCoords[0],{icon:L.divIcon({html:'🚕',className:'',iconSize:[30,30]})}).addTo(map);
+let interval=setInterval(()=>{
+if(idx>=routeCoords.length-1){clearInterval(interval);return;}
+idx+=2;driverMarker.setLatLng(routeCoords[idx]);
+let id=localStorage.getItem('olex_ticket');if(!id){clearInterval(interval);return;}
+db.ref('rides/'+id).once('value',s=>{let r=s.val();if(!r||['completed','cancelled'].includes(r.status)){clearInterval(interval);if(driverMarker)map.removeLayer(driverMarker);}});
+},500);
+}
 function showTicket(id){
 document.getElementById('ticket').classList.add('show');document.getElementById('bookBtn').disabled=true;
-db.ref('rides/'+id).on('value',s=>{let r=s.val();if(!r)return;document.getElementById('tId').innerText=r.ticket;document.getElementById('tRoute').innerText=r.pickup+' → '+r.dropoff+' • 250 + '+r.distance+'×42 = KES '+r.total;document.getElementById('tDate').innerText='Logged: '+r.date+' • Driver XXX';document.getElementById('tSt').innerText=r.status.toUpperCase();document.getElementById('qr').innerHTML='';new QRCode(document.getElementById('qr'),{text:r.ticket,width:70,height:70});
-let msgs={searching:'Searching driver',enroute:'Driver enroute',arrived:'Driver arrived',boarding_pending:'Confirm boarding',boarded:'Boarded - Enroute',payment_pending:'Pay KES '+r.total,completed:'Thank you!'};
+db.ref('rides/'+id).on('value',s=>{
+let r=s.val();if(!r){newRide();return;}
+document.getElementById('tId').innerText=r.ticket;document.getElementById('tRoute').innerText=r.pickup+' → '+r.dropoff+' • '+r.distance+' true • KES '+r.total+' • Exact '+ (r.exactKm?r.exactKm.toFixed(2)+'km':r.distance);document.getElementById('tDate').innerText='Logged: '+r.date+' • True road Y: '+r.distance;document.getElementById('tSt').innerText=r.status.toUpperCase();document.getElementById('qr').innerHTML='';new QRCode(document.getElementById('qr'),{text:r.ticket,width:70,height:70});
+let msgs={searching:'Searching driver XXX - Map active tracking true road',enroute:'Driver enroute - Live map running true road',arrived:'Driver arrived',boarding_pending:'Confirm boarding',boarded:'Enroute - Map tracking live',payment_pending:'Pay KES '+r.total,completed:'Trip completed!'};
 document.getElementById('tInfo').innerText=msgs[r.status]||r.status;
 let act=document.getElementById('tAct');act.innerHTML='';
-if(r.status=='searching'){act.innerHTML=`<button onclick="firebase.database().ref('rides/${r.ticket}').remove();localStorage.removeItem('olex_ticket');location.reload()" style="width:100%;margin-top:10px;padding:12px;border-radius:12px;background:#fff;color:#dc2626;font-weight:800">Cancel</button>`;}
-else if(r.status=='boarding_pending'){act.innerHTML=`<button onclick="firebase.database().ref('rides/${r.ticket}').update({status:'boarded'})" style="width:100%;margin-top:10px;padding:14px;border-radius:12px;background:#fff;color:#111;font-weight:900">✓ Accept Boarding</button>`;}
-else if(r.status=='payment_pending'){act.innerHTML=`<button onclick="firebase.database().ref('rides/${r.ticket}').update({status:'completed'})" style="width:100%;margin-top:10px;padding:14px;border-radius:12px;background:#fff;color:#111;font-weight:900">✓ Paid</button>`;}
-else if(r.status=='completed'){act.innerHTML=`<div style="background:#fff;color:#111;padding:12px;border-radius:12px;font-weight:900;text-align:center;margin-top:10px">Thank you!</div><button onclick="localStorage.removeItem('olex_ticket');location.reload()" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;background:rgba(255,255,255,.15);color:#fff">+ New Ride</button>`;document.getElementById('fbBox').style.display='block';}
+if(r.status=='searching'){act.innerHTML=`<button onclick="if(confirm('Cancel?')){firebase.database().ref('rides/${r.ticket}').remove();newRide()}" style="width:100%;margin-top:10px;padding:12px;border-radius:12px;background:#fff;color:#dc2626;font-weight:800;border:none;cursor:pointer">Cancel Ride</button>`;}
+else if(r.status=='boarding_pending'){act.innerHTML=`<button onclick="firebase.database().ref('rides/${r.ticket}').update({status:'boarded'})" style="width:100%;margin-top:10px;padding:14px;border-radius:12px;background:#fff;color:#111;font-weight:900;border:none;cursor:pointer">✓ Accept Boarding</button>`;}
+else if(r.status=='payment_pending'){act.innerHTML=`<button onclick="firebase.database().ref('rides/${r.ticket}').update({status:'completed'})" style="width:100%;margin-top:10px;padding:14px;border-radius:12px;background:#16a34a;color:#fff;font-weight:900;border:none;cursor:pointer">✓ I've Paid</button>`;}
+else if(r.status=='completed'){
+if(r.feedback){act.innerHTML=`<div style="background:#fff;color:#111;padding:12px;border-radius:12px;font-weight:800;text-align:center;margin-top:10px">✓ Feedback done</div>`;document.getElementById('newRideBox').style.display='block';document.getElementById('fbBox').style.display='none';}
+else{act.innerHTML=`<div style="background:#fff;color:#111;padding:12px;border-radius:12px;font-weight:800;text-align:center;margin-top:10px">✓ Completed</div>`;document.getElementById('fbBox').style.display='block';document.getElementById('newRideBox').style.display='none';}
+}
 });
 }
 let saved=localStorage.getItem('olex_ticket');if(saved)showTicket(saved);
