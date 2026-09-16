@@ -7,12 +7,23 @@ const ACTIVE_TICKET_ID_KEY = 'olexpress_active_ticket_id';
 const DRIVER_PROFILE_KEY = 'olexpress_driver_profile';
 
 export interface DriverProfile {
-  id: string; name: string; phone: string; vehicle: string; plate: string; isOnline: boolean;
+  id: string;
+  name: string;
+  phone: string;
+  vehicle: string;
+  plate: string;
+  isOnline: boolean;
 }
+
 export const DEFAULT_DRIVER: DriverProfile = {
-  id: 'DRV-701', name: 'Mwangi Kamau', phone: '0722894512',
-  vehicle: 'Toyota Fielder (Silver)', plate: 'KDC 482J', isOnline: true,
+  id: 'DRV-701',
+  name: 'Mwangi Kamau',
+  phone: '0722894512',
+  vehicle: 'Toyota Fielder (Silver)',
+  plate: 'KDC 482J',
+  isOnline: true,
 };
+
 const INITIAL_TICKETS: Ticket[] = [];
 
 function loadTickets(): Ticket[] {
@@ -22,12 +33,15 @@ function loadTickets(): Ticket[] {
   } catch {}
   return [...INITIAL_TICKETS];
 }
+
 function saveTicketsLocal(tickets: Ticket[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
 }
 
 export function getTickets(): Ticket[] {
-  return loadTickets().sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return loadTickets().sort((a, b) =>
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 }
 
 export function getDriverProfile(): DriverProfile {
@@ -37,6 +51,7 @@ export function getDriverProfile(): DriverProfile {
   } catch {}
   return DEFAULT_DRIVER;
 }
+
 export function saveDriverProfile(p: DriverProfile) {
   localStorage.setItem(DRIVER_PROFILE_KEY, JSON.stringify(p));
 }
@@ -44,6 +59,7 @@ export function saveDriverProfile(p: DriverProfile) {
 export function getActiveTicketId(): string | null {
   return localStorage.getItem(ACTIVE_TICKET_ID_KEY);
 }
+
 export function setActiveTicketId(id: string | null) {
   if (id) localStorage.setItem(ACTIVE_TICKET_ID_KEY, id);
   else localStorage.removeItem(ACTIVE_TICKET_ID_KEY);
@@ -52,7 +68,7 @@ export function setActiveTicketId(id: string | null) {
 export function createTicket(data: Omit<Ticket, 'id' | 'status' | 'createdAt' | 'updatedAt'>): Ticket {
   const now = new Date().toISOString();
   const id = `OLX-${Date.now().toString().slice(-6)}`;
-  const ticket: Ticket = {
+  const ticket = {
    ...data,
     id,
     status: 'pending' as TicketStatus,
@@ -60,13 +76,11 @@ export function createTicket(data: Omit<Ticket, 'id' | 'status' | 'createdAt' | 
     updatedAt: now,
   } as Ticket;
 
-  // Save locally
   const tickets = loadTickets();
   tickets.unshift(ticket);
   saveTicketsLocal(tickets);
   setActiveTicketId(id);
 
-  // Save to Firebase for cross-phone sync
   try {
     const rideRef = ref(db, `rides/${id}`);
     set(rideRef, ticket);
@@ -84,7 +98,6 @@ export function updateTicketStatus(id: string, status: TicketStatus, extra?: Par
     tickets[idx] = {...tickets[idx], status,...extra, updatedAt: new Date().toISOString() };
     saveTicketsLocal(tickets);
   }
-  // Update Firebase too
   try {
     const rideRef = ref(db, `rides/${id}`);
     update(rideRef, { status,...extra, updatedAt: new Date().toISOString() });
@@ -114,13 +127,12 @@ export function subscribeToTickets(callback: (tickets: Ticket[]) => void) {
     const data = snapshot.val();
     if (data) {
       const fbTickets: Ticket[] = Object.values(data) as Ticket[];
-      // Merge with local
       const local = loadTickets();
       const mergedMap = new Map<string, Ticket>();
       [...local,...fbTickets].forEach(t => mergedMap.set(t.id, t));
       const merged = Array.from(mergedMap.values());
       saveTicketsLocal(merged);
-      callback(merged.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+      callback(merged.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     } else {
       callback(getTickets());
     }
