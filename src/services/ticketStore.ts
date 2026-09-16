@@ -30,7 +30,6 @@ export function getDriverProfile(): DriverProfile {
 export function saveDriverProfile(p: DriverProfile) { localStorage.setItem(DRIVER_PROFILE_KEY, JSON.stringify(p)); }
 export function getActiveTicketId(): string | null { return localStorage.getItem(ACTIVE_TICKET_ID_KEY); }
 export function setActiveTicketId(id: string | null) { if (id) localStorage.setItem(ACTIVE_TICKET_ID_KEY, id); else localStorage.removeItem(ACTIVE_TICKET_ID_KEY); }
-
 export function createTicket(data: any): any {
   const now = new Date().toISOString();
   const id = `OLX-${Date.now().toString().slice(-6)}`;
@@ -64,3 +63,13 @@ export function deleteTicket(id: string) {
   saveTicketsLocal(loadTickets().filter((t: any) => t.id!== id));
   try { remove(ref(db, `rides/${id}`)); } catch {}
 }
+
+// THIS IS THE FIX - TrackingView needs this object
+export const ticketStore = {
+  getTickets, getDriverProfile, saveDriverProfile,
+  getActiveTicketId, setActiveTicketId,
+  createTicket, updateTicketStatus,
+  getTicketById, getActiveTicket, clearActiveTicket,
+  subscribeToTickets, deleteTicket
+};
+export default ticketStore;
