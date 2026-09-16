@@ -182,4 +182,4 @@ setTimeout(()=>{loadAllRides();},1000);
 db.ref('rides').on('value',()=>{loadAllRides();});
 </script>
 </body>
-</html>
+</html>.
