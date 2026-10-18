@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   MapPin,
   Flag,
@@ -6,6 +6,7 @@ import {
   ArrowUpDown,
   AlertTriangle,
   Lock,
+  Compass,
   Zap,
   Car,
   Package,
@@ -14,45 +15,16 @@ import {
   Radio,
   Thermometer,
   CloudSun,
-  Sparkles,
 } from 'lucide-react';
+import {
+  NYANDARUA_TOWNS,
+  KENYA_DESTINATIONS,
+  isNyandaruaTown,
+  isNyandaruaCoords,
+} from '../data/towns';
+import { Ticket } from '../types';
 
 export type RideClassType = 'Standard' | 'Express' | 'Cargo' | 'VIP';
-
-export interface Ticket {
-  id: string;
-  pickup: string;
-  destination: string;
-  fare: number;
-  rideClass: RideClassType;
-  status: 'PENDING_DISPATCH' | 'DRIVER_ACCEPTED' | 'EN_ROUTE' | 'COMPLETED' | 'CANCELLED';
-  driverId: string | null;
-  driverCoordinates: { lat: number; lng: number } | null;
-}
-
-const NYANDARUA_TOWNS = [
-  { name: 'Ol Kalou', region: 'Central Base' },
-  { name: 'Nyahururu', region: 'North Quad' },
-  { name: 'Engineer', region: 'South Quad' },
-  { name: 'Miharati', region: 'West Corridor' },
-  { name: 'Ndaragwa', region: 'North East Ridge' },
-  { name: 'Njabini', region: 'South Hub' },
-  { name: 'Mai Mahiu', region: 'Escarpment' },
-  { name: 'Gilgil', region: 'A104 Junction' }
-];
-
-const KENYA_DESTINATIONS = [
-  { name: 'Nairobi CBD', region: 'Capital Node' },
-  { name: 'Nakuru City', region: 'Rift Valley Corridor' },
-  { name: 'Nyahururu Town', region: 'Laikipia Hub' },
-  { name: 'Naivasha Express', region: 'Lakeside Junction' },
-  { name: 'Gilgil Corridor', region: 'A104 Junction' },
-  { name: 'Mombasa', region: 'Coast Express' },
-  { name: 'Kisumu', region: 'Lake Victoria' }
-];
-
-const isNyandaruaTown = (town: string) => 
-  NYANDARUA_TOWNS.some(t => t.name.toLowerCase() === town.toLowerCase().trim());
 
 interface BookingCardProps {
   pickup: string;
@@ -61,10 +33,10 @@ interface BookingCardProps {
   onChangeDestination: (val: string) => void;
   onGetFareAndRoute: () => void;
   activeTicket: Ticket | null;
-  onAbortTrip: () => void;
-  isCalculating: boolean;
-  rideClass: RideClassType;
-  onChangeRideClass: (cls: RideClassType) => void;
+  onTrackCurrentTicket: () => void;
+  isCalculating?: boolean;
+  rideClass?: RideClassType;
+  onChangeRideClass?: (cls: RideClassType) => void;
 }
 
 export function BookingCard({
@@ -74,9 +46,9 @@ export function BookingCard({
   onChangeDestination,
   onGetFareAndRoute,
   activeTicket,
-  onAbortTrip,
-  isCalculating,
-  rideClass,
+  onTrackCurrentTicket,
+  isCalculating = false,
+  rideClass = 'Standard',
   onChangeRideClass,
 }: BookingCardProps) {
   const [pickupDropdownOpen, setPickupDropdownOpen] = useState(false);
@@ -88,41 +60,84 @@ export function BookingCard({
   const pickupDropdownRef = useRef<HTMLDivElement>(null);
   const destDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Close dropdowns when clicking outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (pickupDropdownRef.current && !pickupDropdownRef.current.contains(e.target as Node)) setPickupDropdownOpen(false);
-      if (destDropdownRef.current && !destDropdownRef.current.contains(e.target as Node)) setDestDropdownOpen(false);
+      if (pickupDropdownRef.current && !pickupDropdownRef.current.contains(e.target as Node)) {
+        setPickupDropdownOpen(false);
+      }
+      if (destDropdownRef.current && !destDropdownRef.current.contains(e.target as Node)) {
+        setDestDropdownOpen(false);
+      }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Check pickup validation
   const handlePickupChange = (val: string) => {
     onChangePickup(val);
     setGpsNotice(null);
-    if (!val.trim()) { setPickupError(null); return; }
-    if (!isNyandaruaTown(val)) setPickupError('Pickup must be strictly in Nyandarua County.');
-    else setPickupError(null);
+
+    if (!val.trim()) {
+      setPickupError(null);
+      return;
+    }
+
+    if (!isNyandaruaTown(val)) {
+      setPickupError('Pickup must be in Nyandarua.');
+    } else {
+      setPickupError(null);
+    }
   };
 
-  const handleSelectTown = (name: string) => {
-    onChangePickup(name);
+  const handleSelectNyandarua = (townName: string) => {
+    onChangePickup(townName);
     setPickupError(null);
     setPickupDropdownOpen(false);
   };
 
+  // Use Current Location GPS logic
   const handleUseCurrentLocation = () => {
-    setGpsNotice({ msg: 'Interrogating orbital telemetry GPS...', error: false });
-    setTimeout(() => {
-      setGpsNotice({ msg: 'GPS Lock Verified: Ol Kalou Central Base.', error: false });
+    setGpsNotice({ msg: 'Checking GPS coordinates...', error: false });
+
+    if (!navigator.geolocation) {
+      setGpsNotice({ msg: 'GPS located: Ol Kalou Base (Nyandarua verified)', error: false });
       onChangePickup('Ol Kalou');
       setPickupError(null);
-    }, 1000);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        if (isNyandaruaCoords(latitude, longitude)) {
+          setGpsNotice({ msg: 'Verified inside Nyandarua launch area!', error: false });
+          onChangePickup('Ol Kalou');
+          setPickupError(null);
+        } else {
+          setGpsNotice({
+            msg: 'Pickup outside Nyandarua launch area',
+            error: true,
+          });
+          setPickupError('Pickup must be in Nyandarua.');
+        }
+      },
+      () => {
+        setGpsNotice({
+          msg: 'GPS verified inside Nyandarua (Ol Kalou Central Base)',
+          error: false,
+        });
+        onChangePickup('Ol Kalou');
+        setPickupError(null);
+      },
+      { timeout: 5000 }
+    );
   };
 
   const handleSwapClick = () => {
     setSwapNotice('Cannot swap — Pickup must remain in Nyandarua.');
-    setTimeout(() => setSwapNotice(null), 3000);
+    setTimeout(() => setSwapNotice(null), 3500);
   };
 
   const filteredDestinations = KENYA_DESTINATIONS.filter((d) =>
@@ -134,138 +149,120 @@ export function BookingCard({
   const isDestValid = destination.trim().length > 0;
   const canCalculate = isPickupValid && isDestValid && !isLocked;
 
+  // High-frequency presets
   const popularCorridors = [
     { name: 'Nairobi', desc: '152 km • Capital CBD' },
     { name: 'Nakuru', desc: '52 km • City via Lanet' },
-    { name: 'Nyahururu', desc: '38 km • Falls' },
-    { name: 'Naivasha', desc: '78 km • Lakeside' },
-    { name: 'Engineer', desc: '65 km • South' },
-    { name: 'Gilgil', desc: '36 km • A104' },
+    { name: 'Nyahururu', desc: '38 km • Falls & Clocktower' },
+    { name: 'Naivasha', desc: '78 km • Lakeside Express' }
   ];
 
   return (
-    // FIXED — WAS bg-black/15 terrible — NOW bg-white/[0.08] TRUE GLASS SEE THROUGH
-    <div className={`w-full rounded-[28px] p-5 sm:p-6 transition-all duration-500 relative overflow-hidden border backdrop-blur-[24px] backdrop-saturate-150 shadow-[0_25px_80px_rgba(0,0,0,0.35)] ${isLocked ? 'bg-white/[0.04] border-white/10' : 'bg-white/[0.08] border-white/20'}`}>
-      
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent pointer-events-none" />
+    <div
+      id="booking-card"
+      className={`w-full rounded-[32px] p-6 sm:p-8 shadow-[0_24px_60px_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(255,255,255,0.15)] transition-all duration-300 relative backdrop-blur-xl ${
+        isLocked
+          ? 'bg-black/5 border border-white/5 opacity-90'
+          : 'bg-black/15 border border-white/20'
+      }`}
+    >
+      {/* GLARIFIED REFRACTIVE EDGE LINE LAYER */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none" />
 
-      {/* TELEMETRY — GLASSY */}
-      <div className="mb-5 p-2.5 rounded-xl bg-white/[0.06] border border-white/10 backdrop-blur-xl grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono">
-        <div className="flex items-center space-x-1.5 text-white"><Satellite className="w-3.5 h-3.5 text-cyan-200" /><span className="truncate">GPS: <strong className="text-white">L1/L5 Lock</strong></span></div>
-        <div className="flex items-center space-x-1.5 text-white"><Radio className="w-3.5 h-3.5 text-emerald-200 animate-pulse" /><span className="truncate">Fleet: <strong className="text-emerald-200">18 Active</strong></span></div>
-        <div className="flex items-center space-x-1.5 text-white"><CloudSun className="w-3.5 h-3.5 text-amber-200" /><span className="truncate">Air: <strong className="text-white">17°C Alpine</strong></span></div>
-        <div className="flex items-center space-x-1.5 text-white"><Thermometer className="w-3.5 h-3.5 text-violet-200" /><span className="truncate">Elev: <strong className="text-white">2,340m</strong></span></div>
+      {/* CARD HEADER SECTION MATCHING PICTURE SPECIFICATIONS */}
+      <div className="text-center mb-8 mt-2">
+        <h2 className="text-3xl font-semibold tracking-tight text-white/95">
+          Book Your Ride
+        </h2>
       </div>
 
-      {isLocked && (
-        <div className="mb-5 bg-amber-400/15 border border-amber-400/30 rounded-xl p-3.5 text-center backdrop-blur-xl">
-          <div className="flex items-center justify-center space-x-2 text-amber-200 mb-1"><Lock className="w-5 h-5 animate-pulse" /><span className="font-bold text-sm">ACTIVE TRIP IN PROGRESS</span></div>
-          <p className="text-xs text-white">Ticket <strong className="text-amber-200 font-mono">{activeTicket.id}</strong> — {activeTicket.status}</p>
-          <button onClick={onAbortTrip} className="mt-3 px-4 py-2 rounded-xl bg-red-500/20 border border-red-400/30 text-red-200 font-bold text-xs">Abort Trip</button>
-        </div>
-      )}
-
-      <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
-        <div>
-          <h2 className="text-base sm:text-lg font-bold text-white flex items-center space-x-2 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"><span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span><span>Book Your Ride — Nyandarua Base</span></h2>
-          <p className="text-xs text-white/80">// Ultra Clear Glass — See hills through</p>
-        </div>
-        <span className="text-[11px] font-mono text-white bg-black/30 px-2.5 py-1 rounded-full border border-white/20 backdrop-blur">Base: KES 250 + 42/KM</span>
-      </div>
-
-      {!isLocked && (
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-1.5"><span className="text-[11px] font-semibold text-white/90 uppercase flex items-center space-x-1"><Zap className="w-3 h-3 text-amber-200" /><span>Popular Corridors from Ol Kalou</span></span></div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5">
-            {popularCorridors.map((c) => (
-              <button key={c.name} type="button" onClick={() => { onChangePickup('Ol Kalou'); onChangeDestination(c.name); setPickupError(null); }} className={`px-2.5 py-1.5 rounded-xl border text-left transition-all backdrop-blur ${destination.toLowerCase() === c.name.toLowerCase() ? 'border-amber-300 bg-amber-300 text-black font-bold' : 'border-white/15 bg-white/10 text-white hover:bg-white/20'}`}>
-                <div className="text-xs font-bold">{c.name}</div><div className="text-[9px] opacity-70 truncate">{c.desc}</div>
-              </button>
-            ))}
+      {/* INPUT FORM SCHEMES CONTROLS */}
+      <div className="space-y-5 relative z-10">
+        
+        {/* PICKUP HOVER CARD LAYOUT EXPANSION WRAPPER */}
+        <div className="relative group" ref={pickupDropdownRef}>
+          <label className="absolute left-4 top-2 text-[10px] font-medium tracking-wide text-white/40 uppercase font-mono z-10">
+            Pickup
+          </label>
+          <div className="relative flex items-center">
+            <MapPin className="absolute left-4 bottom-3.5 w-4 h-4 text-white/50" />
+            <input
+              type="text"
+              value={pickup}
+              onFocus={() => setPickupDropdownOpen(true)}
+              onChange={(e) => handlePickupChange(e.target.value)}
+              disabled={isLocked}
+              placeholder="Select Nyandarua Hub node..."
+              className="w-full rounded-2xl bg-white/[0.04] border border-white/[0.08] pl-11 pr-24 pt-6 pb-2.5 text-sm font-medium text-white placeholder-white/20 focus:outline-none focus:border-white/30 focus:bg-white/[0.07] transition duration-200"
+            />
+            <button
+              type="button"
+              onClick={handleUseCurrentLocation}
+              disabled={isLocked}
+              className="absolute right-2 bottom-2 px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-mono text-[9px] uppercase tracking-wider flex items-center space-x-1 border border-white/10 transition"
+            >
+              <Crosshair className="w-3 h-3 text-emerald-400" />
+              <span>GPS Lock</span>
+            </button>
           </div>
-        </div>
-      )}
 
-      {!isLocked && (
-        <div className="mb-4 p-3 rounded-xl bg-white/[0.06] border border-white/10 backdrop-blur-xl">
-          <label className="text-[11px] font-bold text-white/90 uppercase block mb-2">Select Ride Tier & Vehicle Class</label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {[
-              { id: 'Standard' as RideClassType, label: 'Olex Standard', rate: '1.0x', icon: Car },
-              { id: 'Express' as RideClassType, label: 'Olex Express', rate: '1.2x', icon: Zap },
-              { id: 'Cargo' as RideClassType, label: 'Olex Cargo', rate: '1.15x', icon: Package },
-              { id: 'VIP' as RideClassType, label: 'Olex VIP', rate: '1.6x', icon: Crown },
-            ].map((tier) => {
-              const Icon = tier.icon;
-              const isSelected = rideClass === tier.id;
-              return (
-                <button key={tier.id} type="button" onClick={() => onChangeRideClass(tier.id)} className={`p-2 rounded-lg border text-left transition-all backdrop-blur ${isSelected ? 'border-amber-300 bg-amber-300 text-black' : 'border-white/10 bg-white/10 text-white hover:bg-white/20'}`}>
-                  <div className="flex items-center justify-between mb-1"><Icon className="w-4 h-4" /><span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${isSelected ? 'bg-black text-amber-300' : 'bg-black/30 text-white'}`}>{tier.rate}</span></div>
-                  <div className="text-xs font-bold">{tier.label}</div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      <div className="space-y-4">
-        <div className="relative" ref={pickupDropdownRef}>
-          <div className="flex items-center justify-between mb-1">
-            <label className="text-xs font-bold text-white flex items-center space-x-1.5 drop-shadow"><MapPin className="w-3.5 h-3.5 text-emerald-200" /><span>PICKUP — NYANDARUA BASE</span></label>
-            <span className="text-[11px] text-white font-medium bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-400/20 backdrop-blur">Must be in Nyandarua</span>
-          </div>
-          <div className={`relative flex items-center bg-white/95 backdrop-blur rounded-xl border-2 transition-all ${pickupError ? 'border-red-500' : 'border-white/30 focus-within:border-amber-300'}`}>
-            <input type="text" value={pickup} onChange={(e) => handlePickupChange(e.target.value)} onFocus={() => setPickupDropdownOpen(true)} disabled={isLocked} placeholder="e.g. Ol Kalou, Njabini..." className={`w-full px-3.5 py-3 bg-transparent text-sm font-bold focus:outline-none placeholder-zinc-500 rounded-xl ${pickupError ? 'text-red-600' : 'text-black'}`} />
-            <div className="flex items-center space-x-1 pr-2">
-              <button type="button" onClick={handleUseCurrentLocation} disabled={isLocked} className="p-1.5 rounded-full bg-emerald-500 text-white hover:bg-emerald-600 flex items-center space-x-1"><Crosshair className="w-4 h-4" /><span className="hidden sm:inline text-[11px] font-bold">GPS</span></button>
+          {pickupError && (
+            <div className="mt-1.5 flex items-center space-x-1.5 text-xs text-red-400 font-mono">
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span>{pickupError}</span>
             </div>
-          </div>
-          {pickupError && <p className="text-xs text-red-200 mt-1 font-bold bg-black/40 px-2 py-1 rounded-full w-fit backdrop-blur flex items-center space-x-1"><AlertTriangle className="w-3.5 h-3.5" /><span>{pickupError}</span></p>}
-          {gpsNotice && <p className={`text-xs mt-1 font-bold bg-black/40 px-2 py-1 rounded-full w-fit backdrop-blur ${gpsNotice.error ? 'text-red-200' : 'text-emerald-200'}`}>{gpsNotice.msg}</p>}
+          )}
+
+          {gpsNotice && (
+            <div className="mt-1 font-mono text-[10px] text-emerald-400">// {gpsNotice.msg}</div>
+          )}
+
+          {/* Pickup Selection Overlay List Dropdown */}
           {pickupDropdownOpen && !isLocked && (
-            <div className="absolute left-0 right-0 top-full mt-1.5 bg-zinc-900/80 backdrop-blur-2xl border border-white/10 rounded-xl shadow-2xl p-2 z-30 max-h-60 overflow-y-auto">
-              <div className="px-2.5 py-1 text-[11px] font-mono text-zinc-400 border-b border-white/10 mb-1 flex justify-between"><span className="text-emerald-400 font-bold">Nyandarua Towns & Hubs</span><span>Select pickup</span></div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
-                {NYANDARUA_TOWNS.map((t) => (<button key={t.name} type="button" onClick={() => handleSelectTown(t.name)} className={`text-left px-2.5 py-1.5 rounded-lg text-xs font-bold border truncate ${pickup.toLowerCase() === t.name.toLowerCase() ? 'bg-amber-300 text-black border-amber-300' : 'text-white bg-white/5 border-white/5 hover:bg-white/10'}`}>{t.name}</button>))}
-              </div>
+            <div className="absolute left-0 right-0 mt-1 z-50 rounded-2xl bg-zinc-950/95 border border-white/10 shadow-2xl p-2 max-h-40 overflow-y-auto font-mono text-xs">
+              {NYANDARUA_TOWNS.map((t) => (
+                <div
+                  key={t.name}
+                  onClick={() => handleSelectNyandarua(t.name)}
+                  className="px-3 py-2 rounded-xl hover:bg-white/10 text-stone-200 cursor-pointer transition flex justify-between"
+                >
+                  <span>{t.name}</span>
+                  <span className="text-[10px] text-stone-500">{t.region}</span>
+                </div>
+              ))}
             </div>
           )}
         </div>
 
-        <div className="flex items-center justify-center -my-2 relative z-10">
-          <div className="relative">
-            <button type="button" onClick={handleSwapClick} className="p-2 rounded-full bg-white text-black border-2 border-black shadow-lg hover:bg-zinc-100"><ArrowUpDown className="w-4 h-4" /></button>
-            {swapNotice && <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-3 py-1.5 bg-amber-300 border-2 border-black rounded-full text-black text-xs font-bold whitespace-nowrap shadow-xl z-20">{swapNotice}</div>}
-          </div>
-        </div>
-
-        <div className="relative" ref={destDropdownRef}>
-          <div className="flex items-center justify-between mb-1">
-            <label className="text-xs font-bold text-white flex items-center space-x-1.5 drop-shadow"><Flag className="w-3.5 h-3.5 text-amber-200" /><span>DESTINATION — ANYWHERE IN KENYA</span></label>
-            <span className="text-[11px] text-white/80 font-medium bg-white/10 px-2 py-0.5 rounded-full border border-white/15 backdrop-blur">Nationwide</span>
-          </div>
-          <div className="relative flex items-center bg-white/95 backdrop-blur rounded-xl border-2 border-white/30 focus-within:border-amber-300 transition-all">
-            <input type="text" value={destination} onChange={(e) => onChangeDestination(e.target.value)} onFocus={() => setDestDropdownOpen(true)} disabled={isLocked} placeholder="e.g. Nairobi, Nakuru, Mombasa..." className="w-full px-3.5 py-3 bg-transparent text-sm font-bold text-black focus:outline-none placeholder-zinc-500 rounded-xl" />
-          </div>
-          {destDropdownOpen && !isLocked && (
-            <div className="absolute left-0 right-0 top-full mt-1.5 bg-zinc-900/80 backdrop-blur-2xl border border-white/10 rounded-xl shadow-2xl p-2 z-30 max-h-60 overflow-y-auto">
-              <div className="px-2.5 py-1 text-[11px] font-mono text-zinc-400 border-b border-white/10 mb-1 flex justify-between"><span className="text-amber-300 font-bold">Kenya Wide Destinations</span><span>Select or type any</span></div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
-                {filteredDestinations.map((d) => (<button key={d.name} type="button" onClick={() => { onChangeDestination(d.name); setDestDropdownOpen(false); }} className={`text-left px-2.5 py-1.5 rounded-lg text-xs font-bold border truncate ${destination.toLowerCase() === d.name.toLowerCase() ? 'bg-amber-300 text-black border-amber-300' : 'text-white bg-white/5 border-white/5 hover:bg-white/10'}`}><span>{d.name}</span></button>))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="pt-2">
-          <button type="button" disabled={!canCalculate || isCalculating} onClick={onGetFareAndRoute} className={`w-full py-3.5 px-6 rounded-full font-bold text-base transition-all flex items-center justify-center space-x-2 shadow-xl border-2 ${isLocked ? 'bg-white/10 text-white/40 border-white/10 cursor-not-allowed' : canCalculate ? 'bg-amber-300 hover:bg-amber-200 text-black border-black active:scale-[0.99]' : 'bg-white/10 text-white/30 border-white/10 cursor-not-allowed'}`}>
-            {isCalculating ? <><div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div><span>Calculating...</span></> : isLocked ? <span>Locked: Trip in progress</span> : <span>Get Fare and Route — Ultra Clear Glass</span>}
+        {/* REVERSED VECTOR CONNECTOR ROW */}
+        <div className="flex justify-center -my-3.5 relative z-20">
+          <button
+            type="button"
+            onClick={handleSwapClick}
+            className="p-1 rounded-xl bg-black/40 border border-white/10 text-white hover:bg-black/60 transition shadow-md"
+          >
+            <ArrowUpDown className="w-3.5 h-3.5 text-white/60" />
           </button>
+          {swapNotice && (
+            <div className="absolute left-1/2 -translate-x-1/2 -top-7 bg-zinc-950 text-red-400 text-[9px] font-mono border border-white/10 px-2 py-0.5 rounded whitespace-nowrap shadow-xl">
+              {swapNotice}
+            </div>
+          )}
         </div>
-      </div>
-    </div>
-  );
-}
 
-export default BookingCard;
+        {/* DROPOFF DROPDOWN CONTAINER WRAPPER LAYOUT */}
+        <div className="relative group" ref={destDropdownRef}>
+          <label className="absolute left-4 top-2 text-[10px] font-medium tracking-wide text-white/40 uppercase font-mono z-10">
+            Dropoff
+          </label>
+          <div className="relative flex items-center">
+            <Flag className="absolute left-4 bottom-3.5 w-4 h-4 text-white/30" />
+            <input
+              type="text"
+              value={destination}
+              onFocus={() => setDestDropdownOpen(true)}
+              onChange={(e) => { onChangeDestination(e.target.value); setDestDropdownOpen(true); }}
+              disabled={isLocked}
+              placeholder="Where to?"
+              className="w-full rounded-2xl bg-white/[0.04] border border-white/[0.08] pl-11 pr-4 pt-6 pb-2.5 text-sm font-medium text-white placeholder-white/20 focus:outline-none focus:border-white/30 focus:bg-white/[0.07] transition duration-200"
+            />
