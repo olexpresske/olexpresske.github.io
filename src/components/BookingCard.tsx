@@ -162,13 +162,13 @@ export function BookingCard({
     { name: 'Gilgil', desc: '36 km • A104 Junction' },
   ];
 
- return (
+  return (
     <div
       id="booking-card"
-      className={`w-full rounded-[32px] p-6 sm:p-8 shadow-[0_24px_60px_rgba(0,0,0,0.15),inset_0_1px_1px_rgba(255,255,255,0.2)] transition-all duration-300 relative backdrop-blur-xl ${
+      className={`w-full bg-zinc-900/95 border-2 rounded-2xl p-4 sm:p-6 shadow-2xl transition-all relative backdrop-blur-md ${
         isLocked
-          ? 'bg-white/[0.02] border border-white/10 opacity-90'
-          : 'bg-white/[0.02] border border-white/20'
+          ? 'border-zinc-700 opacity-95'
+          : 'border-amber-500/70 shadow-[0_0_25px_rgba(245,158,11,0.12)]'
       }`}
     >
       {/* COSMIC TELEMETRY STATUS BAR */}
