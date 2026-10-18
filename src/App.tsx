@@ -5,7 +5,7 @@ import { TicketCard } from './components/TicketCard'
 import { TrackingView } from './components/TrackingView'
 import { DriverDashboard } from './components/DriverDashboard'
 import { AdminDashboard } from './components/AdminDashboard'
-import { findTown, calculateRoadRoute, RouteComputation } from './data/towns'
+import { calculateRoadRoute, RouteComputation, findTown, NYANDARUA_TOWNS } from './data/towns'
 import { ticketStore } from './services/ticketStore'
 import { Ticket } from './types'
 
@@ -42,11 +42,29 @@ export default function App(){
   },[])
 
   const handleGetFare=async()=>{
+    if(!destination.trim() || destination.trim().length < 2) return;
     setIsCalculating(true)
-    const p=findTown(pickup); const d=findTown(destination)
-    if(!p||!d){ setIsCalculating(false); return }
-    const res=await calculateRoadRoute(p.name,d.name)
-    if(res){ setRouteData(res); setPickupCoords(p.coords); setDestCoords(d.coords); setHasCalculated(true) }
+    try {
+      // FULL REAL-TIME: Use typed strings directly, not just list
+      const res = await calculateRoadRoute(pickup, destination)
+      if(res){
+        setRouteData(res)
+        // Update map coords from real route
+        if(res.routeCoords && res.routeCoords.length >= 2){
+          setPickupCoords(res.routeCoords[0])
+          setDestCoords(res.routeCoords[res.routeCoords.length-1])
+        } else {
+          // fallback coords from town lookup if available
+          const p = findTown(pickup)
+          if(p) setPickupCoords(p.coords)
+          const d = findTown(destination)
+          if(d) setDestCoords(d.coords)
+        }
+        setHasCalculated(true)
+      }
+    } catch {
+      // never show error to user
+    }
     setIsCalculating(false)
   }
 
@@ -73,7 +91,7 @@ export default function App(){
 
           <div className="pt-4">
             <h1 className="text-3xl font-black drop-shadow-lg">Travel Nyandarua</h1>
-            <p className="text-white/80 text-sm mt-1">Ol Kalou • Engineer • Njabini • Nairobi</p>
+            <p className="text-white/80 text-sm mt-1">Ol Kalou • Engineer • Njabini • Nairobi • Egerton • Molo</p>
           </div>
 
           <BookingCard pickup={pickup} destination={destination} onChangePickup={setPickup} onChangeDestination={setDestination} onGetFareAndRoute={handleGetFare} activeTicket={activeTicket} onTrackCurrentTicket={()=>{}} isCalculating={isCalculating} rideClass={rideClass} onChangeRideClass={setRideClass} />
